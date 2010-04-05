@@ -31,7 +31,7 @@ end
 
 % We need a guess to start with.  Get one from fitDrude.  It's pretty good.
 
-[epsinf, omegap, gamma] = fitDrude(epsilon, lambdas, [realWeight, imagWeight]);
+[epsinf, omegap, gamma] = fitDrude(epsilon, lambdas, [realWeight, imagWeight])
 
 % Now do the final fit: correct for the discretization.  In my experience,
 % the medium-scale least-squares algorithm (option 'LargeScale', 'off')
@@ -67,7 +67,7 @@ cplxErr = @(epsWpGamma) realImag(errEps(epsWpGamma.*[1,1e15,1e15],...
     lambdas, dxdydzdt));
 
 initialGuess = [epsinf, omegap, gamma].*[1, 1e-15, 1e-15];
-opt = optimset('Display', 'off', 'LargeScale', 'off');
+opt = optimset('Display', 'off', 'Algorithm', 'levenberg-marquardt');
 [theParams, resnorm, residual] = lsqnonlin(cplxErr, initialGuess, [], [], opt);
 %%
 

@@ -32,10 +32,10 @@ for ii = 1:length(omegas)
     wp = omegap;
     g = gamma;
     j1 = (2-g*dt)/(2+g*dt);
-    j2 = (2*eps*wp^2*dt)/(2+g*dt);
+    j2 = (2*eps0*wp^2*dt)/(2+g*dt);
     
     bigConst = j2*dt/2/i/eps*sin(w*dt/2)/(exp(-i*w*dt/2) - j1*exp(i*w*dt/2));
-
+    
     dispLin = @(kr,ki) -w^2 - i*w*wp^2/(g-i*w) + (kr+i*ki).^2/mu/eps;
     dispReal = @(kr,ki) prefac*( ...
         -sin(w*dt/2)^2 + bigConst + ...
@@ -55,7 +55,7 @@ for ii = 1:length(omegas)
     x = lsqnonlin(minfn, ksolve, kbounds([1 3]), kbounds([2 4]), opt);
     %}
     
-    opt = optimset('Display', 'off', 'LargeScale', 'off');
+    opt = optimset('Display', 'off', 'Algorithm', 'levenberg-marquardt');
     x = lsqnonlin(minfn, ksolve,[], [], opt);
 
     k = x(1) + i*x(2);

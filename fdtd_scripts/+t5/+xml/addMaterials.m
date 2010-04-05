@@ -14,6 +14,7 @@ for mm = 1:length(sim.Materials)
         ~strcmp(fields(ff), 'PMLParams')
         paramXML.setAttribute(fields{ff}, ...
             num2str(getfield(sim.Materials{mm}, fields{ff}), '%2.8g '));
+            %num2str(getfield(sim.Materials{mm}, fields{ff}))); 
     end
     end
     matXML.appendChild(paramXML);
