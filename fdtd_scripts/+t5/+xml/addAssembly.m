@@ -67,7 +67,7 @@ for aa = 1:length(assembly)
                     tag = assembly{aa}.tags{nn};
                     tagPixel = uint8(round(tag.pixel * 255) );
                     tagPixel = [tagPixel tagPixel tagPixel];
-                    assert(length(tagPixel) == 1);
+                    %assert(length(tagPixel) == 1);
                     hexred = dec2hex(tagPixel(1), 2);
                     hexgreen = dec2hex(tagPixel(2), 2);
                     hexblue = dec2hex(tagPixel(3), 2);

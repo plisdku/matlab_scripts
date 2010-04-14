@@ -43,6 +43,7 @@ X.TimeData = [];
 X.OmitSide = [];
 X = parseargs(X, varargin{:});
 
+
 % Validate fields; should be a single string with some tokens in it
 fieldTokens = {};
 remainder = X.Field;
