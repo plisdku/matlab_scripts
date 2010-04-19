@@ -36,22 +36,30 @@ frameNumber = 1;
 file.open;
 if (length(periods) > 1)
     harmonicComponent = reshape(harmonicComponent, [], length(periods));
-    harmBuffer = zeros(size(harmonicComponent));
+    
+    harmonic = cell(1, length(periods));
+    for pp = 1:length(periods)
+        harmonic{pp} = zeros(prod(dim), 1);
+    end
+    
     while frameNumber <= numFrames
-        phaseFactor = exp(-i*2*pi*(frameNumber-1)./periods);
+        phaseFactor = exp(-1i*2*pi*(frameNumber-1)./periods);
         framedat = file.readFrames(1);
         for pp = 1:length(periods)
-            %keyboard
-            harmBuffer(:,pp) = phaseFactor(pp)*framedat(:);
+            harmonic{pp} = harmonic{pp} + phaseFactor(pp)*framedat(:);
         end
         
-        harmonicComponent = harmonicComponent + harmBuffer;
         frameNumber = frameNumber+1;
     end
+    
+    for pp = 1:length(periods)
+        harmonicComponent(:,pp) = harmonic{pp};
+    end
+    
     harmonicComponent = reshape(harmonicComponent, [dim, length(periods)]);
 else
     while frameNumber <= numFrames
-        phaseFactor = exp(-i*2*pi*(frameNumber-1)./periods);
+        phaseFactor = exp(-1i*2*pi*(frameNumber-1)./periods);
         framedat = file.readFrames(1);
         harmonicComponent = harmonicComponent + phaseFactor*framedat;
         frameNumber = frameNumber+1;
