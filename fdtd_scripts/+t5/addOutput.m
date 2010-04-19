@@ -39,13 +39,15 @@ function addOutput(filename, fields, varargin)
 %                       will have the same Period; if Period has the same
 %                       number of rows as Duration, then each Duration will
 %                       have its own Period.  (default: 1)
-%       InterpolationPoint  A point between [0 0 0] and [1 1 1] at which to
+%       InterpolationPoint
+%                       A point between [0 0 0] and [1 1 1] at which to
 %                       sample E and H fields.  The electromagnetic fields in
 %                       FDTD are calculated at different spatial and temporal
 %                       positions; using an InterpolationPoint will simulate
 %                       measuring the fields all at one location in space by
 %                       trilinear interpolation.  This will NOT resample in
 %                       time.  Applicable only to E and H fields.
+%                       Use this to measure E and H at the same point!
 %                       (default: unused)
 %           
 grid = t5.TrogdorSimulation.instance().currentGrid();

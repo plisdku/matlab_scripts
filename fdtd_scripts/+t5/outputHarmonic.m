@@ -30,20 +30,24 @@ numFrames = file.numFramesAvailable;
 endOfFile = 0;
 
 harmonicComponent = zeros([dim, length(periods)]);
-harmBuffer = zeros([length(periods), dim]);
 
 frameNumber = 1;
 
 file.open;
 if (length(periods) > 1)
+    harmBuffer = zeros(size(harmonicComponent));
+    %harmBuffer = cell([1, length(periods)]);
     while frameNumber <= numFrames
         phaseFactor = exp(-i*2*pi*(frameNumber-1)./periods);
         framedat = file.readFrames(1);
         for pp = 1:length(periods)
-            phaseFrame = phaseFactor(pp)*framedat;
-            harmBuffer(pp,:) = phaseFrame(:);
+            harmBuffer(:,:,:,pp) = phaseFactor(pp)*framedat;
+            %harmonicComponent(:,:,:,pp) = harmonicComponent(:,:,:,pp) +...
+            %    phaseFactor(pp)*framedat;
         end
-        harmonicComponent = harmonicComponent + shiftdim(harmBuffer,1);
+        %keyboard
+        
+        harmonicComponent = harmonicComponent + harmBuffer;
         frameNumber = frameNumber+1;
     end
 else
