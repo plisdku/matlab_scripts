@@ -9,16 +9,19 @@ function [eps, lam] = getPermittivity(matName, varargin)
 %
 % Available materials include
 %   Ag
+%   Al
 %   Al32Cr
-%   AuGa
 %   Au
+%   AuGa
+%   CNT
+%   Co_hex_vis+IR
 %   Cr
 %   diamond
 %   GST-A
 %   GST-C
 %   SiO2
+%   Ti
 %   TiO2
-%   Co_hex_vis+IR
 
 lamRange = [-inf, inf];
 if nargin >= 2
