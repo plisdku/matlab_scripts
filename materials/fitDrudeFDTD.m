@@ -31,7 +31,7 @@ end
 
 % We need a guess to start with.  Get one from fitDrude.  It's pretty good.
 
-[epsinf, omegap, gamma] = fitDrude(epsilon, lambdas, [realWeight, imagWeight])
+[epsinf, omegap, gamma] = fitDrude(epsilon, lambdas, [realWeight, imagWeight]);
 
 % Now do the final fit: correct for the discretization.  In my experience,
 % the medium-scale least-squares algorithm (option 'LargeScale', 'off')

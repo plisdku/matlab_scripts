@@ -1,4 +1,5 @@
 function [fwhmLeft, fwhmRight] = findFWHM(data1d, peakCell)
+%function [fwhmLeft, fwhmRight] = findFWHM(data1d, peakCell)
 
 leftSide = data1d(1:peakCell);
 rightSide = data1d(peakCell:end);
