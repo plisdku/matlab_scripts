@@ -31,7 +31,7 @@ end
 rect = reshape(rect, [], 6);
 
 for row = 1:size(rect, 1)
-    r = rect(row,:)
+    r = rect(row,:);
     
     r(4:6) = r(4:6)+1;
     r = r + [0.1 0.1 0.1 -0.1 -0.1 -0.1];
