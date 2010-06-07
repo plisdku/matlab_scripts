@@ -68,7 +68,7 @@ elseif (nnz(dim(1:3) == 1) == 2)   % All 1D cases
                 ylim([-2, 2]);
                 legend(fieldNames{:})
                 title(sprintf('Frame %i', frameNum));
-                pause(0.1);
+                pause(0.01);
             end
             if frameNum < numFrames
                 data = file.readFrames(1);
@@ -91,7 +91,7 @@ elseif (nnz(dim(1:3) == 1) == 2)   % All 1D cases
                 %}
                 ylim([-2, 2]);
                 title(sprintf('Frame %i', frameNum));
-                pause(0.1);
+                pause(0.01);
                 %pause  
             end
             if frameNum < numFrames
@@ -102,17 +102,34 @@ elseif (nnz(dim(1:3) == 1) == 2)   % All 1D cases
         file.close
     end
 elseif (nnz(dim(1:3) == 1) == 1)    % All 2D cases
+    
+    coords = 'xyz';
+    [xPos yPos zPos] = file.positions;
+    xyzPos = {xPos yPos zPos};
+    
+    if file.Regions{1}.Size(1) == 1
+        row = 2; col = 3;
+    elseif file.Regions{1}.Size(2) == 1
+        row = 1; col = 3;
+    else
+        row = 1; col = 2;
+    end
+    
     if (length(dim) == 3)
         frameNum = 1;
         file.open
         data = file.readFrames(1);
         while frameNum <= numFrames
             if (mod(frameNum, period) == 0)
-                imagesc_centered(squeeze(data));
+                imagesc_centered(xyzPos{row}, xyzPos{col}, ...
+                    transpose(squeeze(data)));
                 axis image
+                set(gca, 'YDir', 'Normal');
                 colorbar;
                 title(sprintf('Frame %i', frameNum));
-                pause(0.1);
+                xlabel(sprintf('%s (m)', coords(row)));
+                ylabel(sprintf('%s (m)', coords(col)));
+                pause(0.01);
             end
             if frameNum < numFrames
                 data = file.readFrames(1);
@@ -131,40 +148,63 @@ elseif (nnz(dim(1:3) == 1) == 1)    % All 2D cases
                 clf
                 if datsize(1) > datsize(2)   % tall skinny
                     subplot(131);
-                    imagesc_centered(squeeze(data(:,:,:,1)));
+                    imagesc_centered(xyzPos{row}{1}, xyzPos{col}{1}, ...
+                        transpose(squeeze(data(:,:,:,1))));
                     axis image
+                    set(gca, 'YDir', 'Normal');
                     colorbar;
                     title(file.Fields{1}.Name);
+                    xlabel(sprintf('%s (m)', coords(row)));
+                    ylabel(sprintf('%s (m)', coords(col)));
+                    
                     subplot(132)
-                    imagesc_centered(squeeze(data(:,:,:,2)));
+                    imagesc_centered(xyzPos{row}{2}, xyzPos{col}{2}, ...
+                        transpose(squeeze(data(:,:,:,2))));
                     axis image
                     colorbar;
                     title(file.Fields{2}.Name);
+                    xlabel(sprintf('%s (m)', coords(row)));
+                    ylabel(sprintf('%s (m)', coords(col)));
+                    
                     subplot(133)
-                    imagesc_centered(squeeze(data(:,:,:,3)));
+                    imagesc_centered(xyzPos{row}{3}, xyzPos{col}{3}, ...
+                        transpose(squeeze(data(:,:,:,3))));
                     axis image
                     colorbar;
                     title(file.Fields{3}.Name);
+                    xlabel(sprintf('%s (m)', coords(row)));
+                    ylabel(sprintf('%s (m)', coords(col)));
                     %suptitle(sprintf('Frame %i', frameNum));
                 else
                     subplot(311)
-                    imagesc_centered(squeeze(data(:,:,:,1)));
+                    imagesc_centered(xyzPos{row}{1}, xyzPos{col}{1}, ...
+                        transpose(squeeze(data(:,:,:,1))));
                     axis image
                     colorbar;
                     title(file.Fields{1}.Name);
+                    xlabel(sprintf('%s (m)', coords(row)));
+                    ylabel(sprintf('%s (m)', coords(col)));
+                    
                     subplot(312)
-                    imagesc_centered(squeeze(data(:,:,:,2)));
+                    imagesc_centered(xyzPos{row}{2}, xyzPos{col}{2}, ...
+                        transpose(squeeze(data(:,:,:,2))));
                     axis image
                     colorbar;
                     title(file.Fields{2}.Name);
+                    xlabel(sprintf('%s (m)', coords(row)));
+                    ylabel(sprintf('%s (m)', coords(col)));
+                    
                     subplot(313)
-                    imagesc_centered(squeeze(data(:,:,:,3)));
+                    imagesc_centered(xyzPos{row}{3}, xyzPos{col}{3}, ...
+                        transpose(squeeze(data(:,:,:,3))));
                     axis image
                     colorbar;
                     title(file.Fields{3}.Name);
+                    xlabel(sprintf('%s (m)', coords(row)));
+                    ylabel(sprintf('%s (m)', coords(col)));
                     %suptitle(sprintf('Frame %i', frameNum));
                 end
-                pause(0.1);
+                pause(0.01);
             end
             if frameNum < numFrames
                 data = file.readFrames(1);
