@@ -161,6 +161,7 @@ elseif (nnz(dim(1:3) == 1) == 1)    % All 2D cases
                     imagesc_centered(xyzPos{row}{2}, xyzPos{col}{2}, ...
                         transpose(squeeze(data(:,:,:,2))));
                     axis image
+                    set(gca, 'YDir', 'Normal');
                     colorbar;
                     title(file.Fields{2}.Name);
                     xlabel(sprintf('%s (m)', coords(row)));
@@ -170,6 +171,7 @@ elseif (nnz(dim(1:3) == 1) == 1)    % All 2D cases
                     imagesc_centered(xyzPos{row}{3}, xyzPos{col}{3}, ...
                         transpose(squeeze(data(:,:,:,3))));
                     axis image
+                    set(gca, 'YDir', 'Normal');
                     colorbar;
                     title(file.Fields{3}.Name);
                     xlabel(sprintf('%s (m)', coords(row)));
@@ -180,6 +182,7 @@ elseif (nnz(dim(1:3) == 1) == 1)    % All 2D cases
                     imagesc_centered(xyzPos{row}{1}, xyzPos{col}{1}, ...
                         transpose(squeeze(data(:,:,:,1))));
                     axis image
+                    set(gca, 'YDir', 'Normal');
                     colorbar;
                     title(file.Fields{1}.Name);
                     xlabel(sprintf('%s (m)', coords(row)));
@@ -189,6 +192,7 @@ elseif (nnz(dim(1:3) == 1) == 1)    % All 2D cases
                     imagesc_centered(xyzPos{row}{2}, xyzPos{col}{2}, ...
                         transpose(squeeze(data(:,:,:,2))));
                     axis image
+                    set(gca, 'YDir', 'Normal');
                     colorbar;
                     title(file.Fields{2}.Name);
                     xlabel(sprintf('%s (m)', coords(row)));
@@ -198,6 +202,7 @@ elseif (nnz(dim(1:3) == 1) == 1)    % All 2D cases
                     imagesc_centered(xyzPos{row}{3}, xyzPos{col}{3}, ...
                         transpose(squeeze(data(:,:,:,3))));
                     axis image
+                    set(gca, 'YDir', 'Normal');
                     colorbar;
                     title(file.Fields{3}.Name);
                     xlabel(sprintf('%s (m)', coords(row)));
