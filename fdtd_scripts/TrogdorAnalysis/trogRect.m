@@ -28,24 +28,26 @@ if (nargin > 2)
     [extras{1:nargin-2}] = deal(varargin{2:end});
 end
 
+rect = reshape(rect, [], 6);
 
+for row = 1:size(rect, 1)
+    r = rect(row,:)
+    
+    r(4:6) = r(4:6)+1;
+    r = r + [0.1 0.1 0.1 -0.1 -0.1 -0.1];
 
-rect = rect(:);
+    line(r([1,4]), r([2,2]), r([3,3]), 'Color', colors, extras{:});
+    line(r([1,4]), r([2,2]), r([6,6]), 'Color', colors, extras{:});
+    line(r([1,4]), r([5,5]), r([3,3]), 'Color', colors, extras{:});
+    line(r([1,4]), r([5,5]), r([6,6]), 'Color', colors, extras{:});
 
-rect(4:6) = rect(4:6)+1;
-rect = rect + [0.1 0.1 0.1 -0.1 -0.1 -0.1]';
+    line(r([1,1]), r([2,5]), r([3,3]), 'Color', colors, extras{:});
+    line(r([4,4]), r([2,5]), r([3,3]), 'Color', colors, extras{:});
+    line(r([1,1]), r([2,5]), r([6,6]), 'Color', colors, extras{:});
+    line(r([4,4]), r([2,5]), r([6,6]), 'Color', colors, extras{:});
 
-line(rect([1,4]), rect([2,2]), rect([3,3]), 'Color', colors, extras{:});
-line(rect([1,4]), rect([2,2]), rect([6,6]), 'Color', colors, extras{:});
-line(rect([1,4]), rect([5,5]), rect([3,3]), 'Color', colors, extras{:});
-line(rect([1,4]), rect([5,5]), rect([6,6]), 'Color', colors, extras{:});
-
-line(rect([1,1]), rect([2,5]), rect([3,3]), 'Color', colors, extras{:});
-line(rect([4,4]), rect([2,5]), rect([3,3]), 'Color', colors, extras{:});
-line(rect([1,1]), rect([2,5]), rect([6,6]), 'Color', colors, extras{:});
-line(rect([4,4]), rect([2,5]), rect([6,6]), 'Color', colors, extras{:});
-
-line(rect([1,1]), rect([2,2]), rect([3,6]), 'Color', colors, extras{:});
-line(rect([4,4]), rect([2,2]), rect([3,6]), 'Color', colors, extras{:});
-line(rect([1,1]), rect([5,5]), rect([3,6]), 'Color', colors, extras{:});
-line(rect([4,4]), rect([5,5]), rect([3,6]), 'Color', colors, extras{:});
+    line(r([1,1]), r([2,2]), r([3,6]), 'Color', colors, extras{:});
+    line(r([4,4]), r([2,2]), r([3,6]), 'Color', colors, extras{:});
+    line(r([1,1]), r([5,5]), r([3,6]), 'Color', colors, extras{:});
+    line(r([4,4]), r([5,5]), r([3,6]), 'Color', colors, extras{:});
+end
