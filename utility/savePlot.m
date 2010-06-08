@@ -1,4 +1,4 @@
-function savePlot(filename);
+function savePlot(filename)
 % savePlot          Save the current figure in jpg, eps and fig formats.
 %   Usage: savePlot(filename) 
 

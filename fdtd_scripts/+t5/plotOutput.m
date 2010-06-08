@@ -146,7 +146,9 @@ elseif (nnz(dim(1:3) == 1) == 1)    % All 2D cases
             if (mod(frameNum, period) == 0)
                 datsize = size(squeeze(data(:,:,:,1)));
                 clf
-                if datsize(1) < datsize(2)   % tall skinny
+                if diff(xyzPos{row}{2}([1 end])) < ...
+                    diff(xyzPos{col}{2}([1 end]))
+                %if datsize(1) < datsize(2)   % tall skinny
                     subplot(131);
                     imagesc_centered(xyzPos{row}{1}, xyzPos{col}{1}, ...
                         transpose(squeeze(data(:,:,:,1))));
