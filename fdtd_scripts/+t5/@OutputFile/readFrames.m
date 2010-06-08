@@ -69,10 +69,10 @@ elseif length(sizes) > 1
     
     % Resize the data array.  Out of memory errors should happen here and not
     % elsewhere.
-    
+    sizes{:}
     data = cell([length(sizes), 1]);
     for rr = 1:length(sizes)
-        regionSize = sizes{rr}.NumYeeCells*numFields*numFrames;
+        regionSize = prod(sizes{rr})*numFields*numFrames;
         data{rr} = zeros([regionSize, 1]);
 %        disp(sprintf('Chunk %i is size %i', rr, length(data{rr})));
     end
