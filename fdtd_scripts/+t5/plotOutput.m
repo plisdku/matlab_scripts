@@ -1,17 +1,18 @@
-function plotOutput(fileName, period)
+function plotOutput(fileName, varargin)
 % plotOutput(fileName, period)
 %   Plot 1D and 2D output data from FDTD program.  1D data will be
 %   plotted vs time, and 2D output will be presented frame by frame
 %   without pause.  Use getOutputFrames or openOutputFile and
 %   getOutputFrame to work with the data.
 %
-%   Provided for back-compatibility with Trogdor 4.
 
-import t5.*
+import t6.*
 
-if (nargin < 2)
-    period = 1;
-end
+X.Period = 1;
+X.YLim = [-1 1];
+X = parseargs(X, varargin{:});
+
+period = X.Period;
 
 file = OutputFile(fileName);
 
@@ -61,17 +62,17 @@ elseif (nnz(dim(1:3) == 1) == 2)   % All 1D cases
     if (length(dim) == 3)
         frameNum = 1;
         file.open
-        data = file.readFrames(1);
+        data = file.readFrames('NumFrames', 1);
         while frameNum <= numFrames
             if (mod(frameNum, period) == 0)
                 plot(squeeze(data));
-                ylim([-2, 2]);
+                ylim(X.YLim);
                 legend(fieldNames{:})
                 title(sprintf('Frame %i', frameNum));
                 pause(0.01);
             end
             if frameNum < numFrames
-                data = file.readFrames(1);
+                data = file.readFrames('NumFrames', 1);
             end
             frameNum = frameNum + 1;
         end
@@ -79,7 +80,7 @@ elseif (nnz(dim(1:3) == 1) == 2)   % All 1D cases
     elseif (length(dim) == 4)
         frameNum = 1;
         file.open
-        data = file.readFrames(1);
+        data = file.readFrames('NumFrames', 1);
         while frameNum <= numFrames
             if (mod(frameNum, period) == 0)
                 plot(squeeze(data(:,:,:,:)));
@@ -89,13 +90,13 @@ elseif (nnz(dim(1:3) == 1) == 2)   % All 1D cases
                 plot(squeeze(data(:,:,:,3)), 'b');
                 hold off
                 %}
-                ylim([-2, 2]);
+                ylim(X.YLim);
                 title(sprintf('Frame %i', frameNum));
                 pause(0.01);
                 %pause  
             end
             if frameNum < numFrames
-                data = file.readFrames(1);
+                data = file.readFrames('NumFrames', 1);
             end
             frameNum = frameNum + 1;
         end
@@ -118,7 +119,7 @@ elseif (nnz(dim(1:3) == 1) == 1)    % All 2D cases
     if (length(dim) == 3)
         frameNum = 1;
         file.open
-        data = file.readFrames(1);
+        data = file.readFrames('NumFrames', 1);
         while frameNum <= numFrames
             if (mod(frameNum, period) == 0)
                 imagesc_centered(xyzPos{row}, xyzPos{col}, ...
@@ -132,14 +133,14 @@ elseif (nnz(dim(1:3) == 1) == 1)    % All 2D cases
                 pause(0.01);
             end
             if frameNum < numFrames
-                data = file.readFrames(1);
+                data = file.readFrames('NumFrames', 1);
             end
             frameNum = frameNum + 1;
         end
     elseif (length(dim) == 4)
         frameNum = 1;
         file.open
-        data = file.readFrames(1);
+        data = file.readFrames('NumFrames', 1);
         
         
         while frameNum <= numFrames
@@ -214,7 +215,7 @@ elseif (nnz(dim(1:3) == 1) == 1)    % All 2D cases
                 pause(0.01);
             end
             if frameNum < numFrames
-                data = file.readFrames(1);
+                data = file.readFrames('NumFrames', 1);
             end
             frameNum = frameNum + 1;
         end

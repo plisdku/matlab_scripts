@@ -32,7 +32,7 @@ for ll = 1:length(grid.TFSFSources)
         elemXML.appendChild(durXML);
     end
     
-    %dataFileName = t5.xml.randomName('__tfsfsource_', '', 8);
+    %dataFileName = t6.xml.randomName('__tfsfsource_', '', 8);
     dataFileName = sprintf('__tfsfsource_%i', TROG_XML_COUNT___.tfsfTime);
     TROG_XML_COUNT___.tfsfTime = TROG_XML_COUNT___.tfsfTime + 1;
     elemXML.setAttribute('file', dataFileName);
@@ -52,7 +52,7 @@ for ll = 1:length(grid.TFSFSources)
         error('Could not write TFSF source data file.');
     end
     fclose(fh);    
-    t5.xml.writeSourceSpec(src, 'AutoTimeFile', dataFileName);
+    t6.xml.writeSourceSpec(src, 'AutoTimeFile', dataFileName);
     
     % Count up the fields and decide if this source needs a polarization vector
     % or not.

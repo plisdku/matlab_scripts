@@ -10,7 +10,7 @@ function newDrude(name, varargin)
 %       mur     relative magnetic permeability (default 1.0)
 %       omegap  plasmon frequency (default 0.0)
 %       tauc    relaxation time (default 0.0)
-sim = t5.TrogdorSimulation.instance();
+sim = t6.TrogdorSimulation.instance();
 
 X.epsinf = 1;
 X.omegap = 0;

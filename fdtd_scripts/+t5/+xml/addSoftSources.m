@@ -13,7 +13,7 @@ for ss = 1:length(grid.SoftSources)
     elemXML.setAttribute('fields', fieldstr);
     
     if length(src.timeData) ~= 0
-        %fname = t5.xml.randomName('__softsource_time_', '', 8);
+        %fname = t6.xml.randomName('__softsource_time_', '', 8);
         fname = sprintf('__softsource_time_%i', TROG_XML_COUNT___.softTime);
         TROG_XML_COUNT___.softTime = TROG_XML_COUNT___.softTime + 1;
         elemXML.setAttribute('timeFile', fname);
@@ -24,11 +24,11 @@ for ss = 1:length(grid.SoftSources)
             error('Could not write source data file.');
         end
         fclose(fh);
-        t5.xml.writeSourceSpec(src, 'AutoTimeFile', fname);
+        t6.xml.writeSourceSpec(src, 'AutoTimeFile', fname);
     end
     
     if length(src.maskData) ~= 0
-        %fname = t5.xml.randomName('__softsource_mask_', '', 8);
+        %fname = t6.xml.randomName('__softsource_mask_', '', 8);
         fname = sprintf('__softsource_mask_%i', TROG_XML_COUNT___.softMask);
         TROG_XML_COUNT___.softMask = TROG_XML_COUNT___.softMask + 1;
         elemXML.setAttribute('maskFile', fname);
@@ -50,11 +50,11 @@ for ss = 1:length(grid.SoftSources)
             error('Could not write soft source mask data file.');
         end
         fclose(fh);
-        t5.xml.writeSourceSpec(src, 'AutoMaskFile', fname);
+        t6.xml.writeSourceSpec(src, 'AutoMaskFile', fname);
     end
     
     if length(src.spaceTimeData) ~= 0
-        %fname = t5.xml.randomName('__softsource_spacetime_', '', 8);
+        %fname = t6.xml.randomName('__softsource_spacetime_', '', 8);
         fname = sprintf('__softsource_spacetime_%i', ...
             TROG_XML_COUNT___.softSpaceTime);
         TROG_XML_COUNT___.softSpaceTime = TROG_XML_COUNT___.softSpaceTime + 1;
@@ -84,7 +84,7 @@ for ss = 1:length(grid.SoftSources)
         end
         fclose(fh);
         
-        t5.xml.writeSourceSpec(src, 'AutoSpaceTimeFile', fname);
+        t6.xml.writeSourceSpec(src, 'AutoSpaceTimeFile', fname);
     end
     
     % durations and regions.

@@ -6,9 +6,12 @@ sim = simHandle;
 for gg = 1:length(sim.Grids)
     grid = sim.Grids{gg};
     
-    nonPMLYeeCells = grid.extent;
-    yeeCells(1:3) = nonPMLYeeCells(1:3) - grid.PML(1:3);
-    yeeCells(4:6) = nonPMLYeeCells(4:6) + grid.PML(4:6);
+    %nonPMLYeeCells = grid.extent;
+    yeeCells = grid.YeeCells;
+    nonPMLYeeCells(1:3) = yeeCells(1:3) + grid.PML(1:3);
+    nonPMLYeeCells(4:6) = yeeCells(4:6) - grid.PML(4:6);
+    %yeeCells(1:3) = nonPMLYeeCells(1:3) - grid.PML(1:3);
+    %yeeCells(4:6) = nonPMLYeeCells(4:6) + grid.PML(4:6);
     
     originTrogdor = -yeeCells(1:3);
     
@@ -27,16 +30,16 @@ for gg = 1:length(sim.Grids)
         sprintf('%i ', nonPMLYeeCells + [originTrogdor, originTrogdor]));
     gridXML.setAttribute('origin', sprintf('%i ', originTrogdor));
     
-    t5.xml.addAssembly(grid.Assembly, gridXML, doc, originTrogdor);
-    t5.xml.addOutputs(grid, gridXML, doc, originTrogdor);
-    t5.xml.addGridReports(grid, gridXML, doc, originTrogdor);
-    t5.xml.addLinks(grid, gridXML, doc, originTrogdor);
-    t5.xml.addTFSFSources(grid, gridXML, doc, originTrogdor);
-    t5.xml.addCustomTFSFSources(grid, gridXML, doc, originTrogdor);
-    t5.xml.addHardSources(grid, gridXML, doc, originTrogdor);
-    t5.xml.addSoftSources(grid, gridXML, doc, originTrogdor);
-    t5.xml.addCurrentSources(grid, gridXML, doc, originTrogdor);
-    t5.xml.addPMLParams(grid, gridXML, doc);
+    t6.xml.addAssembly(grid.Assembly, gridXML, doc, originTrogdor);
+    t6.xml.addOutputs(grid, gridXML, doc, originTrogdor);
+    t6.xml.addGridReports(grid, gridXML, doc, originTrogdor);
+    t6.xml.addLinks(grid, gridXML, doc, originTrogdor);
+    t6.xml.addTFSFSources(grid, gridXML, doc, originTrogdor);
+    t6.xml.addCustomTFSFSources(grid, gridXML, doc, originTrogdor);
+    t6.xml.addHardSources(grid, gridXML, doc, originTrogdor);
+    t6.xml.addSoftSources(grid, gridXML, doc, originTrogdor);
+    t6.xml.addCurrentSources(grid, gridXML, doc, originTrogdor);
+    t6.xml.addPMLParams(grid, gridXML, doc);
     
     root.appendChild(gridXML);
 end

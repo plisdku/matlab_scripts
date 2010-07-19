@@ -26,13 +26,7 @@ function addCurrentSource(varargin)
 %                   is specified as [0 10] then TimeData needs 11 columns, one
 %                   for each sourced timestep.
 %                   (TimeData or SpaceTimeFile required)
-%       MaskFile    Name of a file that will contain a per-field, per-cell
-%                   prefactor to multiply the source by.  When using MaskFile,
-%                   Trogdor will run once to generate a data request file named
-%                   [MaskFile, '.m'] containing an ordered list of points at
-%                   which to provide mask data.  The mask data file must be
-%                   provided according to the data request before the simulation
-%                   may run.  (default: no mask file)
+%       SpaceTimeData An array of size [nFields nTimesteps*nCells].
 %       SpaceTimeFile   Name of a file that will contain the current for each
 %                   cell at each timestep.  When using SpaceTimeFile, Trogdor
 %                   will run once to generate a data request file named
@@ -54,17 +48,17 @@ function addCurrentSource(varargin)
 %   at which data is required.  After this data is written in the correct order
 %   to a binary file called 'currentInput', Trogdor can be run again to
 %   completion.
-grid = t5.TrogdorSimulation.instance().currentGrid();
+grid = t6.TrogdorSimulation.instance().currentGrid();
 
 X.Field = '';
 X.YeeCells = [];
 X.Duration = [];
 X.TimeData = [];
-X.MaskFile = [];
+X.SpaceTimeData = [];
 X.SpaceTimeFile = [];
 X = parseargs(X, varargin{:});
 
-t5.validateDataRequestParameters(X);
+t6.validateDataRequestParameters(X);
 
 % Validate fields; should be a single string with some tokens in it
 fieldTokens = {};
@@ -73,13 +67,7 @@ while ~strcmp(remainder, '')
     [token, remainder] = strtok(remainder);
     if ~strcmp(token, '')
         fieldTokens = {fieldTokens{:}, token};
-        
-        if length(token) ~= 2
-            error('Bad field %s', token);
-        elseif (token(1) ~= 'j' && token(1) ~= 'k') || ...
-            (token(2) < 'x' || token(2) > 'z')
-            token(1)
-            token(2)
+        if (~checkCurrentName(token))
             error('Bad field %s', token);
         end
     end
@@ -92,7 +80,27 @@ obj.field = fieldTokens;
 obj.yeeCells = X.YeeCells;
 obj.duration = X.Duration;
 obj.timeData = X.TimeData;
-obj.maskFile = X.MaskFile;
+obj.spaceTimeData = X.SpaceTimeData;
 obj.spaceTimeFile = X.SpaceTimeFile;
 
 grid.CurrentSources = {grid.CurrentSources{:}, obj};
+
+end
+
+function isOK = checkCurrentName(token)
+
+isOK = 0;
+
+if length(token) == 2
+    if (token(1) == 'j' || token(1) == 'm') && ...
+       (token(2) >= 'x' && token(2) <= 'z')
+        isOK = 1;
+    end
+elseif length(token) == 3
+    if (strcmp(token(1:2), 'je') || strcmp(token(1:2), 'mh')) && ...
+       (token(3) >= 'x' && token(3) <= 'z')
+        isOK = 1;
+    end
+end
+
+end

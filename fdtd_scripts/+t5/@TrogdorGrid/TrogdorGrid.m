@@ -15,6 +15,7 @@ classdef TrogdorGrid < handle
         Links = {};
         ModelReports = {};
         GridReports = {};
+        YeeCells = [0 0 0 0 0 0]; % one cell
     end
     
     methods

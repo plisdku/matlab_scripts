@@ -15,7 +15,7 @@ function validateSourceParameters(X)
 %
 % As soon as a problem is found this function will throw an error.
 % It has no return value.
-grid = t5.TrogdorSimulation.instance().currentGrid();
+grid = t6.TrogdorSimulation.instance().currentGrid();
 
 % Validate fields; should be a single string with some tokens in it
 fieldTokens = {};
@@ -32,7 +32,7 @@ if size(X.YeeCells, 2) ~= 6
 end
 
 if length(X.Duration) == 0
-    X.Duration = [0, t5.TrogdorSimulation.instance().NumT-1];
+    X.Duration = [0, t6.TrogdorSimulation.instance().NumT-1];
 elseif size(X.Duration, 2) ~= 2
     error('Duration must have two columns (first and last timestep).');
 end

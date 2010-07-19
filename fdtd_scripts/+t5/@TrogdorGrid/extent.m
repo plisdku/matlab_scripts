@@ -10,6 +10,6 @@ for aa = 1:length(obj.Assembly)
     end
 end
 
-if ~t5.validateRect(yeeCells)
+if ~t6.validateRect(yeeCells)
     error('Cannot calculate proper extent of grid.');
 end

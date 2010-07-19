@@ -48,7 +48,7 @@ function addCustomTFSFSource(varargin)
 %   Source data into the box [0 0 0 100 100 100] but omit the correction on the
 %   +Z and -Y faces.
 
-grid = t5.TrogdorSimulation.instance().currentGrid();
+grid = t6.TrogdorSimulation.instance().currentGrid();
 
 % note that there is no X.MaskFile because it will ALWAYS be requested along
 % with a TimeFile.  Likewise there is no Field because all E and H fields
@@ -65,7 +65,7 @@ if size(X.YeeCells) ~= [1 6]
 end
 
 if isempty(X.Duration)
-    X.Duration = [0, t5.TrogdorSimulation.instance().NumT-1];
+    X.Duration = [0, t6.TrogdorSimulation.instance().NumT-1];
 elseif size(X.Duration, 2) ~= 2
     error('Duration must have two columns (first and last timestep).');
 end

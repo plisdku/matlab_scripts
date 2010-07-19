@@ -49,7 +49,7 @@ function addSoftSource(varargin)
 %   Specify soft source in cells (50, 50, 50) and (60, 60, 60), nonzero for
 %   timesteps 0:10 and 100:110, where ex varies sinusoidally and hx varies
 %   as a decaying exponential.
-grid = t5.TrogdorSimulation.instance().currentGrid();
+grid = t6.TrogdorSimulation.instance().currentGrid();
 
 X.Field = '';
 X.YeeCells = [];
@@ -59,7 +59,7 @@ X.MaskData = [];
 X.SpaceTimeData = [];
 X = parseargs(X, varargin{:});
 
-t5.validateSourceDataParameters(X); % will call error() for problems
+t6.validateSourceDataParameters(X); % will call error() for problems
 
 % Now I need to validate the Field: it must be ex, ey, ez, hx, hy, hz stuff.
 fieldTokens = {};
@@ -82,7 +82,7 @@ end
 
 % Validate duration
 if length(X.Duration) == 0
-    X.Duration = [0, t5.TrogdorSimulation.instance().NumT-1];
+    X.Duration = [0, t6.TrogdorSimulation.instance().NumT-1];
 elseif size(X.Duration, 2) ~= 2
     error('Duration must have two columns (first and last timestep).');
 end

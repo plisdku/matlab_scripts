@@ -53,7 +53,7 @@ classdef OutputFile < handle
         nn = timesteps(obj);
         tt = times(obj);
         
-        data = read(obj); % return fields by region
+        data = read(obj, varargin); % single stream of data from all regions
         
         open(obj)
         data = readFrames(obj, varargin)
@@ -62,6 +62,8 @@ classdef OutputFile < handle
     
     methods (Access = private)
         readSpecFile(obj)
+        data = readFrames_SeparateRegions(obj, numFrames);
+        data = readFrames_RegionsTogether(obj, numFrames);
     end
     
     methods (Static, Access = private)

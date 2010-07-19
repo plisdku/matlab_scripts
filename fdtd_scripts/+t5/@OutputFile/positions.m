@@ -14,7 +14,7 @@ end
 
 for rr = 1:length(obj.Regions)
 for ff = 1:length(obj.Fields)
-    offset = t5.xml.fieldOffset(obj.Fields{ff}.Name);
+    offset = t6.xml.fieldOffset(obj.Fields{ff}.Name);
     xx{rr,ff} = obj.Dxyz(1)*(ii{rr} + offset(1));
     yy{rr,ff} = obj.Dxyz(2)*(jj{rr} + offset(2));
     zz{rr,ff} = obj.Dxyz(3)*(kk{rr} + offset(3));

@@ -19,8 +19,8 @@ function setPML(varargin)
 %   may be set all at once; however, 'Depth' and 'Material' cannot be set at
 %   once as all materials have the same PML thickness.
 
-sim = t5.TrogdorSimulation.instance();
-grid = t5.TrogdorSimulation.instance().currentGrid();
+sim = t6.TrogdorSimulation.instance();
+grid = t6.TrogdorSimulation.instance().currentGrid();
 
 X.Depth = [];
 X.Material = [];
@@ -42,7 +42,7 @@ end
 
 if length(X.Material) ~= 0
     
-    index = t5.indexOf(X.Material, sim.Materials);
+    index = t6.indexOf(X.Material, sim.Materials);
     if index == -1
         error('Material not found.');
     end

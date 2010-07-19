@@ -9,7 +9,7 @@ end
 
 for dd = 1:length(obj.Durations)
 for ff = 1:length(obj.Fields)
-    offset = t5.xml.fieldOffset(obj.Fields{ff}.Name);
+    offset = t6.xml.fieldOffset(obj.Fields{ff}.Name);
     tt{dd,ff} = obj.Dt*(nn{dd} + offset(4));
 end
 end

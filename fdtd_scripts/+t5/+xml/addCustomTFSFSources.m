@@ -25,7 +25,7 @@ for ll = 1:length(grid.CustomTFSFSources)
         elemXML.appendChild(durXML);
     end
     
-    t5.xml.writeSourceSpec(src);
+    t6.xml.writeSourceSpec(src);
     
     gridXML.appendChild(elemXML);
 end

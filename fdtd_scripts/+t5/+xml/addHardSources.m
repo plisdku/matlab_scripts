@@ -22,7 +22,7 @@ for ss = 1:length(grid.HardSources)
     % duration from A to B period C
     
     if length(src.timeData) ~= 0
-        %fname = t5.xml.randomName('__hardsource_time_', '', 8);
+        %fname = t6.xml.randomName('__hardsource_time_', '', 8);
         fname = sprintf('__hardsource_time_%i', TROG_XML_COUNT___.hardTime);
         TROG_XML_COUNT___.hardTime = TROG_XML_COUNT___.hardTime + 1;
         elemXML.setAttribute('timeFile', fname);
@@ -33,11 +33,11 @@ for ss = 1:length(grid.HardSources)
             error('Could not write TFSF source data file.');
         end
         fclose(fh);
-        t5.xml.writeSourceSpec(src, 'AutoTimeFile', fname);
+        t6.xml.writeSourceSpec(src, 'AutoTimeFile', fname);
     end
     
     if length(src.maskData) ~= 0
-        %fname = t5.xml.randomName('__hardsource_mask_', '', 8);
+        %fname = t6.xml.randomName('__hardsource_mask_', '', 8);
         fname = sprintf('__hardsource_mask_%i', TROG_XML_COUNT___.hardMask);
         TROG_XML_COUNT___.hardMask = TROG_XML_COUNT___.hardMask + 1;
         elemXML.setAttribute('maskFile', fname);
@@ -59,11 +59,11 @@ for ss = 1:length(grid.HardSources)
             error('Could not write hard source mask data file.');
         end
         fclose(fh);
-        t5.xml.writeSourceSpec(src, 'AutoMaskFile', fname);
+        t6.xml.writeSourceSpec(src, 'AutoMaskFile', fname);
     end
     
     if length(src.spaceTimeData) ~= 0
-        %fname = t5.xml.randomName('__hardsource_spacetime_', '', 8);
+        %fname = t6.xml.randomName('__hardsource_spacetime_', '', 8);
         fname = sprintf('__hardsource_spacetime_%i', ...
             TROG_XML_COUNT___.hardSpaceTime);
         TROG_XML_COUNT___.hardSpaceTime = TROG_XML_COUNT___.hardSpaceTime + 1;
@@ -93,7 +93,7 @@ for ss = 1:length(grid.HardSources)
             error('Could not write hard source space-time data file.');
         end
         fclose(fh);
-        t5.xml.writeSourceSpec(src, 'AutoSpaceTimeFile', fname);
+        t6.xml.writeSourceSpec(src, 'AutoSpaceTimeFile', fname);
     end
     
     % durations and regions.

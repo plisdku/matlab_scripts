@@ -33,7 +33,7 @@ function addAxisOrientedPlaneWave(varargin)
 %
 %   Source data into the box [0 0 0 100 100 100] but omit the TFSF correction on
 %   the +Z and -Y faces.
-grid = t5.TrogdorSimulation.instance().currentGrid();
+grid = t6.TrogdorSimulation.instance().currentGrid();
 
 X.Field = '';
 X.YeeCells = [];
@@ -68,7 +68,7 @@ if size(X.YeeCells, 2) ~= 6
 end
 
 if length(X.Duration) == 0
-    X.Duration = [0, t5.TrogdorSimulation.instance().NumT-1];
+    X.Duration = [0, t6.TrogdorSimulation.instance().NumT-1];
 elseif size(X.Duration, 2) ~= 2
     error('Duration must have two columns (first and last timestep).');
 end

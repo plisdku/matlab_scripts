@@ -12,7 +12,7 @@ function harmonicComponent = outputHarmonic(filename, periods)
 
 %filename = 'outYZE';
 %periods = 1:2;
-import t5.*
+import t6.*
 
 file = OutputFile(filename);
 if length(file.Regions) > 1

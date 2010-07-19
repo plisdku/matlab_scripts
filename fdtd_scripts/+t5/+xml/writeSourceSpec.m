@@ -1,5 +1,5 @@
 function writeSourceSpec(source, varargin)
-sim = t5.TrogdorSimulation.instance; % to get dxyz, dt, etc.
+sim = t6.TrogdorSimulation.instance; % to get dxyz, dt, etc.
 
 X.AutoMaskFile = '';
 X.AutoTimeFile = '';
@@ -30,7 +30,7 @@ if isfield(source, 'timeData')
     end
     
     for ff = 1:length(fieldList)
-        offset = t5.xml.fieldOffset(fieldList{ff});
+        offset = t6.xml.fieldOffset(fieldList{ff});
         fprintf(fh, 'field %s (%g, %g, %g) %g\n', fieldList{ff}, offset);
     end
     
@@ -39,6 +39,42 @@ if isfield(source, 'timeData')
     end
     
     fprintf(fh, 'region [(0, 0, 0), (0, 0, 0)] stride (1, 1, 1)\n');
+    
+    fclose(fh);
+end
+
+if isfield(source, 'spaceTimeData')
+    fh = fopen([X.AutoSpaceTimeFile, '.txt'], 'wt');
+    fprintf(fh, 'trogdor5data\n');
+    fprintf(fh, 'date %s\n', date());
+    fprintf(fh, 'dxyz (%g, %g, %g)\n', ...
+        sim.Dxyz(1), sim.Dxyz(2), sim.Dxyz(3));
+    fprintf(fh, 'dt %g\n', sim.Dt);
+    fprintf(fh, 'specfile %s\n', [X.AutoTimeFile, '.txt']);
+    fprintf(fh, 'unitVector0 (1, 0, 0)\n');
+    fprintf(fh, 'unitVector1 (0, 1, 0)\n');
+    fprintf(fh, 'unitVector2 (0, 0, 1)\n');
+    
+    % CustomTFSFSource must provide all E and H fields and has no "field".
+    if isfield(source, 'field')
+        fieldList = source.field;
+    else
+        fieldList = {'ex', 'ey', 'ez', 'hx', 'hy', 'hz'};
+    end
+    
+    for ff = 1:length(fieldList)
+        offset = t6.xml.fieldOffset(fieldList{ff});
+        fprintf(fh, 'field %s (%g, %g, %g) %g\n', fieldList{ff}, offset);
+    end
+    
+    for dd = 1:size(source.duration, 1)
+        fprintf(fh, 'duration from %i to %i period 1\n', source.duration(dd,:));
+    end
+    
+    for yy = 1:size(source.yeeCells, 1)
+        fprintf(fh, 'region [(%i, %i, %i), (%i, %i, %i)] stride (1, 1, 1)\n',...
+            source.yeeCells(yy,:));
+    end
     
     fclose(fh);
 end
@@ -63,7 +99,7 @@ if isfield(source, 'maskData')
     end
     
     for ff = 1:length(fieldList)
-        offset = t5.xml.fieldOffset(fieldList{ff});
+        offset = t6.xml.fieldOffset(fieldList{ff});
         fprintf(fh, 'field %s (%g, %g, %g) %g\n', fieldList{ff}, offset);
     end
     
@@ -96,7 +132,7 @@ if isfield(source, 'spaceTimeData')
     end
     
     for ff = 1:length(fieldList)
-        offset = t5.xml.fieldOffset(fieldList{ff});
+        offset = t6.xml.fieldOffset(fieldList{ff});
         fprintf(fh, 'field %s (%g, %g, %g) %g\n', fieldList{ff}, offset);
     end
     
