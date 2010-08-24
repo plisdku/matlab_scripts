@@ -11,14 +11,14 @@ classdef TrogdorSimulation < handle
     
     methods
         function grid = currentGrid(obj)
-            if ~isa(obj.CurrentGrid, 't6.TrogdorGrid')
+            if ~isa(obj.CurrentGrid, 't5.TrogdorGrid')
                 error('Please call addGrid to create a new grid.');
             end
             grid = obj.CurrentGrid;
         end
         
         function setCurrentGrid(obj, grid)
-            if ~isa(grid, 't6.TrogdorGrid')
+            if ~isa(grid, 't5.TrogdorGrid')
                 error('Not a valid grid handle.');
             end
             obj.CurrentGrid = grid;
@@ -33,13 +33,13 @@ classdef TrogdorSimulation < handle
     methods (Static)
         function clear()
             global TROGDOR_SIMULATION
-            TROGDOR_SIMULATION = t6.TrogdorSimulation();
+            TROGDOR_SIMULATION = t5.TrogdorSimulation();
         end
         
         function obj = instance()
             global TROGDOR_SIMULATION
-            if ~isa(TROGDOR_SIMULATION, 't6.TrogdorSimulation')
-                TROGDOR_SIMULATION = t6.TrogdorSimulation();
+            if ~isa(TROGDOR_SIMULATION, 't5.TrogdorSimulation')
+                TROGDOR_SIMULATION = t5.TrogdorSimulation();
             end
             obj = TROGDOR_SIMULATION;
         end

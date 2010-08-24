@@ -10,7 +10,7 @@ function newLossyDielectric(name, varargin)
 %       mur     relative magnetic permeability (default 1.0)
 %       sigma   DC electrical conductivity (default 0.0)
 
-sim = t6.TrogdorSimulation.instance();
+sim = t5.TrogdorSimulation.instance();
 
 X.epsr = 1.0;
 X.mur = 1.0;

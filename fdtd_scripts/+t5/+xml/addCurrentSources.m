@@ -13,7 +13,7 @@ for ss = 1:length(grid.CurrentSources)
     elemXML.setAttribute('fields', fieldstr);
     
     if length(src.timeData) ~= 0
-        %fname = t6.xml.randomName('__currentsource_time_', '', 8);
+        %fname = t5.xml.randomName('__currentsource_time_', '', 8);
         fname = sprintf('__currentsource_time_%i', TROG_XML_COUNT___.currentTime);
         TROG_XML_COUNT___.currentTime = TROG_XML_COUNT___.currentTime + 1;
         elemXML.setAttribute('timeFile', fname);
@@ -21,35 +21,20 @@ for ss = 1:length(grid.CurrentSources)
         try
             count = fwrite(fh, src.timeData, 'float32');
         catch
-            error('Could not write current source data file.');
+            error('Could not write TFSF source data file.');
         end
         fclose(fh);
-        t6.xml.writeSourceSpec(src, 'AutoTimeFile', fname);
+        t5.xml.writeSourceSpec(src, 'AutoTimeFile', fname);
     end
     
-    if length(src.spaceTimeData) ~= 0
-        fname = sprintf('__currentsource_spacetime_%i',...
-            TROG_XML_COUNT___.currentSpaceTime);
-        TROG_XML_COUNT___.currentSpaceTime = TROG_XML_COUNT___.currentSpaceTime + 1;
-        elemXML.setAttribute('spaceTimeFile', fname);
-        fh = fopen(fname, 'w');
-        try
-            count = fwrite(fh, src.spaceTimeData, 'float32');
-        catch
-            error('Could not write current source data file.');
-        end
-        fclose(fh);
-        t6.xml.writeSourceSpec(src, 'AutoSpaceTimeFile', fname);
+    if length(src.maskFile) ~= 0
+        elemXML.setAttribute('maskFile', src.maskFile);
+        t5.xml.writeSourceSpec(src);
     end
-    
-    %if length(src.maskFile) ~= 0
-    %    elemXML.setAttribute('maskFile', src.maskFile);
-    %    t6.xml.writeSourceSpec(src);
-    %end
     
     if length(src.spaceTimeFile) ~= 0
         elemXML.setAttribute('spaceTimeFile', src.spaceTimeFile);
-        t6.xml.writeSourceSpec(src);
+        t5.xml.writeSourceSpec(src);
     end
     
     

@@ -8,6 +8,7 @@ function trogdor_end(varargin)
 
 import com.mathworks.xml.XMLUtils.*;
 
+
 paramFileName = 'params.xml';
 if length(varargin) > 0
     if ~isstr(varargin{1})
@@ -19,13 +20,13 @@ end
 % Last things:
 %   store the extent of source grids in links
 
-sim = t6.TrogdorSimulation.instance;
+sim = t5.TrogdorSimulation.instance;
 
 for gg = 1:length(sim.Grids)
     grid = sim.Grids{gg};
     
     for ll = 1:length(grid.Links)
-        sourceGridIndex = t6.indexOf(grid.Links{ll}.sourceGrid, sim.Grids);
+        sourceGridIndex = t5.indexOf(grid.Links{ll}.sourceGrid, sim.Grids);
         if sourceGridIndex == -1
             error('Unknown source grid %s', grid.Links{ll}.sourceGrid);
         end
@@ -39,5 +40,5 @@ for gg = 1:length(sim.Grids)
     end
 end
 
-doc = t6.xml.generateXML(sim);
+doc = t5.xml.generateXML(sim);
 xmlwrite(paramFileName, doc);

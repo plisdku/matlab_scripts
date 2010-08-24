@@ -50,7 +50,7 @@ function addOutput(filename, fields, varargin)
 %                       Use this to measure E and H at the same point!
 %                       (default: unused)
 %           
-grid = t6.TrogdorSimulation.instance().currentGrid();
+grid = t5.TrogdorSimulation.instance().currentGrid();
 
 X.YeeCells = []; % [x y z x y z]
 X.Duration = [];  % [first last]
@@ -68,7 +68,7 @@ if size(X.YeeCells, 2) ~= 6
     error('YeeCells must have six columns.');
 end
 if length(X.Duration) == 0
-    X.Duration = [0, t6.TrogdorSimulation.instance().NumT-1];
+    X.Duration = [0, t5.TrogdorSimulation.instance().NumT-1];
 elseif size(X.Duration, 2) ~= 2
     error('Duration must have two columns (first and last timestep).');
 end

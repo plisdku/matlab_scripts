@@ -1,24 +1,15 @@
-function addGrid(name, yeeCells)
+function addGrid(name)
 %addGrid Begin description of an FDTD simulation grid
-%   addGrid('Main Grid', [0 0 0 99 99 0) begins the description of a grid
-%   called 'Main Grid', spanning 100 yee cells in X and Y and symmetrical
-%   in z.
+%   addGrid('Main Grid') begins the description of a grid called 'Main Grid'.
 %
-%   Usage: addGrid(gridName, yeeCells)
+%   Usage: addGrid(gridName)
 %       gridName    A name.  Names that are attractive, fortunate or that have
 %                   been borne by prominent historical figures may cause Trogdor
 %                   to run faster and/or more accurately.
-%       yeeCells    Number of cells in the grid
-sim = t6.TrogdorSimulation.instance();
+sim = t5.TrogdorSimulation.instance();
 
-grid = t6.TrogdorGrid();
+grid = t5.TrogdorGrid();
 grid.Name = name;
-
-if t6.validateRect(yeeCells)
-    grid.YeeCells = yeeCells;
-else
-    error('Bad yee cells.');
-end
 
 if ~iscell(sim.Grids)
     sim.Grids = {};

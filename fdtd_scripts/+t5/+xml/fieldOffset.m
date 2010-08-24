@@ -15,28 +15,16 @@ switch fieldString
         xyzt = [0.5 0 0.5 0.5];
     case 'hz'
         xyzt = [0.5 0.5 0 0.5];
-    case 'dx'
-        xyzt = [0.5 0 0 0];
-    case 'dy'
-        xyzt = [0 0.5 0 0];
-    case 'dz'
-        xyzt = [0 0 0.5 0];
-    case 'bx'
-        xyzt = [0 0.5 0.5 0.5];
-    case 'by'
-        xyzt = [0.5 0 0.5 0.5];
-    case 'bz'
-        xyzt = [0.5 0.5 0 0.5];
-    case {'jx', 'jex'}
+    case 'jx'
         xyzt = [0.5 0 0 0.5];
-    case {'jy', 'jey'}
+    case 'jy'
         xyzt = [0 0.5 0 0.5];
-    case {'jz', 'jez'}
+    case 'jz'
         xyzt = [0 0 0.5 0.5];
-    case {'mx', 'mhx'}
+    case 'kx'
         xyzt = [0 0.5 0.5 0];
-    case {'my', 'mhy'}
+    case 'ky'
         xyzt = [0.5 0 0.5 0];
-    case {'mz', 'mhz'}
-        xyzt = [0.5 0.5 0 0];
+    case 'kz'
+        xyzt = [0.5 0.5 0 0.5];
 end

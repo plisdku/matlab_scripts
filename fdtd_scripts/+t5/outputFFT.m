@@ -4,7 +4,7 @@ function fftDat = outputFFT(fileName)
 %	opening the fdtd output file and calling fft on the data
 %	manually.  This is a nice shortcut, presuming that all the 
 %	data can be fit in memory at once.
-import t6.*
+import t5.*
 file = OutputFile(fileName);
 data = file.read;
 

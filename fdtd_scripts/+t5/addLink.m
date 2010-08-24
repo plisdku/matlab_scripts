@@ -21,13 +21,13 @@ function addLink(sourceGridName, sourceYeeCells, destYeeCells, varargin)
 %   addLink('AuxGrid', [0 0 0 100 0 0], [0 0 0 100 100 100], 'OmitSide', ...
 %       {[1 0 0], [0 -1 0]});
 %
-grid = t6.TrogdorSimulation.instance().currentGrid();
+grid = t5.TrogdorSimulation.instance().currentGrid();
 
-if ~t6.validateRect(sourceYeeCells)
+if ~t5.validateRect(sourceYeeCells)
     error('Invalid source rectangle.');
 end
 
-if ~t6.validateRect(destYeeCells)
+if ~t5.validateRect(destYeeCells)
     error('Invalid destination rectangle.');
 end
 

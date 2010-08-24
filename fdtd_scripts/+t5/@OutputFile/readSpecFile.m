@@ -133,22 +133,32 @@ end
 
 fclose(fid);
 
-% Now work on the hidden properties: obj.RegionOffsetsInFields,
-% and obj.FieldOffsetsInFrames.
+% Now work on the hidden properties
 
-totalYeeCells = 0;
-regionOffset = 0;
-for nn = 1:length(obj.Regions)
-    totalYeeCells = totalYeeCells + obj.Regions{nn}.NumYeeCells;
-    obj.RegionOffsetsInFields(nn) = regionOffset;
-    regionOffset = regionOffset + obj.Regions{nn}.NumYeeCells;
-end
-obj.FrameSize = totalYeeCells * length(obj.Fields);
-
-fieldOffset = 0;
-for nn = 1:length(obj.Fields)
-    obj.FieldOffsetsInFrames(nn) = fieldOffset;
-    fieldOffset = fieldOffset + totalYeeCells;
+if size(obj.Materials) ~= 0  % If this is a material report
+    totalHalfCells = 0;
+    regionOffset = 0;
+    for nn = 1:length(obj.HalfCells)
+        totalHalfCells = totalHalfCells + obj.HalfCells{nn}.NumHalfCells;
+        obj.RegionOffsetsInFields(nn) = regionOffset;
+        regionOffset = regionOffset + obj.HalfCells{nn}.NumHalfCells;
+    end
+    obj.FrameSize = totalHalfCells;
+else
+    totalYeeCells = 0;
+    regionOffset = 0;
+    for nn = 1:length(obj.Regions)
+        totalYeeCells = totalYeeCells + obj.Regions{nn}.NumYeeCells;
+        obj.RegionOffsetsInFields(nn) = regionOffset;
+        regionOffset = regionOffset + obj.Regions{nn}.NumYeeCells;
+    end
+    obj.FrameSize = totalYeeCells * length(obj.Fields);
+    
+    fieldOffset = 0;
+    for nn = 1:length(obj.Fields)
+        obj.FieldOffsetsInFrames(nn) = fieldOffset;
+        fieldOffset = fieldOffset + totalYeeCells;
+    end
 end
 
     

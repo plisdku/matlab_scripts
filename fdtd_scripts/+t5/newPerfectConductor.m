@@ -5,7 +5,7 @@ function newPerfectConductor(name)
 %
 %   Named parameters:
 %       (none)
-sim = t6.TrogdorSimulation.instance();
+sim = t5.TrogdorSimulation.instance();
 
 material = struct;
 material.name = name;

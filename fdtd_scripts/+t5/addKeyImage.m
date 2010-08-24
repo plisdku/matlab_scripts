@@ -74,10 +74,10 @@ for tt = 1:length(varargin)
     
     if length(tag) == 2
         tagStruct = struct('pixel', tag{1}, 'material', tag{2}, ...
-            'fillStyle', 'PECStyle');
+            'fillStyle', 'YeeCellStyle');
     else
         if ~strcmp(tag{3}, 'PECStyle') && ~strcmp(tag{3}, 'PMCStyle')
-            error('KeyImage tag fill style must be PECStyle or PMCStyle.');
+            error('KeyImage tag fill style must be PECStyle, PMCStyle or YeeCellStyle.');
         end
         tagStruct = struct('pixel', tag{1}, 'material', tag{2}, ...
             'fillStyle', tag{3});
