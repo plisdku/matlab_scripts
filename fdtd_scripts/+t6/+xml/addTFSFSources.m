@@ -1,6 +1,7 @@
 function addTFSFSources(grid, gridXML, doc, originTrogdor)
 global TROG_XML_COUNT___;
 originTwice = [originTrogdor originTrogdor];
+precisionString = t6.TrogdorSimulation.instance().Precision;
 
 for ll = 1:length(grid.TFSFSources)
     src = grid.TFSFSources{ll};
@@ -47,7 +48,7 @@ for ll = 1:length(grid.TFSFSources)
             timeData = src.timeData;
         end
         
-        count = fwrite(fh, timeData, 'float32');
+        count = fwrite(fh, timeData, precisionString);
     catch
         error('Could not write TFSF source data file.');
     end

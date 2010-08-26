@@ -24,6 +24,20 @@ try % everything else, but close file before rethrow
             case 'specfile'
             case 'datafile'
             case 'materialfile'
+            case 'precision'
+                precision = sscanf(remainder, '%s');
+                if ~strcmp(precision, 'float32') && ...
+                    ~strcmp(precision, 'float64')
+                    error(sprintf('Invalid precision %s', precision));
+                end
+                obj.Precision = precision;
+                
+                if strcmp(precision, 'float32')
+                    obj.BytesPerValue = 4;
+                elseif strcmp(precision, 'float64')
+                    obj.BytesPerValue = 8;
+                end
+                                
             case 'date'
                 obj.DateString = remainder;
             case 'dxyz'

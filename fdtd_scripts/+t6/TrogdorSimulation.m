@@ -7,6 +7,7 @@ classdef TrogdorSimulation < handle
         Dxyz = 0
         Dt = 0
         NumT = 0
+        Precision = 'float32';
     end
     
     methods

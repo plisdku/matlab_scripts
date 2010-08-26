@@ -1,6 +1,7 @@
 function addSoftSources(grid, gridXML, doc, originTrogdor)
 global TROG_XML_COUNT___;
 originTwice = [originTrogdor originTrogdor];
+precisionString = t6.TrogdorSimulation.instance().Precision;
 
 for ss = 1:length(grid.SoftSources)
     src = grid.SoftSources{ss};
@@ -19,7 +20,7 @@ for ss = 1:length(grid.SoftSources)
         elemXML.setAttribute('timeFile', fname);
         fh = fopen(fname, 'w');
         try
-            count = fwrite(fh, src.timeData, 'float32');
+            count = fwrite(fh, src.timeData, precisionString);
         catch
             error('Could not write source data file.');
         end
@@ -42,7 +43,7 @@ for ss = 1:length(grid.SoftSources)
                 % dims: x y z fields.  Matlab writes in column order!!
                 data = src.maskData{mm}(:,:,:,ff);
                 %data = permute(src.maskData{mm}, [2 1 3 4]); % wrong
-                count = fwrite(fh, data, 'float32');
+                count = fwrite(fh, data, precisionString);
             end
             end
         catch exception
@@ -78,7 +79,7 @@ for ss = 1:length(grid.SoftSources)
             end
             end
             end
-            count = fwrite(fh, alldat, 'float32');
+            count = fwrite(fh, alldat, precisionString);
         catch
             error('Could not write soft source space-time data file.');
         end

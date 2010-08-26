@@ -1,6 +1,7 @@
 function addCurrentSources(grid, gridXML, doc, originTrogdor)
 global TROG_XML_COUNT___;
 originTwice = [originTrogdor originTrogdor];
+precisionString = t6.TrogdorSimulation.instance().Precision;
 
 for ss = 1:length(grid.CurrentSources)
     src = grid.CurrentSources{ss};
@@ -19,7 +20,7 @@ for ss = 1:length(grid.CurrentSources)
         elemXML.setAttribute('timeFile', fname);
         fh = fopen(fname, 'w');
         try
-            count = fwrite(fh, src.timeData, 'float32');
+            count = fwrite(fh, src.timeData, precisionString);
         catch
             error('Could not write current source data file.');
         end
@@ -34,7 +35,7 @@ for ss = 1:length(grid.CurrentSources)
         elemXML.setAttribute('spaceTimeFile', fname);
         fh = fopen(fname, 'w');
         try
-            count = fwrite(fh, src.spaceTimeData, 'float32');
+            count = fwrite(fh, src.spaceTimeData, precisionString);
         catch
             error('Could not write current source data file.');
         end
