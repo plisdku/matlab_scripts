@@ -4,6 +4,8 @@ doc = documentNode;
 
 originTwice = [originTrogdor originTrogdor];
 
+digits = 10;
+
 assemblyXML = doc.createElement('Assembly');
 
 for aa = 1:length(assembly)
@@ -24,7 +26,7 @@ for aa = 1:length(assembly)
             for vv = 1:length(assembly{aa}.vertices)
                 vertXML = doc.createElement('Vertex');
                 vertXML.setAttribute('position', ...
-                    num2str(assembly{aa}.vertices(vv,:)));
+                    num2str(assembly{aa}.vertices(vv,:), digits));
                 vertXML.setAttribute('freeDirections', ...
                     num2str(assembly{aa}.vertexFreeDirections(vv,:)));
                 elemXML.appendChild(vertXML);
@@ -33,7 +35,7 @@ for aa = 1:length(assembly)
             for ff = 1:length(assembly{aa}.faces)
                 faceXML = doc.createElement('Face');
                 faceXML.setAttribute('vertices', ...
-                    num2str(assembly{aa}.faces(ff,:)));
+                    num2str(assembly{aa}.faces(ff,:), digits));
                 elemXML.appendChild(faceXML);
             end
             

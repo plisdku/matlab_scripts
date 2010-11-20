@@ -8,7 +8,7 @@ function addCurrentSource(varargin)
 %
 %   Named parameters:
 %       Field       The electromagnetic fields to source.  Valid fields:
-%                   'kx', 'ky', 'kz'    magnetic currents
+%                   'mx', 'my', 'mz'    magnetic currents
 %                   'jx', 'jy', 'jz'    electric currents
 %                   Any combination of fields may be used, but they should be
 %                   specified in order: kx before ky, magnetic before electric
