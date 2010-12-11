@@ -25,7 +25,8 @@ function addHeightMap(materialName, yeeCells, image, imageRow, imageCol, ...
 %                   give transverse directions and zDir is "up".
 %
 %   Named parameters:
-%       FillStyle   either 'PECStyle' or 'PMCStyle' (default: 'PECStyle')
+%       FillStyle   either 'PECStyle', 'PMCStyle' or 'YeeCellStyle'
+%                   (default: 'PECStyle')
 %
 grid = t5.TrogdorSimulation.instance().currentGrid();
 

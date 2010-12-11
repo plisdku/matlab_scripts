@@ -25,9 +25,8 @@ function addKeyImage(yeeCells, image, imageRow, imageCol, varargin)
 %       color           scalar or RGB pixel value in keyImage
 %       materialName    name of a simulated material, as specified in (e.g.)
 %                       newDielectric, newDrude, etc.
-%       fillStyle       'PECStyle' (default if unspecified) or 'PMCStyle'
-%                       Do not specify fillStyle if you do not know what it
-%                       does.
+%       fillStyle       'PECStyle' (default if unspecified), 'PMCStyle' or
+%                       'YeeCellStyle'.
 %
 %   Pixels in greyscale keyImage data must vary from 0 to 1.
 %   Pixels in RGB keyImage data must vary from 0 to 1 in each channel (R, G, B).
@@ -74,7 +73,7 @@ for tt = 1:length(varargin)
     
     if length(tag) == 2
         tagStruct = struct('pixel', tag{1}, 'material', tag{2}, ...
-            'fillStyle', 'YeeCellStyle');
+            'fillStyle', 'PECStyle');
     else
         if ~strcmp(tag{3}, 'PECStyle') && ~strcmp(tag{3}, 'PMCStyle')
             error('KeyImage tag fill style must be PECStyle, PMCStyle or YeeCellStyle.');
