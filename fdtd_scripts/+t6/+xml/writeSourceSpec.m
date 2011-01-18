@@ -6,6 +6,8 @@ X.AutoTimeFile = '';
 X.AutoSpaceTimeFile = '';
 X = parseargs(X, varargin{:});
 
+precisionString = t6.TrogdorSimulation.instance().Precision;
+
 % The purpose of the spec file is mostly to provide the DIMENSIONS of data.
 % This will be equivalent to source.yeeCells for space-varying data, but will
 % not be equivalent for time data, for instance.
@@ -13,6 +15,7 @@ X = parseargs(X, varargin{:});
 if isfield(source, 'timeData')
     fh = fopen([X.AutoTimeFile, '.txt'], 'wt');
     fprintf(fh, 'trogdor5data\n');
+    fprintf(fh, 'precision %s\n', precisionString);
     fprintf(fh, 'date %s\n', date());
     fprintf(fh, 'dxyz (%g, %g, %g)\n', ...
         sim.Dxyz(1), sim.Dxyz(2), sim.Dxyz(3));
@@ -46,6 +49,7 @@ end
 if isfield(source, 'spaceTimeData')
     fh = fopen([X.AutoSpaceTimeFile, '.txt'], 'wt');
     fprintf(fh, 'trogdor5data\n');
+    fprintf(fh, 'precision %s\n', precisionString);
     fprintf(fh, 'date %s\n', date());
     fprintf(fh, 'dxyz (%g, %g, %g)\n', ...
         sim.Dxyz(1), sim.Dxyz(2), sim.Dxyz(3));
@@ -82,6 +86,7 @@ end
 if isfield(source, 'maskData')
     fh = fopen([X.AutoMaskFile, '.txt'], 'wt');
     fprintf(fh, 'trogdor5data\n');
+    fprintf(fh, 'precision %s\n', precisionString);
     fprintf(fh, 'date %s\n', date());
     fprintf(fh, 'dxyz (%g, %g, %g)\n', ...
         sim.Dxyz(1), sim.Dxyz(2), sim.Dxyz(3));
@@ -115,6 +120,7 @@ end
 if isfield(source, 'spaceTimeData')
     fh = fopen([X.AutoSpaceTimeFile, '.txt'], 'wt');
     fprintf(fh, 'trogdor5data\n');
+    fprintf(fh, 'precision %s\n', precisionString);
     fprintf(fh, 'date %s\n', date());
     fprintf(fh, 'dxyz (%g, %g, %g)\n', ...
         sim.Dxyz(1), sim.Dxyz(2), sim.Dxyz(3));

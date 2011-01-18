@@ -10,6 +10,8 @@ classdef PhysicalConstants
         eV = 1.60217646e-19; % Joules
         electronMass = 9.10938188e-31;
         avogadro = 6.0221415e23;
+        electronCharge = -1.602176487e-19;
+        protonMass = 1.67262158e-27; % kg
     end
     
 end

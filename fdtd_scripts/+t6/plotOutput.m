@@ -10,9 +10,15 @@ import t6.*
 
 X.Period = 1;
 X.YLim = [-1 1];
+X.CLim = [];
 X = parseargs(X, varargin{:});
 
 period = X.Period;
+
+imagesc_args = {};
+if ~isempty(X.CLim)
+    imagesc_args = {X.CLim};
+end
 
 file = OutputFile(fileName);
 
@@ -123,7 +129,7 @@ elseif (nnz(dim(1:3) == 1) == 1)    % All 2D cases
         while frameNum <= numFrames
             if (mod(frameNum, period) == 0)
                 imagesc_centered(xyzPos{row}, xyzPos{col}, ...
-                    transpose(squeeze(data)));
+                    transpose(squeeze(data)), imagesc_args{:});
                 axis image
                 set(gca, 'YDir', 'Normal');
                 colorbar;
