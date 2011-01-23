@@ -75,8 +75,22 @@ end
 % If there is a remainder after copying by MAXREADBYTES-sized chunks, read it.
 if frameRange(2) ~= numFrames
     frameNum = frameRange(2)+1;
-%    someData = obj.readFrames(numFrames - frameRange(2));
-    someData = obj.readFrames('NumFrames', numFrames - frameRange(2));
+    
+    if iscell(data)
+        someData = obj.readFrames('NumFrames', numFrames - frameRange(2));
+        for rr = 1:length(obj.Regions)
+            valuesPerRegion = obj.Regions{rr}.NumYeeCells*length(obj.Fields);
+            i1 = (frameNum-1)*valuesPerRegion + 1;
+            data{rr}(i1:end) = someData{rr}(:);
+        end
+    else
+        someData = obj.readFrames('NumFrames', numFrames - frameRange(2),...
+            'Regions', 'Together');
+        i1 = (frameNum-1)*obj.FrameSize + 1;
+        data(i1:end) = someData(:);
+    end
+    
+    %{
     if iscell(someData)
         for rr = 1:length(obj.Regions)
             valuesPerRegion = obj.Regions{rr}.NumYeeCells*length(obj.Fields);
@@ -87,6 +101,7 @@ if frameRange(2) ~= numFrames
         i1 = (frameNum-1)*obj.FrameSize + 1;
         data(i1:end) = someData(:);
     end
+    %}
 end
 
 catch exception
