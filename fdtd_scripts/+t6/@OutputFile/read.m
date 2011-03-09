@@ -41,7 +41,7 @@ for chunk = 1:numChunks
 %    someData = obj.readFrames(framesPerChunk);
     
     if iscell(data)
-        someData = obj.readFrames('NumFrames', framesPerChunk)
+        someData = obj.readFrames('NumFrames', framesPerChunk);
         for rr = 1:length(someData)
             valuesPerRegion = obj.Regions{rr}.NumYeeCells*length(obj.Fields);
             i1 = (frameNum-1)*valuesPerRegion + 1;

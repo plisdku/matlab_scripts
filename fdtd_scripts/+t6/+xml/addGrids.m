@@ -6,14 +6,14 @@ sim = simHandle;
 for gg = 1:length(sim.Grids)
     grid = sim.Grids{gg};
     
-    %nonPMLYeeCells = grid.extent;
     yeeCells = grid.YeeCells;
     nonPMLYeeCells(1:3) = yeeCells(1:3) + grid.PML(1:3);
     nonPMLYeeCells(4:6) = yeeCells(4:6) - grid.PML(4:6);
     %yeeCells(1:3) = nonPMLYeeCells(1:3) - grid.PML(1:3);
     %yeeCells(4:6) = nonPMLYeeCells(4:6) + grid.PML(4:6);
     
-    originTrogdor = -yeeCells(1:3);
+    %originTrogdor = -yeeCells(1:3);
+    originTrogdor = [0 0 0 ];
     
     nxyz = yeeCells(4:6)-yeeCells(1:3) + 1;
     
@@ -26,9 +26,11 @@ for gg = 1:length(sim.Grids)
     gridXML.setAttribute('nx', num2str(nxyz(1)));
     gridXML.setAttribute('ny', num2str(nxyz(2)));
     gridXML.setAttribute('nz', num2str(nxyz(3)));
-    gridXML.setAttribute('nonPML',...
-        sprintf('%i ', nonPMLYeeCells + [originTrogdor, originTrogdor]));
-    gridXML.setAttribute('origin', sprintf('%i ', originTrogdor));
+    gridXML.setAttribute('yeeCells', sprintf('%i ', yeeCells));
+    gridXML.setAttribute('nonPML', sprintf('%i ', nonPMLYeeCells));
+    %gridXML.setAttribute('nonPML',...
+    %    sprintf('%i ', nonPMLYeeCells + [originTrogdor, originTrogdor]));
+    %gridXML.setAttribute('origin', sprintf('%i ', originTrogdor));
     
     t6.xml.addAssembly(grid.Assembly, gridXML, doc, originTrogdor);
     t6.xml.addOutputs(grid, gridXML, doc, originTrogdor);
