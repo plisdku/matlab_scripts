@@ -8,7 +8,9 @@ function addOutput(filename, fields, varargin)
 %   
 %   Valid fields:
 %       'ex', 'ey', 'ez'        electric fields
+%       'exx', 'exy', etc.      off-diagonal electric field subcomponents
 %       'hx', 'hy', 'hz'        magnetic fields
+%       'hxx', 'hxy', etc.      off-diagonal magnetic field subcomponents
 %       'jx', 'jy', 'jz'        electric currents
 %       'kx', 'ky', 'kz'        magnetic currents
 %   E and H fields may be saved in the same file, and J and K fields may be

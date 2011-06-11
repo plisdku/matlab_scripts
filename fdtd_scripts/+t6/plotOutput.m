@@ -55,14 +55,6 @@ if (prod(dim(1:3)) == 1)   % All 0D cases
     elseif (length(dim) == 4)  % assuming dim4 = 3
         plot(squeeze(data)');
         legend(fieldNames{:})
-        %{
-        plot(squeeze(data(1,1,1,1,:)), 'r');
-        hold on
-        plot(squeeze(data(1,1,1,2,:)), 'g');
-        plot(squeeze(data(1,1,1,3,:)), 'b');
-        hold off
-        legend('Component 1', 'Component 2', 'Component 3');
-        %}
     end
 elseif (nnz(dim(1:3) == 1) == 2)   % All 1D cases
     if (length(dim) == 3)
@@ -90,16 +82,10 @@ elseif (nnz(dim(1:3) == 1) == 2)   % All 1D cases
         while frameNum <= numFrames
             if (mod(frameNum, period) == 0)
                 plot(squeeze(data(:,:,:,:)));
-                %{
-                hold on
-                plot(squeeze(data(:,:,:,2)), 'g');
-                plot(squeeze(data(:,:,:,3)), 'b');
-                hold off
-                %}
                 ylim(X.YLim);
+                legend(fieldNames{:})
                 title(sprintf('Frame %i', frameNum));
                 pause(0.01);
-                %pause  
             end
             if frameNum < numFrames
                 data = file.readFrames('NumFrames', 1);
