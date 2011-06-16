@@ -12,4 +12,5 @@ end
 axis ij
 view(2)
 xlabel(sprintf('nz = %i', length(vv)));
-
+xlim([0, size(matrix,2)]);
+ylim([0, size(matrix, 1)]);
