@@ -41,7 +41,7 @@ try % everything else, but close file before rethrow
             case 'date'
                 obj.DateString = remainder;
             case 'dxyz'
-                [dat, count] = sscanf(remainder, ' (%f, %f, %f)');
+                [dat, count] = sscanf(remainder, ' [%f, %f, %f]');
                 if count == 3
                     obj.Dxyz = dat';
                 else
@@ -56,7 +56,7 @@ try % everything else, but close file before rethrow
                 end
             case 'field'
                 [fieldName, numbers] = strtok(remainder);
-                [dat, count] = sscanf(numbers, ' (%f, %f, %f) %f');
+                [dat, count] = sscanf(numbers, ' [%f, %f, %f] %f');
                 if count == 4
                     field = [];
                     field.Name = fieldName;
@@ -66,21 +66,21 @@ try % everything else, but close file before rethrow
                     error('Cannot parse line %s', lineFromFile);
                 end
             case 'unitVector0'
-                [dat, count] = sscanf(remainder, ' (%f, %f, %f)');
+                [dat, count] = sscanf(remainder, ' [%f, %f, %f]');
                 if count == 3
                     obj.UnitVectors(1,:) = dat';
                 else
                     error('Cannot parse line %s', lineFromFile);
                 end
             case 'unitVector1'
-                [dat, count] = sscanf(remainder, ' (%f, %f, %f)');
+                [dat, count] = sscanf(remainder, ' [%f, %f, %f]');
                 if count == 3
                     obj.UnitVectors(2,:) = dat';
                 else
                     error('Cannot parse line %s', lineFromFile);
                 end
             case 'unitVector2'
-                [dat, count] = sscanf(remainder, ' (%f, %f, %f)');
+                [dat, count] = sscanf(remainder, ' [%f, %f, %f]');
                 if count == 3
                     obj.UnitVectors(3,:) = dat';
                 else
@@ -96,7 +96,7 @@ try % everything else, but close file before rethrow
             % For field outputs
             case 'region'
                 [dat, count] = sscanf(remainder, ...
-                    ' [(%f, %f, %f), (%f, %f, %f)] stride (%f, %f, %f)');
+                    ' [[%f, %f, %f], [%f, %f, %f]] stride [%f, %f, %f]');
                 if count == 9
                     region = struct;
                     region.YeeCells = dat(1:6)';
@@ -125,7 +125,7 @@ try % everything else, but close file before rethrow
                 obj.Materials{str2num(materialNumber)+1} = materialName;
             case 'halfCells'
                 [dat, count] = sscanf(remainder, ...
-                    ' [(%f, %f, %f), (%f, %f, %f)]');
+                    ' [[%f, %f, %f], [%f, %f, %f]]');
                 if count == 6
                     halfCells = struct;
                     halfCells.HalfCells = dat';
