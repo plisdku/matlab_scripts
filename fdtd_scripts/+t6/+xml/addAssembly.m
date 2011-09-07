@@ -4,7 +4,7 @@ doc = documentNode;
 
 originTwice = [originTrogdor originTrogdor];
 
-digits = 10;
+digits = 14;
 
 assemblyXML = doc.createElement('Assembly');
 
