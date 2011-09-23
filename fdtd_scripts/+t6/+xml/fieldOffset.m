@@ -3,29 +3,29 @@ function xyzt = fieldOffset(fieldString)
 xzyt = [0 0 0 0];
 
 switch fieldString
-    case 'ex'
+    case {'ex', 'exx'}
         xyzt = [0.5 0 0 0];
-    case 'ey'
+    case {'ey', 'eyy'}
         xyzt = [0 0.5 0 0];
-    case 'ez'
+    case {'ez', 'ezz'}
         xyzt = [0 0 0.5 0];
-    case 'hx'
+    case {'hx', 'hxx'}
         xyzt = [0 0.5 0.5 0.5];
-    case 'hy'
+    case {'hy', 'hyy'}
         xyzt = [0.5 0 0.5 0.5];
-    case 'hz'
+    case {'hz', 'hzz'}
         xyzt = [0.5 0.5 0 0.5];
-    case 'dx'
+    case {'dx', 'dxx'}
         xyzt = [0.5 0 0 0];
-    case 'dy'
+    case {'dy', 'dyy'}
         xyzt = [0 0.5 0 0];
-    case 'dz'
+    case {'dz', 'dzz'}
         xyzt = [0 0 0.5 0];
-    case 'bx'
+    case {'bx', 'bxx'}
         xyzt = [0 0.5 0.5 0.5];
-    case 'by'
+    case {'by', 'byy'}
         xyzt = [0.5 0 0.5 0.5];
-    case 'bz'
+    case {'bz', 'bzz'}
         xyzt = [0.5 0.5 0 0.5];
     case {'jx', 'jex'}
         xyzt = [0.5 0 0 0.5];
