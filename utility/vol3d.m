@@ -5,6 +5,8 @@ function [model] = vol3d(varargin)
 % tune the texture mapping technique. This function is best used with
 % fast OpenGL hardware.
 %
+% vol3d                   Provide a demo of functionality.
+%
 % H = vol3d('CData',data) Create volume render object from input 
 %                         3-D data. Use interp3 on data to increase volume
 %                         rendering resolution. Returns a struct 
@@ -18,6 +20,10 @@ function [model] = vol3d(varargin)
 %                          scaled alphamap indices).
 %
 % vol3d(...,'Parent',axH)  Specify parent axes. Default: gca.
+%
+% vol3d(...,'XData',x)  1x2 x-axis bounds. Default: [0 size(data, 2)].
+% vol3d(...,'YData',y)  1x2 y-axis bounds. Default: [0 size(data, 1)].
+% vol3d(...,'ZData',z)  1x2 z-axis bounds. Default: [0 size(data, 3)].
 %
 % vol3d(...,'texture','2D')  Only render texture planes parallel to nearest
 %                            orthogonal viewing plane. Requires doing
@@ -63,8 +69,13 @@ function [model] = vol3d(varargin)
 % See also alphamap, colormap, opengl, isosurface
 
 % Copyright Joe Conti, 2004
-% Improvements by Oliver Woodford, 2008-2009, with permission of the
+% Improvements by Oliver Woodford, 2008-2011, with permission of the
 % copyright holder.
+
+if nargin == 0
+    demo_vol3d;
+    return
+end
 
 if isstruct(varargin{1})
     model = varargin{1};
@@ -74,7 +85,6 @@ if isstruct(varargin{1})
 else
     model = localGetDefaultModel;
 end
-
 
 if length(varargin)>1
   for n = 1:2:length(varargin)
@@ -87,6 +97,12 @@ if length(varargin)>1
             model.texture = varargin{n+1};
         case 'alpha'
             model.alpha = varargin{n+1};
+        case 'xdata'
+            model.xdata = varargin{n+1}([1 end]);
+        case 'ydata'
+            model.ydata = varargin{n+1}([1 end]);
+        case 'zdata'
+            model.zdata = varargin{n+1}([1 end]);
     end
     
   end
@@ -109,6 +125,8 @@ model.zdata = [];
 model.parent = [];
 model.handles = [];
 model.texture = '3D';
+tag = tempname;
+model.tag = ['vol3d_' tag(end-11:end)];
 
 %------------------------------------------%
 function [model,ax] = local_draw(model)
@@ -136,7 +154,7 @@ ax = model.parent;
 cam_dir = camtarget(ax) - campos(ax);
 [m,ind] = max(abs(cam_dir));
 
-opts = {'Parent',ax,'cdatamapping',[],'alphadatamapping',[],'facecolor','texturemap','edgealpha',0,'facealpha','texturemap','tag','vol3d'};
+opts = {'Parent',ax,'cdatamapping',[],'alphadatamapping',[],'facecolor','texturemap','edgealpha',0,'facealpha','texturemap','tag',model.tag};
 
 if ndims(cdata) > 3
     opts{4} = 'direct';
@@ -161,7 +179,7 @@ else
     opts{6} = 'none';
 end
 
-h = findobj(ax,'type','surface','tag','vol3d');
+h = findobj(ax,'type','surface','tag',model.tag);
 for n = 1:length(h)
   try
      delete(h(n));
@@ -207,7 +225,6 @@ if (ind==1 || is3DTexture )
   end
 end
 
-  
 % Create y-slice
 if (ind==2 || is3DTexture)
   x = [model.xdata(1), model.xdata(1); model.xdata(2), model.xdata(2)];
@@ -226,3 +243,13 @@ if (ind==2 || is3DTexture)
 end
 
 model.handles = h;
+
+function demo_vol3d
+figure;
+load mri.mat
+vol3d('cdata', squeeze(D), 'xdata', [0 1], 'ydata', [0 1], 'zdata', [0 0.7]);
+colormap(bone(256));
+alphamap([0 linspace(0.1, 0, 255)]);
+axis equal off
+set(gcf, 'color', 'w');
+view(3);
