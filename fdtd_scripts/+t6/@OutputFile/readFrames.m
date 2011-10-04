@@ -1,6 +1,8 @@
 function data = readFrames(obj, varargin)
 % outputFile.readFrames()
 % outputFile.readFrames(numFrames)
+% outputFile.readFrames(numFrames, 'Regions', 'Together')
+% outputFile.readFrames(numFrames, 'Regions', 'Separate')
 
 X.NumFrames = 1;
 X.Regions = 'Separate';

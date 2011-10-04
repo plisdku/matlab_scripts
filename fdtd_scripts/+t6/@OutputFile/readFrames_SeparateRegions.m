@@ -9,9 +9,9 @@ function data = readFrames_SeparateRegions(obj, numFrames)
 % above.
 
 sizes = {};
-if ~isempty(obj.Regions)
-    for nn = 1:length(obj.Regions)
-        sizes{nn} = obj.Regions{nn}.Size;
+if obj.numRegions() > 0
+    for nn = 1:obj.numRegions()
+        sizes{nn} = obj.Regions.Size(nn,:);
     end
     numFields = length(obj.Fields);
 else
@@ -23,12 +23,12 @@ end
 precisionString = [obj.Precision, '=>', obj.Precision];
 
 %if length(sizes) == 1
-if length(obj.Regions) == 1
+if obj.numRegions() == 1
     readLength = obj.FrameSize * numFrames;
     data = fread(obj.FileHandle, readLength, precisionString);
     data = reshape(data, [sizes{1}, numFields, numFrames]);
     
-elseif length(obj.Regions) > 1
+elseif obj.numRegions() > 1
     readLength = obj.FrameSize * numFrames;
     [rawdata, count] = fread(obj.FileHandle, readLength, precisionString);
     
@@ -38,8 +38,8 @@ elseif length(obj.Regions) > 1
     
     % Resize the data array.  Out of memory errors should happen here and not
     % elsewhere.
-    data = cell([length(obj.Regions), 1]);
-    for rr = 1:length(obj.Regions)
+    data = cell([obj.numRegions(), 1]);
+    for rr = 1:obj.numRegions()
         regionSize = prod(sizes{rr})*numFields*numFrames;
         data{rr} = zeros([regionSize, 1]);
 %        disp(sprintf('Chunk %i is size %i', rr, length(data{rr})));
@@ -72,7 +72,7 @@ elseif length(obj.Regions) > 1
             %
             % Instead, go through each region in turn.
             
-            for rr = 1:length(obj.Regions)
+            for rr = 1:obj.numRegions()
                 regionFieldSize = prod(sizes{rr});
                 
                 readFirst = readFieldBegin + obj.RegionOffsetsInFields(rr);
@@ -97,7 +97,7 @@ elseif length(obj.Regions) > 1
     %   2.  Shiftdim the data into XYZ order again.
     % In the file, each region has XYZ size regionSizeWritten, and we'll
     % permute it back to regionSizeHere.
-    for rr = 1:length(obj.Regions)
+    for rr = 1:obj.numRegions()
         %regionSizeWritten = circshift(sizes{rr}, [0, -permNum]);
         regionSizeWritten = sizes{rr};
         regionSizeHere = sizes{rr};

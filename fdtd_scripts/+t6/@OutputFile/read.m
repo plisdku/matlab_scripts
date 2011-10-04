@@ -1,5 +1,12 @@
 function data = read(obj, varargin)
-% This is my function!
+% data = read(obj, varargin)
+%
+% Reads every field in the file.
+% 
+% Named options:
+%
+%   'Separate'      Put separate regions in separate cells
+%
 
 X.Regions = 'Separate';
 X = parseargs(X, varargin{:});
@@ -20,14 +27,14 @@ numChunks = floor(numFrames / framesPerChunk);
 
 % Reserve some space
 % size: [x y z f t r]
-if length(obj.Regions) > 1 && strcmp(X.Regions, 'Separate')
+if obj.numRegions() > 1 && strcmp(X.Regions, 'Separate')
     data = cell(size(obj.Regions));
-    for rr = 1:length(obj.Regions)
-        data{rr} = zeros([obj.Regions{rr}.Size, length(obj.Fields), ...
+    for rr = 1:obj.numRegions()
+        data{rr} = zeros([obj.Regions.Size(rr,:), length(obj.Fields), ...
             numFrames]);
     end
-elseif length(obj.Regions) == 1 && strcmp(X.Regions, 'Separate')
-    data = zeros([obj.Regions{1}.Size, length(obj.Fields), numFrames]);
+elseif obj.numRegions() == 1 && strcmp(X.Regions, 'Separate')
+    data = zeros([obj.Regions.Size(1,:), length(obj.Fields), numFrames]);
 elseif ~strcmp(X.Regions, 'Separate')
     data = zeros(obj.FrameSize/length(obj.Fields), length(obj.Fields), numFrames);
 else
@@ -43,7 +50,7 @@ for chunk = 1:numChunks
     if iscell(data)
         someData = obj.readFrames('NumFrames', framesPerChunk);
         for rr = 1:length(someData)
-            valuesPerRegion = obj.Regions{rr}.NumYeeCells*length(obj.Fields);
+            valuesPerRegion = obj.Regions.NumYeeCells(rr)*length(obj.Fields);
             i1 = (frameNum-1)*valuesPerRegion + 1;
             i2 = i1 + valuesPerRegion*framesPerChunk - 1;
             data{rr}(i1:i2) = someData{rr}(:);
@@ -55,21 +62,6 @@ for chunk = 1:numChunks
         i2 = i1 + obj.FrameSize*framesPerChunk - 1;
         data(i1:i2) = someData(:);
     end
-%{    
-    if length(obj.Regions) > 1
-        for rr = 1:length(obj.Regions)
-            valsPerRegion = obj.Regions{rr}.NumYeeCells*length(obj.Fields);
-            i1 = (frameNum-1)*valsPerRegion + 1;
-            i2 = i1 + valsPerRegion*framesPerChunk - 1;
-            data{rr}(i1:i2) = someData{rr}(:);
-        end
-    else
-        valsPerRegion = obj.Regions{1}.NumYeeCells*length(obj.Fields);
-        i1 = (frameNum-1)*valsPerRegion + 1;
-        i2 = i1 + valsPerRegion*framesPerChunk - 1;
-        data(i1:i2) = someData(:);
-    end
-%}
 end
 
 % If there is a remainder after copying by MAXREADBYTES-sized chunks, read it.
@@ -78,8 +70,8 @@ if frameRange(2) ~= numFrames
     
     if iscell(data)
         someData = obj.readFrames('NumFrames', numFrames - frameRange(2));
-        for rr = 1:length(obj.Regions)
-            valuesPerRegion = obj.Regions{rr}.NumYeeCells*length(obj.Fields);
+        for rr = 1:obj.numRegions()
+            valuesPerRegion = obj.Regions.NumYeeCells(rr,:)*length(obj.Fields);
             i1 = (frameNum-1)*valuesPerRegion + 1;
             data{rr}(i1:end) = someData{rr}(:);
         end
@@ -90,18 +82,6 @@ if frameRange(2) ~= numFrames
         data(i1:end) = someData(:);
     end
     
-    %{
-    if iscell(someData)
-        for rr = 1:length(obj.Regions)
-            valuesPerRegion = obj.Regions{rr}.NumYeeCells*length(obj.Fields);
-            i1 = (frameNum-1)*valuesPerRegion + 1;
-            data{rr}(i1:end) = someData{rr}(:);
-        end
-    else
-        i1 = (frameNum-1)*obj.FrameSize + 1;
-        data(i1:end) = someData(:);
-    end
-    %}
 end
 
 catch exception

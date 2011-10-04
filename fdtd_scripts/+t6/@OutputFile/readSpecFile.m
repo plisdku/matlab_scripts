@@ -3,11 +3,65 @@ function readSpecFile(obj)
 
 isTrogdor5 = 0;
 
+
+% Figure out how many regions there will be, in advance
+numRegions = 0;
+numDurations = 0;
+
 fid = fopen(obj.SpecFileName, 'r');
+try
+    done = 0;
+    while done == 0
+        lineFromFile = fgets(fid);
+        if ~ischar(lineFromFile)
+            done = 1;
+        else
+            [token, remainder] = strtok(lineFromFile);
+            switch token
+                case 'region'
+                    numRegions = numRegions + 1;
+                case 'duration'
+                    numDurations = numDurations + 1;
+                otherwise
+                    % nothing
+            end
+        end
+    end
+catch err
+    error('How does this fail?');
+end
+fclose(fid);
+
+fprintf('%i regions, %i durations\n', numRegions, numDurations);
+
+fid = fopen(obj.SpecFileName, 'r');
+
+linesRead = 0;
+
+obj.Regions.YeeCells = zeros(numRegions, 6);
+obj.Regions.Size = zeros(numRegions, 3);
+obj.Regions.Stride = zeros(numRegions, 3);
+obj.Regions.NumYeeCells = zeros(numRegions, 1);
+
+obj.Durations = cell(numDurations, 1);
+nRegion = 1;
+nDuration = 1;
+
+%t0 = cputime;
 
 try % everything else, but close file before rethrow
     done = 0;
     while (done == 0)
+        linesRead = linesRead + 1;
+        %fprintf('On line %i\n', linesRead);
+        %if mod(linesRead, 100) == 0
+        %    fprintf('%2.2f lines/time\n', linesRead / (cputime - t0));
+        %end
+        
+        %if linesRead == 8000
+        %    done = 1;
+        %end
+        
         lineFromFile = fgets(fid);
         if ~ischar(lineFromFile)
             %disp('Done.');
@@ -61,7 +115,7 @@ try % everything else, but close file before rethrow
                     field = [];
                     field.Name = fieldName;
                     field.Offset = dat';                    
-                    obj.Fields = {obj.Fields{:}, field};
+                    obj.Fields = {obj.Fields, field};
                 else
                     error('Cannot parse line %s', lineFromFile);
                 end
@@ -98,12 +152,19 @@ try % everything else, but close file before rethrow
                 [dat, count] = sscanf(remainder, ...
                     ' [[%f, %f, %f], [%f, %f, %f]] stride [%f, %f, %f]');
                 if count == 9
-                    region = struct;
-                    region.YeeCells = dat(1:6)';
-                    region.Size = ceil( (dat(4:6)-dat(1:3)+1) ./ dat(7:9) )';
-                    region.Stride = dat(7:9)';
-                    region.NumYeeCells = prod(region.Size);
-                    obj.Regions = {obj.Regions{:}, region};
+                    obj.Regions.YeeCells(nRegion,:) = dat(1:6)';
+                    obj.Regions.Size(nRegion,:) = ceil( (dat(4:6)-dat(1:3)+1) ./ dat(7:9))';
+                    obj.Regions.Stride(nRegion,:) = dat(7:9)';
+                    obj.Regions.NumYeeCells(nRegion) = prod(obj.Regions.Size(nRegion,:));
+                    nRegion = nRegion + 1;
+%                     region = struct;
+%                     region.YeeCells = dat(1:6)';
+%                     region.Size = ceil( (dat(4:6)-dat(1:3)+1) ./ dat(7:9) )';
+%                     region.Stride = dat(7:9)';
+%                     region.NumYeeCells = prod(region.Size);
+%                     obj.Regions{nRegion} = region;
+%                     nRegion = nRegion + 1;
+                    %obj.Regions = {obj.Regions, region};
                 else
                     error('Cannot parse line %s', lineFromFile);
                 end
@@ -115,7 +176,9 @@ try % everything else, but close file before rethrow
                     duration.Last = dat(2);
                     duration.Period = dat(3);
                     duration.NumTimesteps = floor( (dat(2)-dat(1)+1)/dat(3) );
-                    obj.Durations = {obj.Durations{:}, duration};
+                    obj.Durations{nDuration} = duration;
+                    nDuration = nDuration + 1;
+                    %obj.Durations = {obj.Durations, duration};
                 else
                     error('Cannot parse line %s', lineFromFile);
                 end
@@ -131,7 +194,7 @@ try % everything else, but close file before rethrow
                     halfCells.HalfCells = dat';
                     cellSpan = dat(4:6)-dat(1:3)+1;
                     halfCells.NumHalfCells = prod(cellSpan);
-                    obj.HalfCells = {obj.HalfCells{:}, halfCells};
+                    obj.HalfCells = {obj.HalfCells, halfCells};
                 else
                     error('Cannot parse line %s', lineFromFile);
                 end
@@ -150,12 +213,14 @@ fclose(fid);
 % Now work on the hidden properties: obj.RegionOffsetsInFields,
 % and obj.FieldOffsetsInFrames.
 
+obj.RegionOffsetsInFields = zeros(numRegions,1);
+
 totalYeeCells = 0;
 regionOffset = 0;
-for nn = 1:length(obj.Regions)
-    totalYeeCells = totalYeeCells + obj.Regions{nn}.NumYeeCells;
+for nn = 1:numRegions
+    totalYeeCells = totalYeeCells + obj.Regions.NumYeeCells(nn,:);
     obj.RegionOffsetsInFields(nn) = regionOffset;
-    regionOffset = regionOffset + obj.Regions{nn}.NumYeeCells;
+    regionOffset = regionOffset + obj.Regions.NumYeeCells(nn,:);
 end
 obj.FrameSize = totalYeeCells * length(obj.Fields);
 

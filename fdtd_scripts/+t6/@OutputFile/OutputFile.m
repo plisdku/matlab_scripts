@@ -12,7 +12,8 @@ classdef OutputFile < handle
     % The following properties can be set only by class methods
     properties (SetAccess = private)
         FileName = '';
-        Regions = {};  % struct: r.YeeCells, r.Size, r.Stride, r.NumYeeCells
+        Regions = struct('YeeCells', [], 'Size', [], 'Stride', [], ...
+            'NumYeeCells', []);
         Durations = {}; % struct: d.First, d.Last, d.Period, d.NumTimesteps
         Materials = {};  % used in grid reports
         HalfCells = {};  % used in grid reports
@@ -23,7 +24,6 @@ classdef OutputFile < handle
         Dt = 0;
         DateString = '';
         SpecFileName = '';   % set in constructor
-        %DataFileName = '';   % set in constructor
         TrogdorVersionString = '';
         Precision = 'float32';
     end
@@ -45,6 +45,10 @@ classdef OutputFile < handle
             end
             
             obj.readSpecFile();
+        end
+        
+        function nR = numRegions(obj)
+            nR = size(obj.Regions.YeeCells, 1);
         end
         
         n = numFramesAvailable(obj);

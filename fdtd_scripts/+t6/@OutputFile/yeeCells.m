@@ -4,17 +4,17 @@ X.Regions = 'Separate'; % Separate or Together
 X = parseargs(X, varargin{:});
 
 if strcmp(X.Regions, 'Separate')
-    ii = cell(size(obj.Regions));
-    jj = cell(size(obj.Regions));
-    kk = cell(size(obj.Regions));
+    ii = cell(obj.numRegions(), 1);
+    jj = cell(obj.numRegions(), 1);
+    kk = cell(obj.numRegions(), 1);
     
     for rr = 1:length(obj.Regions)
-        ii{rr} = obj.Regions{rr}.YeeCells(1):obj.Regions{rr}.Stride(1):obj.Regions{rr}.YeeCells(4);
-        jj{rr} = obj.Regions{rr}.YeeCells(2):obj.Regions{rr}.Stride(2):obj.Regions{rr}.YeeCells(5);
-        kk{rr} = obj.Regions{rr}.YeeCells(3):obj.Regions{rr}.Stride(3):obj.Regions{rr}.YeeCells(6);
+        ii{rr} = obj.Regions.YeeCells(rr,1):obj.Regions.Stride(rr,1):obj.Regions.YeeCells(rr,4);
+        jj{rr} = obj.Regions.YeeCells(rr,2):obj.Regions.Stride(rr,2):obj.Regions.YeeCells(rr,5);
+        kk{rr} = obj.Regions.YeeCells(rr,3):obj.Regions.Stride(rr,3):obj.Regions.YeeCells(rr,6);
     end
     
-    if length(obj.Regions) == 1
+    if obj.numRegions() == 1
         ii = ii{1};
         jj = jj{1};
         kk = kk{1};
@@ -24,8 +24,8 @@ elseif strcmp(X.Regions, 'Together')
     jj = [];
     kk = [];
     
-    for rr = 1:length(obj.Regions)
-        [ii1, jj1, kk1] = unrollRegion(obj.Regions{rr}.YeeCells);
+    for rr = 1:obj.numRegions()
+        [ii1, jj1, kk1] = unrollRegion(obj.Regions.YeeCells(rr,:));
         ii = [ii, ii1];
         jj = [jj, jj1];
         kk = [kk, kk1];

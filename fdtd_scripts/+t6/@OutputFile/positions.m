@@ -12,7 +12,7 @@ if ~iscell(ii)
     kk = {kk};
 end
 
-for rr = 1:length(obj.Regions)
+for rr = 1:size(obj.Regions.YeeCells, 1)
 for ff = 1:length(obj.Fields)
     offset = obj.Fields{ff}.Offset;
     xx{rr,ff} = obj.Dxyz(1)*(ii{rr} + offset(1));
