@@ -115,7 +115,7 @@ try % everything else, but close file before rethrow
                     field = [];
                     field.Name = fieldName;
                     field.Offset = dat';                    
-                    obj.Fields = {obj.Fields, field};
+                    obj.Fields = [obj.Fields {field}];
                 else
                     error('Cannot parse line %s', lineFromFile);
                 end
@@ -164,7 +164,7 @@ try % everything else, but close file before rethrow
 %                     region.NumYeeCells = prod(region.Size);
 %                     obj.Regions{nRegion} = region;
 %                     nRegion = nRegion + 1;
-                    %obj.Regions = {obj.Regions, region};
+                    %obj.Regions = {obj.Regions{:}, region};
                 else
                     error('Cannot parse line %s', lineFromFile);
                 end
@@ -178,7 +178,7 @@ try % everything else, but close file before rethrow
                     duration.NumTimesteps = floor( (dat(2)-dat(1)+1)/dat(3) );
                     obj.Durations{nDuration} = duration;
                     nDuration = nDuration + 1;
-                    %obj.Durations = {obj.Durations, duration};
+                    %obj.Durations = {obj.Durations{:}, duration};
                 else
                     error('Cannot parse line %s', lineFromFile);
                 end
@@ -194,7 +194,7 @@ try % everything else, but close file before rethrow
                     halfCells.HalfCells = dat';
                     cellSpan = dat(4:6)-dat(1:3)+1;
                     halfCells.NumHalfCells = prod(cellSpan);
-                    obj.HalfCells = {obj.HalfCells, halfCells};
+                    obj.HalfCells = {obj.HalfCells{:}, halfCells};
                 else
                     error('Cannot parse line %s', lineFromFile);
                 end

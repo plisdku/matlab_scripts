@@ -39,11 +39,14 @@ classdef Mesh < handle
                 vertexColumn(3:3:end)];
         end
         
-        %v = vertices(obj, varargin); % in a column, 3N high for N vertices
-        %f = faces(obj, varargin);
-        %m = materials(obj);
-        %jj = jacobian(obj, varargin); % vertex sensitivities w.r.t.
-        %parameters
+        function b = bounds(obj, varargin)
+            
+            v = obj.patchVertices(varargin{:});
+            minCoord = min(v);
+            maxCoord = max(v);
+            
+            b = [minCoord maxCoord];
+        end
     end
     
 end

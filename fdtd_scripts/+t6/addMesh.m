@@ -12,10 +12,6 @@ X.Permittivity = '';
 X.Permeability = '';
 X = parseargs(X, varargin{:});
 
-%if ~t6.validateRect(X.YeeBounds)
-%    error('Invalid rectangle.');
-%end
-
 if ~isempty(X.Permittivity)
     obj.permittivity = X.Permittivity;
 end

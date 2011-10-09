@@ -1,3 +1,4 @@
+% Representation of a cylinder.
 classdef Cylinder < t6.model.Node
     
     properties

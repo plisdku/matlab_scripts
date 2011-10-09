@@ -28,7 +28,7 @@ numChunks = floor(numFrames / framesPerChunk);
 % Reserve some space
 % size: [x y z f t r]
 if obj.numRegions() > 1 && strcmp(X.Regions, 'Separate')
-    data = cell(size(obj.Regions));
+    data = cell(obj.numRegions(),1);
     for rr = 1:obj.numRegions()
         data{rr} = zeros([obj.Regions.Size(rr,:), length(obj.Fields), ...
             numFrames]);

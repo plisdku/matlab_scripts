@@ -27,14 +27,14 @@ for nn = 1:length(file.Fields)
     fieldNames{nn} = file.Fields{nn}.Name;
 end
 
-if length(file.Regions) > 1
+if file.numRegions() > 1
     error('Function does not yet work with multi-region outputs.');
 end
 
 if length(file.Fields) > 1
-    dim = [file.Regions{1}.Size, length(file.Fields)];
+    dim = [file.Regions.Size(1,:), length(file.Fields)];
 else
-    dim = file.Regions{1}.Size;
+    dim = file.Regions.Size;
 end
 
 numFrames = file.numFramesAvailable;
@@ -100,9 +100,9 @@ elseif (nnz(dim(1:3) == 1) == 1)    % All 2D cases
     [xPos yPos zPos] = file.positions;
     xyzPos = {xPos yPos zPos};
     
-    if file.Regions{1}.Size(1) == 1
+    if file.Regions.Size(1,1) == 1
         row = 2; col = 3;
-    elseif file.Regions{1}.Size(2) == 1
+    elseif file.Regions.Size(1,2) == 1
         row = 1; col = 3;
     else
         row = 1; col = 2;
