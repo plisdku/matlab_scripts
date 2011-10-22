@@ -1,16 +1,99 @@
 function [f, freqs, resid, residFrac] = spectrum(fileName, varargin)
+%spectrum Calculate discrete-time Fourier components of time-sampled data
+%   THE NORMALIZATION OF THIS FUNCTION DIFFERS FROM FFT().  Read the note
+%   at the end for details.
 %
-% [f, freqs] = spectrum(timeData, 'Dt', dt)
-% [f, freqs] = spectrum(timeData, 'Dt', dt, 'Frequency', freq)
-% [f, freqs] = spectrum(fileName)
-% [f, freqs] = spectrum(fileName, 'Frequency', freq)
-% [f, freqs] = spectrum(fileName, 'SteadyStateFrequency', freq)
-% [f, freqs, residual, residualFraction] = spectrum(fileName, 'SteadyStateFrequency', freq)
+%   [F, freqs] = spectrum(f, 'Dt', dt) returns the discrete-time Fourier
+%   transform of vector f (length N) and its corresponding frequencies
+%   
+%       freqs(k) = 2*pi*(k-1)/N*dt.
+%   
+%   The values of f are separated by a time interval of dt.  The Fourier
+%   transform is always taken along the last dimension of f.
 %
+%   [F, freqs] = spectrum(f, 'Dt', dt, 'Frequency', frequencies) extracts
+%   several frequency components of f without taking the full fft.  For
+%   each given frequency,
+%   
+%                       N
+%       F(k) = (1/N) * sum  f(n)*exp(-j*frequency*n*dt)
+%                      n=1
+%  
+%   If the frequencies correspond to the frequencies of the fft, F(k) will
+%   agree frequency-by-frequency with the result of spectrum(f, 'Dt', dt).
 %
-% To replace outputFFT() or fft(), use spectrum(fileName) or spectrum(data)
-% To replace outputHarmonic(), use spectrum(fileName, 'Frequency', freqs)
+%   [F, freqs, residual, relativeResidual] = spectrum(f, 'Time', timeVals,
+%   'SteadyStateFrequency', frequency) is used to obtain the amplitude and
+%   phase of a signal that is known to have one dominant frequency
+%   component: f(n) = F*exp(j*frequency*n*dt).  As few as two samples of f
+%   may be used to obtain F.
+%   
+%   Example:
+%       freq = 0.1
+%       t = 0:10;
+%       f = cos(freq*t);
+%       F = spectrum(f(9:10), 'Time', t, 'SteadyStateFrequency', freq)
+%   
+%   Output:
 %
+%   F =
+%
+%       0.5000 - 0.0000i
+%   
+%   Providing more than two samples of f permits the calculation of a
+%   residual, representing the part of f that is not well-represented by
+%   the given sinusoid.  For convenience, the relative magnitude of the
+%   residual relativeResidual = norm(residual)/norm(f) is given as well.
+%   
+%   [F, freqs] = spectrum(filename) returns the discrete-time Fourier
+%   transform of the FDTD data from the given Trogdor output file.  The
+%   time of each sample is obtained from the output file, and a phase
+%   correction is applied to E and H as necessary to compensate for FDTD
+%   interleaving.  (This function is equivalent to the old outputFFT() with
+%   the additional phase correction and different amplitude normalization.
+%   Read the note at the end of the help for details.)
+%   
+%   [F, freqs] = spectrum(filename, 'Frequency', frequencies) returns the
+%   requested frequency components of the output file without using fft().
+%   Large data files may be impossible to load into memory for fft().
+%   Using this function the data are read one timestep at a time, so
+%   frequency decompositions for large files may still be performed.  The
+%   time of each sample is obtained from the output file, and a phase
+%   correction is applied to E and H as necessary to compensate for FDTD
+%   interleaving. (This function is equivalent to the old outputHarmonic()
+%   with the additional phase correction and different amplitude
+%   normalization.  Read the note at the end of the help for details.)
+%
+%   [F, freqs, residual, relativeResidual] = spectrum(filename,
+%   'SteadyStateFrequency', frequency) is used to obtain the amplitude and
+%   phase of a signal that is known to have one dominant frequency
+%   component: f(n) = F*exp(j*frequency*n*dt).  As few as two samples of f
+%   may be used to obtain F.  In practice this is useful for obtaining the
+%   phasor components of an electromagnetic field in a volume.  After
+%   running a simulation to steady-state, the last two (or N) timesteps of
+%   the simulation may be saved to a file and used to extract the phasors.
+%   The amount of disk space required is miniscule compared to saving every
+%   timestep in the whole volume.  The time of each sample is obtained from
+%   the output file, and a phase correction is applied to E and H as
+%   necessary to compensate for FDTD interleaving.  The residual is also
+%   provided (see above).
+%
+%   DEFINITION OF FREQUENCY DECOMPOSITION
+%
+%   A length N input vector f with time spacing dt can be decomposed into
+%   its frequency components as
+%
+%               N
+%       f(n) = sum  F(k)*exp(j*freq(k)*n*dt), 1 <= n <= N
+%              k=1
+%
+%   The frequencies freq(k) = 2*pi*(k-1)/(N*dt).  This decomposition
+%   differs from Matlab's ifft() by the omission of the prefactor (1/N).
+%   By omitting this factor, the decomposition F(k) of a truncated signal
+%   will have roughly the same amplitude regardless of the number of
+%   samples in the signal and the sampling interval.  This facilitates
+%   comparison of spectra of signals taken with different sampling
+%   intervals or from FDTD simulations of different total durations.
 
 import t5.*;
 
