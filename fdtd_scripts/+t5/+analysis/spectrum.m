@@ -131,8 +131,18 @@ if iscell(data)
         ' except from output file']);
 end
 
-sz = size(data);
-numT = sz(end);
+
+if ndims(data) == 2
+    if size(data, 2) > 1
+        timeAxis = 2;
+    else
+        timeAxis = 1;
+    end
+else
+    timeAxis = ndims(data);
+end 
+    
+numT = size(data, timeAxis);
 
 if ~isempty(X.Time) && ~isempty(X.Dt)
     error('Please provide either Dt or Times');
@@ -155,11 +165,7 @@ end
 if isempty(X.Frequency) && isempty(X.SteadyStateFrequency)
     
     freqs = 2*pi*(0:numT-1) / (numT * X.Dt);
-    if ndims(data) == 2
-        f = fft(data)/numT;
-    else
-        f = fft(data, [], ndims(data)) / numT;
-    end 
+    f = fft(data, [], timeAxis) / numT;
     
 elseif ~isempty(X.SteadyStateFrequency)
     
@@ -171,7 +177,8 @@ elseif ~isempty(X.SteadyStateFrequency)
     
     calcResid = (nargout > 2);
     nd = ndims(data);
-    timeFirstData = permute(data, [nd, 1:nd-1]);
+    timeFirstIndices = [timeAxis, 1:timeAxis-1, timeAxis+1:nd];
+    timeFirstData = permute(data, timeFirstIndices);
     szTFD = size(timeFirstData);
     
     time = reshape(X.Time, 1, []);
@@ -186,7 +193,7 @@ elseif ~isempty(X.SteadyStateFrequency)
             szTFD);
         decomp = reshape(timeFirstDecomp, [2 szTFD(2:end)]);
         
-        resid = ipermute(timeFirstResid, [nd, 1:nd-1]);
+        resid = ipermute(timeFirstResid, timeFirstIndices);
         residFrac = norm(resid(:)) / norm(data(:));
     else
         decomp = reshape(pinvA*timeFirstData(:,:), [2 szTFD(2:end)]);
@@ -195,13 +202,14 @@ elseif ~isempty(X.SteadyStateFrequency)
     szDecomp = size(decomp);
     
     complexDecomp = [1 1i]*decomp(:,:);
-    f = ipermute(reshape(complexDecomp, [1 szDecomp(2:end)]), [nd, 1:nd-1]);
+    f = ipermute(reshape(complexDecomp, [1 szDecomp(2:end)]), timeFirstIndices);
     
 else
     % Output harmonic...
     
     nd = ndims(data);
-    timeFirstData = permute(data, [nd, 1:nd-1]);
+    timeFirstIndices = [timeAxis, 1:timeAxis-1, timeAxis+1:nd];
+    timeFirstData = permute(data, timeFirstIndices);
     szTFD = size(timeFirstData);
     szHarm = [numel(X.Frequency), szTFD(2:end)];
     
@@ -211,7 +219,7 @@ else
     phaseFactors = exp(-1i*freqs*times);
     
     harmonics = reshape(phaseFactors*timeFirstData(:,:), szHarm);
-    f = ipermute(harmonics, [nd, 1:nd-1]) / numT;
+    f = ipermute(harmonics, timeFirstIndices) / numT;
     
 end
 
