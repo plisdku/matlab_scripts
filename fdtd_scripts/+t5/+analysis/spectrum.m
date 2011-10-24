@@ -155,7 +155,11 @@ end
 if isempty(X.Frequency) && isempty(X.SteadyStateFrequency)
     
     freqs = 2*pi*(0:numT-1) / (numT * X.Dt);
-    f = fft(data, [], ndims(data)) / numT;
+    if ndims(data) == 2
+        f = fft(data)/numT;
+    else
+        f = fft(data, [], ndims(data)) / numT;
+    end 
     
 elseif ~isempty(X.SteadyStateFrequency)
     
@@ -261,6 +265,7 @@ if (isempty(X.Frequency) && isempty(X.SteadyStateFrequency)) || ...
         for rr = 1:numRegions
             offset = file.Fields{1}.Offset(4);
             phaseFactors = exp(-1i*offset*file.Dt*freqs);
+            
             for pp = 1:numel(freqs)
                 f{rr}(:,:,:,pp) = f{rr}(:,:,:,pp) * phaseFactors(pp);
             end
