@@ -92,6 +92,19 @@ for aa = 1:length(assembly)
             elemXML.setAttribute('file', imfilename);
             imwrite(assembly{aa}.image, imfilename, 'bmp');
             assemblyXML.appendChild(elemXML);
+        
+        case 'Background'
+            elemXML = doc.createElement('Background');
+            if isfield(assembly{aa}, 'permittivity')
+                elemXML.setAttribute('permittivity', ...
+                    assembly{aa}.permittivity);
+            end
+            if isfield(assembly{aa}, 'permeability')
+                elemXML.setAttribute('permeability', ...
+                    assembly{aa}.permeability);
+            end
+            assemblyXML.appendChild(elemXML);
+            
     end % switch assembly instruction type
 end % foreach assembly instruction
 

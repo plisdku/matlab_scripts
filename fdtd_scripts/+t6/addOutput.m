@@ -28,6 +28,7 @@ function addOutput(filename, fields, varargin)
 %                       Multiple-row arrays will cause Trogdor to save multiple
 %                       ranges of timesteps; to save only timesteps 100 and 144,
 %                       use addOutput('Duration', [100 100; 144 144]).
+%                       Timesteps range from 0 to numTimesteps-1.
 %                       (default: all timesteps)
 %       Stride          Spatial sampling period.  Set to [2 2 2] to save every
 %                       second cell in X, Y and Z (cutting file size by 8).  If

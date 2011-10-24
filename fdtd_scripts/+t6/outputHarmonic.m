@@ -20,9 +20,9 @@ if length(file.Regions) > 1
 end
 
 if length(file.Fields) > 1
-    dim = [file.Regions{1}.Size, length(file.Fields)];
+    dim = [file.Regions.Size(1,:), length(file.Fields)];
 else
-    dim = file.Regions{1}.Size;
+    dim = file.Regions.Size(1,:);
 end
 
 numFrames = file.numFramesAvailable;
