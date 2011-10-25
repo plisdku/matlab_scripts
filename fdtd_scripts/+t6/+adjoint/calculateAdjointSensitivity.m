@@ -86,6 +86,7 @@ while tBeginChunk <= numT
     if isstruct(coeffs{movableVert, freeDir})
     if isstruct(coeffs{movableVert,freeDir}.tensor{1,1})
     if length(coeffs{movableVert,freeDir}.tensor) >= fieldXYZ
+    if isstruct(coeffs{movableVert,freeDir}.tensor{fieldXYZ,fieldXYZ})
         
         sumSensitivity = 0;
         
@@ -135,6 +136,7 @@ while tBeginChunk <= numT
             vertJacobian(freeDir + 3*(movableVert-1), 1) ...
             + sumSensitivity;
     
+    end
     end
     end
     end
