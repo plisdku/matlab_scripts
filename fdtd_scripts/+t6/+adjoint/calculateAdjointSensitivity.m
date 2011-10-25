@@ -1,7 +1,7 @@
-function [dfdp, dfdv, dvdp] = binarySensitivityChunked(node, parameters)
+function [dfdp, dfdv, dvdp] = calculateAdjointSensitivity(node, parameters)
 
 import t6.*
-import adjoint.*
+import t6.adjoint.*
 
 fwdFileNames = {'boundary_dexx', 'boundary_deyy', 'boundary_dezz'};
 adjFileNames = {'boundary_adjoint_exx', 'boundary_adjoint_eyy', ...
@@ -35,8 +35,8 @@ numLags = 10; % one lag means static dielectric
 adjBuffer = zeros(adjDE.FrameSize, numLags + chunkFrames);
 fwdBuffer = zeros(fwdDE.FrameSize/2, 2, chunkFrames);
 
-fwdEBuffer = zeros(fwdDE.FrameSize/2, chunkFrames);
-fwdDBuffer = zeros(fwdDE.FrameSize/2, chunkFrames);
+%fwdEBuffer = zeros(fwdDE.FrameSize/2, chunkFrames);
+%fwdDBuffer = zeros(fwdDE.FrameSize/2, chunkFrames);
 
 bufferIndex = @(t) mod( (t-1), numLags + chunkFrames ) + 1;
 
@@ -78,13 +78,14 @@ while tBeginChunk <= numT
     if tAdjFirst <= tAdjLast
         adjBuffer(:,bufferIndex(tAdjFirst:tAdjLast)) = adjDE.readFrames(...
             'NumFrames', loadAdjFrames, 'Regions', 'Together');
-        fprintf('Adj: load %i to %i\n\n', tAdjFirst, tAdjLast);
+        %fprintf('Adj: load %i to %i\n\n', tAdjFirst, tAdjLast);
     end
     
     for movableVert = verts
     for freeDir = 1:3
     if isstruct(coeffs{movableVert, freeDir})
     if isstruct(coeffs{movableVert,freeDir}.tensor{1,1})
+    if length(coeffs{movableVert,freeDir}.tensor) >= fieldXYZ
         
         sumSensitivity = 0;
         
@@ -134,6 +135,7 @@ while tBeginChunk <= numT
             vertJacobian(freeDir + 3*(movableVert-1), 1) ...
             + sumSensitivity;
     
+    end
     end
     end
     end

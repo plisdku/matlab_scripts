@@ -32,7 +32,7 @@ catch err
 end
 fclose(fid);
 
-fprintf('%i regions, %i durations\n', numRegions, numDurations);
+%fprintf('%i regions, %i durations\n', numRegions, numDurations);
 
 fid = fopen(obj.SpecFileName, 'r');
 

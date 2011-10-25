@@ -94,10 +94,10 @@ for tensor_ij = 0:2
                  %fprintf('%2.4f ', vals);
                  %fprintf('\n');
                  
-	cc{vNum+1, freeDir+1}.tensor{tensor_ij+1, tensor_ij+1}.DB{lag+1}.coefficients ...
-        = vals;
-    cc{vNum+1, freeDir+1}.tensor{tensor_ij+1, tensor_ij+1}.DB{lag+1}.indices...
-        = inds;
+                cc{vNum+1, freeDir+1}.tensor{tensor_ij+1, tensor_ij+1}...
+                    .DB{lag+1}.coefficients = vals;
+                cc{vNum+1, freeDir+1}.tensor{tensor_ij+1, tensor_ij+1}...
+                    .DB{lag+1}.indices = inds;
             end
             
             % Read denominator
@@ -131,10 +131,10 @@ for tensor_ij = 0:2
                  %fprintf('%2.4f ', vals);
                  %fprintf('\n');
                  
-	cc{vNum+1, freeDir+1}.tensor{tensor_ij+1, tensor_ij+1}.EH{lag+1}.coefficients ...
-        = vals;
-    cc{vNum+1, freeDir+1}.tensor{tensor_ij+1, tensor_ij+1}.EH{lag+1}.indices...
-        = inds;
+                cc{vNum+1, freeDir+1}.tensor{tensor_ij+1, tensor_ij+1} ...
+                    .EH{lag+1}.coefficients = vals;
+                cc{vNum+1, freeDir+1}.tensor{tensor_ij+1, tensor_ij+1} ...
+                    .EH{lag+1}.indices = inds;
             end
             
         end
