@@ -15,5 +15,5 @@ function [x y z] = outputPositions(fileName)
 %
 %   This is a convenience function wrapping OutputFile.positions().
 
-fi = t5.OutputFile(fileName);
+fi = t6.OutputFile(fileName);
 [x y z] = fi.positions();

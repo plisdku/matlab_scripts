@@ -1,16 +1,17 @@
-function addPoyntingOutput(fileName, varargin)
-%addPoyntingOutput Add an output that saves ex, ey, ez, hx, hy, and hz
-%   addPoyntingOutput('poynting', 'YeeCells', [0 0 0 0 20 20]) will instruct
-%   Trogdor to save the E and H fields in a binary file named 'poynting' on
-%   every timestep.
+function addSurfaceOutput(fileName, fields, varargin)
+%addSurfaceOutput Add an output that saves fields on the faces of a box.
+%   addSurfaceOutput('surf', 'ex', 'YeeCells', [0 0 0 20 20 20]) will
+%   instruct Trogdor to save the ex field along the six faces of
+%   [0 0 0 20 20 20] in a binary file named 'surf' on every timestep.
+%   The six rectangles in order will be
+%       [0 0 0 0 20 20]         (low X)
+%       [20 0 0 20 20 20]       (high X)
+%       [0 0 0 20 0 20]         (low Y)
+%       [0 20 0 20 20 20]       (high Y)
+%       [0 0 0 20 20 0]         (low Z)
+%       [0 0 20 20 20 20]       (high Z)
 %
-%   This function differs from addOutput essentially in specifying the six
-%   E and H field components and interpolation point [0 0 0] by default;
-%   it will fail if the Stride does not allow for output in each corner of
-%   YeeCells (this is important for integration of the Poynting vector flux
-%   through a surface).
-%
-%   Usage: addPoyntingOutput(filename, named parameters)
+%   Usage: addSurfaceOutput(filename, fields, named parameters)
 %
 %   Named parameters:
 %       YeeCells        The region of the grid to save; [x0 y0 z0 x1 y1 z1] will
@@ -44,28 +45,62 @@ function addPoyntingOutput(fileName, varargin)
 %                       trilinear interpolation.  This will NOT resample in
 %                       time.  Applicable only to E and H fields.
 %                       Use this to measure E and H at the same point!
-%                       (default: [0 0 0])
+%                       (default: unused)
+%       Sides           A row vector of six elements.  A nonzero value
+%                       at position n signifies that the output should
+%                       include face n.  The order of faces is low X, high
+%                       X, low Y, high Y, low Z, high Z.
+%                       (default: [1 1 1 1 1 1])
 
 X.YeeCells = [];
-X.Bounds = [];
 X.Duration = [];
 X.Stride = [1 1 1];
 X.Period = 1;
-X.InterpolationPoint = [0 0 0];
+X.InterpolationPoint = [];
+X.Sides = [1 1 1 1 1 1];
 X = parseargs(X, varargin{:});
 
-for xyz = 1:3
-    yee0 = X.YeeCells(xyz);
-    yee1 = X.YeeCells(xyz+3);
-    
-    if mod(yee1-yee0, X.Stride(xyz)) ~= 0
-        error(['Stride(%i) does not put an output sample at ',...
-            'YeeCells(%i) and YeeCells(%i)'], xyz, xyz, xyz+3);
+if isempty(X.YeeCells)
+    error('YeeCells required.');
+end
+
+if size(X.YeeCells, 2) ~= 6
+    error('YeeCells must have six columns.');
+end
+
+yeeCells = [];
+for side = 1:6
+    xyz = 1+floor( (side-1)/2 );
+    if X.Sides(side) && X.YeeCells(xyz) < X.YeeCells(xyz + 3)
+        yeeCells(end+1,:) = sideOfRect(X.YeeCells, side);
     end
 end
 
-t6.addOutput(fileName, 'ex ey ez hx hy hz', ...
-    'YeeCells', X.YeeCells, 'Bounds', X.Bounds, 'Duration', X.Duration, ...
+if isempty(yeeCells)
+    warning('Poynting surface omits all six sides!');
+end
+
+t6.addOutput(fileName, fields, ...
+    'YeeCells', yeeCells, 'Duration', X.Duration, ...
     'Period', X.Period, 'InterpolationPoint', X.InterpolationPoint);
 
+
+function rect = sideOfRect(inRect, whichSide)
+
+switch whichSide
+    case 1 % low X
+        rect = inRect([1 2 3 1 5 6]);
+    case 2 % high X
+        rect = inRect([4 2 3 4 5 6]);
+    case 3 % low Y
+        rect = inRect([1 2 3 4 2 6]);
+    case 4 % high Y
+        rect = inRect([1 5 3 4 5 6]);
+    case 5 % low Z
+        rect = inRect([1 2 3 4 5 3]);
+    case 6 % high Z
+        rect = inRect([1 2 6 4 5 6]);
+    otherwise
+        error('Side of rect must range from 1 to 6');
+end
 

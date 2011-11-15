@@ -1,6 +1,6 @@
-function addTFSFSources(grid, gridXML, doc, originTrogdor)
+function addTFSFSources(grid, gridXML, doc, origin)
 global TROG_XML_COUNT___;
-originTwice = [originTrogdor originTrogdor];
+%originTwice = [originTrogdor originTrogdor];
 precisionString = t6.TrogdorSimulation.instance().Precision;
 
 for ll = 1:length(grid.TFSFSources)
@@ -15,7 +15,7 @@ for ll = 1:length(grid.TFSFSources)
     elemXML.setAttribute('fields', fieldstr);
     
     elemXML.setAttribute('yeeCells', ...
-        sprintf('%i ', src.yeeCells + originTwice));
+        sprintf('%i ', src.yeeCells));
     elemXML.setAttribute('direction', ...
         sprintf('%i ', src.direction));
     

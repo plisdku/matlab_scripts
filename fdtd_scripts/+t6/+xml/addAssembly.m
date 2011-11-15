@@ -1,8 +1,6 @@
-function addAssembly(assembly, gridXML, documentNode, originTrogdor)
+function addAssembly(assembly, gridXML, documentNode, origin)
 global TROG_XML_COUNT___;
 doc = documentNode;
-
-originTwice = [originTrogdor originTrogdor];
 
 digits = 14;
 
@@ -26,7 +24,7 @@ for aa = 1:length(assembly)
             for vv = 1:length(assembly{aa}.vertices)
                 vertXML = doc.createElement('Vertex');
                 vertXML.setAttribute('position', ...
-                    num2str(assembly{aa}.vertices(vv,:), digits));
+                    num2str(assembly{aa}.vertices(vv,:) - origin, digits));
                 vertXML.setAttribute('freeDirections', ...
                     num2str(assembly{aa}.vertexFreeDirections(vv,:)));
                 elemXML.appendChild(vertXML);
@@ -39,58 +37,6 @@ for aa = 1:length(assembly)
                 elemXML.appendChild(faceXML);
             end
             
-            assemblyXML.appendChild(elemXML);
-            
-        case 'Block'
-            elemXML = doc.createElement('Block');
-            elemXML.setAttribute('yeeBounds', ...
-                sprintf('%i ', assembly{aa}.yeeBounds + originTwice));
-            if isfield(assembly{aa}, 'permittivity')
-                elemXML.setAttribute('permittivity', ...
-                    assembly{aa}.permittivity);
-            end
-            if isfield(assembly{aa}, 'permeability')
-                elemXML.setAttribute('permeability',...
-                    assembly{aa}.permeability);
-            end
-            assemblyXML.appendChild(elemXML);
-            
-        case 'Ellipsoid'
-            elemXML = doc.createElement('Ellipsoid');
-            elemXML.setAttribute('yeeBounds', ...
-                sprintf('%i ', assembly{aa}.yeeBounds + originTwice));
-            if isfield(assembly{aa}, 'permittivity')
-                elemXML.setAttribute('permittivity', ...
-                    assembly{aa}.permittivity);
-            end
-            if isfield(assembly{aa}, 'permeability')
-                elemXML.setAttribute('permeability',...
-                    assembly{aa}.permeability);
-            end
-            assemblyXML.appendChild(elemXML);
-        
-        case 'HeightMap'
-            elemXML = doc.createElement('HeightMap');
-            elemXML.setAttribute('yeeBounds', ...
-                sprintf('%i ', assembly{aa}.yeeBounds + originTwice));
-            if isfield(assembly{aa}, 'permittivity')
-                elemXML.setAttribute('permittivity', ...
-                    assembly{aa}.permittivity);
-            end
-            if isfield(assembly{aa}, 'permeability')
-                elemXML.setAttribute('permeability',...
-                    assembly{aa}.permeability);
-            end
-            elemXML.setAttribute('row', assembly{aa}.row);
-            elemXML.setAttribute('column', assembly{aa}.column);
-            elemXML.setAttribute('up', assembly{aa}.up);
-            
-            %imfilename = t6.xml.randomName('__heightmap_', '.bmp', 8);
-            imfilename = sprintf('__heightmap_%i.bmp', ...
-                TROG_XML_COUNT___.heightMap);
-            TROG_XML_COUNT___.heightMap = TROG_XML_COUNT___.heightMap + 1;
-            elemXML.setAttribute('file', imfilename);
-            imwrite(assembly{aa}.image, imfilename, 'bmp');
             assemblyXML.appendChild(elemXML);
         
         case 'Background'

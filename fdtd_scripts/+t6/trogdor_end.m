@@ -21,6 +21,10 @@ end
 
 sim = t6.TrogdorSimulation.instance;
 
+if numel(sim.Grids) > 1
+    error('Trogdor 6 does not support multiple grids');
+end
+
 for gg = 1:length(sim.Grids)
     grid = sim.Grids{gg};
     

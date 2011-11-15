@@ -60,8 +60,11 @@ X.OmitSide = [];
 X.Symmetries = [0 0 0];
 X = parseargs(X, varargin{:});
 
-if size(X.YeeCells) ~= [1 6]
-    error('YeeCells must have six columns.');
+t6.validateYeeCellsAndBounds(X);
+
+% If we obtained Bounds and not YeeCells, set the YeeCells appropriately
+if ~isempty(X.Bounds)
+    X.YeeCells = boundsToYee(X.Bounds, {'ex', 'ey', 'ez', 'hx', 'hy', 'hz'});
 end
 
 if isempty(X.Duration)

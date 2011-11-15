@@ -1,13 +1,13 @@
-function addCustomTFSFSources(grid, gridXML, doc, originTrogdor)
+function addCustomTFSFSources(grid, gridXML, doc, origin)
 
-originTwice = [originTrogdor originTrogdor];
+%originTwice = [originTrogdor originTrogdor];
 
 for ll = 1:length(grid.CustomTFSFSources)
     src = grid.CustomTFSFSources{ll};
     
     elemXML = doc.createElement('CustomTFSFSource');
     elemXML.setAttribute('yeeCells', ...
-        sprintf('%i ', src.yeeCells + originTwice));
+        sprintf('%i ', src.yeeCells));
     elemXML.setAttribute('file', src.spaceTimeFile);
     elemXML.setAttribute('symmetries', sprintf('%i ', src.symmetries));
     

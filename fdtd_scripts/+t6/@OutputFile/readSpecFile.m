@@ -108,6 +108,13 @@ try % everything else, but close file before rethrow
                 else
                     error('Cannot parse line %s', lineFromFile);
                 end
+            case 'origin'
+                [dat, count] = sscanf(remainder, ' [%f, %f, %f]');
+                if count == 3
+                    obj.Origin = dat';
+                else
+                    error('Cannot parse line %s', lineFromFile);
+                end
             case 'field'
                 [fieldName, numbers] = strtok(remainder);
                 [dat, count] = sscanf(numbers, ' [%f, %f, %f] %f');
@@ -157,14 +164,6 @@ try % everything else, but close file before rethrow
                     obj.Regions.Stride(nRegion,:) = dat(7:9)';
                     obj.Regions.NumYeeCells(nRegion) = prod(obj.Regions.Size(nRegion,:));
                     nRegion = nRegion + 1;
-%                     region = struct;
-%                     region.YeeCells = dat(1:6)';
-%                     region.Size = ceil( (dat(4:6)-dat(1:3)+1) ./ dat(7:9) )';
-%                     region.Stride = dat(7:9)';
-%                     region.NumYeeCells = prod(region.Size);
-%                     obj.Regions{nRegion} = region;
-%                     nRegion = nRegion + 1;
-                    %obj.Regions = {obj.Regions{:}, region};
                 else
                     error('Cannot parse line %s', lineFromFile);
                 end

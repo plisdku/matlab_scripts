@@ -1,6 +1,4 @@
-function addOutputs(grid, gridXML, doc, originTrogdor)
-
-originTwice = [originTrogdor originTrogdor];
+function addOutputs(grid, gridXML, doc, origin)
 
 for oo = 1:length(grid.Outputs)
     output = grid.Outputs{oo};
@@ -25,9 +23,10 @@ for oo = 1:length(grid.Outputs)
     for rr = 1:size(output.yeeCells, 1)
         regionXML = doc.createElement('Region');
         regionXML.setAttribute('yeeCells', ...
-            sprintf('%i ', output.yeeCells(rr,:) + originTwice));
+            sprintf('%i ', output.yeeCells(rr,:)));
         regionXML.setAttribute('stride', sprintf('%i ', output.stride(rr,:)));
         elemXML.appendChild(regionXML);
     end
     gridXML.appendChild(elemXML);
 end
+

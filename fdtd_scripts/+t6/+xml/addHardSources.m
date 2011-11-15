@@ -1,6 +1,6 @@
-function addHardSources(grid, gridXML, doc, originTrogdor)
+function addHardSources(grid, gridXML, doc, origin)
 global TROG_XML_COUNT___;
-originTwice = [originTrogdor originTrogdor];
+%originTwice = [originTrogdor originTrogdor];
 precisionString = t6.TrogdorSimulation.instance().Precision;
 
 for ss = 1:length(grid.HardSources)
@@ -108,7 +108,7 @@ for ss = 1:length(grid.HardSources)
     for rr = 1:size(src.yeeCells, 1)
         regionXML = doc.createElement('Region');
         regionXML.setAttribute('yeeCells', ...
-            sprintf('%i ', src.yeeCells(rr,:) + originTwice));
+            sprintf('%i ', src.yeeCells(rr,:)));
         elemXML.appendChild(regionXML);
     end
     

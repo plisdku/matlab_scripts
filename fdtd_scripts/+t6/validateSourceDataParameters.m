@@ -1,16 +1,13 @@
-function validateSourceParameters(X)
+function validateSourceDataParameters(X)
 % Validate the various data parameters to addHardSource and addSoftSource.
 % This function will:
-% - make sure Yee cells are Nx6
+% - make sure Yee cells and Bounds are Nx6 (whichever is provided)
+% - make sure only one of YeeCells and Bounds is provided
 % - make sure Duration is Mx2
 % - make sure TimeData is as long as numT (total from Durations with period 1)
 %   and has one value per input field
-% - make sure MaskData has dimensions [x y z nFields] or, for multiple
-%   regions, is a cell array where each cell has dimensions [x y z nFields] for
-%   its region
-% - make sure SpaceTimeData has dimensions [x y z nFields numT] or is right-
-%   sized cell array as for MaskData
-% Furthermore this makes sure that the pair (TimeData, MaskData) does not occur
+% - make sure SpaceTimeData has dimensions [x y z nFields numT]
+% Furthermore this makes sure that the TimeData does not occur
 % along with SpaceTimeData.
 %
 % As soon as a problem is found this function will throw an error.
@@ -27,8 +24,20 @@ while ~strcmp(remainder, '')
     end
 end
 
-if size(X.YeeCells, 2) ~= 6
+if ~isempty(X.YeeCells) && ~isempty(X.Bounds)
+    error('YeeCells and Bounds are mutually exclusive options');
+end
+
+if isempty(X.YeeCells) && isempty(X.Bounds)
+    error('Either YeeCells or Bounds must be given');
+end
+
+if isempty(X.Bounds) && size(X.YeeCells, 2) ~= 6
     error('YeeCells must have six columns.');
+end
+
+if isempty(X.YeeCells) && size(X.Bounds, 2) ~= 6
+    error('Bounds must have six columns.');
 end
 
 if length(X.Duration) == 0
@@ -45,39 +54,6 @@ if length(X.TimeData) ~= 0
         error('TimeData must have the same length as the Duration');
     elseif size(X.TimeData, 1) ~= length(fieldTokens)
         error('TimeData must have size [nFields, timesteps]');
-    end
-end
-
-% 2/3  Validate mask data.
-if length(X.MaskData) ~= 0
-    if size(X.YeeCells, 1) == 1
-        % One mask region only; dims [x y z field]
-        dim = X.YeeCells(4:6) - X.YeeCells(1:3) + 1;
-        if size(X.MaskData,1) ~= dim(1) || size(X.MaskData,2) ~= dim(2) ...
-            || size(X.MaskData,3) ~= dim(3)
-            error('MaskData must have same size as YeeCells.');
-        elseif size(X.MaskData, 4) ~= length(fieldTokens)
-            error('Must provide MaskData for every field.');
-        end
-    else
-        % Many mask regions; must pack into cell array
-        if ~iscell(X.MaskData)
-            error('MaskData for multiple-rectangle sources must be cell array.');
-        end
-        if length(X.MaskData) ~= size(X.YeeCells, 1)
-            error('Provide MaskData for each rectangle.');
-        end
-        
-        for mm = 1:length(X.MaskData)
-            dim = X.YeeCells(mm, 4:6) - X.YeeCells(mm, 1:3) + 1;
-            if size(X.MaskData{mm},1) ~= dim(1) || ...
-                size(X.MaskData{mm},2) ~= dim(2) || ...
-                size(X.MaskData{mm},3) ~= dim(3)
-                error('MaskData #%i must have same size as YeeCells.', mm);
-            elseif size(X.MaskData{mm}, 4) ~= length(fieldTokens)
-                error('Must provide MaskData for every field.');
-            end
-        end
     end
 end
 
@@ -120,12 +96,6 @@ end
 if length(X.TimeData) ~= 0
     if length(X.SpaceTimeData) ~= 0
         error('Only one of TimeData and SpaceTimeData can be specified.');
-    end
-end
-
-if length(X.SpaceTimeData) ~= 0
-    if length(X.MaskData) ~= 0
-        error('Space-Time sources cannot use MaskData.');
     end
 end
 

@@ -28,4 +28,4 @@ else
     error('Invalid cell size.');
 end
 
-dt = 1 / 3e8 / sqrt(sum(1./dxyz.^2));
+dt = 1 / sqrt(sum(1./dxyz.^2));

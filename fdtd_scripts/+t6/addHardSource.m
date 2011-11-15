@@ -17,21 +17,26 @@ function addHardSource(varargin)
 %                   field; [x0 y0 z0 x1 y1 z1] will source all cells (x, y, z)
 %                   where x0 <= x <= x1, y0 <= y <= y1, z0 <= z <= z1.  Multiple
 %                   rows may be used to source in multiple regions.
-%                   (required)
+%                   (YeeCells or Bounds required)
+%       Bounds      The region of the simulation space in which to add
+%                   electromagnetic field; [x0 y0 z0 x1 y1 z1] in real units
+%                   will be used to choose the YeeCells [m0 n0 p0 m1 n1 p1] in
+%                   which to source fields, suitably for the grid resolution
+%                   (YeeCells or Bounds required)
 %       Duration    The range of timesteps on which to source fields; [t0 t1]
 %                   will source on timesteps t such that t0 <= t <= t1.  Using
 %                   multiple rows specifies multiple ranges of timesteps.
 %                   (default: all timesteps)
+%       FieldFunction   A function of space and time, e.g.
+%                   @(x, y, z, t) sin(x).*cos(y).*tan(z).*exp(-t).
+%                   If more than one current component is specified, then this
+%                   argument must be a cell array with one function per field
+%                   component, e.g. {exFunc, eyFunc, ezFunc}.
+%                   (FieldFunction, TimeData, or SpaceTimeData required)
 %       TimeData    An array of size [nFields nTimesteps].  If the Duration
 %                   is specified as [0 10] then TimeData needs 11 columns, one
 %                   for each sourced timestep.
 %                   (TimeData or SpaceTimeData required)
-%       MaskData    A per-field, per-cell prefactor to multiply the source by.
-%                   If YeeCells specifies a rectangle of size [nx ny nz] then
-%                   MaskData must have size [nx ny nz nFields].  If YeeCells
-%                   has multiple rows, then MaskData must be a cell array 
-%                   where each cell contains the mask for one row in YeeCells.
-%                   (default: no mask)
 %       SpaceTimeData   Specifies the field for each cell at each timestep.  If
 %                   YeeCells specifies a rectangle of size [nx ny nz] then
 %                   SpaceTimeData must have size [nx ny nz nFields nTimesteps].
@@ -39,6 +44,7 @@ function addHardSource(varargin)
 %                   a cell array with one entry per row of YeeCells.  If the 
 %                   Duration is specified as [0 10] then SpaceTimeData must
 %                   provide data for 11 timesteps.
+%      
 %
 %   Example:
 %
@@ -53,31 +59,22 @@ grid = t6.TrogdorSimulation.instance().currentGrid();
 
 X.Field = '';
 X.YeeCells = [];
+X.Bounds = [];
 X.Duration = [];
+X.FieldFunction = [];
 X.TimeData = [];
-X.MaskData = [];
 X.SpaceTimeData = [];
 X = parseargs(X, varargin{:});
 
 t6.validateSourceDataParameters(X); % will call error() for problems
+t6.validateYeeCellsAndBounds(X);
 
 % Now I need to validate the Field: it must be ex, ey, ez, hx, hy, hz stuff.
-fieldTokens = {};
-remainder = X.Field;
-while ~strcmp(remainder, '')
-    [token, remainder] = strtok(remainder);
-    if ~strcmp(token, '')
-        fieldTokens = {fieldTokens{:}, token};
-        
-        if length(token) ~= 2
-            error('Bad field %s', token);
-        elseif (token(1) ~= 'e' && token(1) ~= 'h') || ...
-            (token(2) < 'x' || token(2) > 'z')
-            token(1)
-            token(2)
-            error('Bad field %s', token);
-        end
-    end
+fieldTokens = tokenizeFields(X.Field, 'e h');
+
+% If we obtained Bounds and not YeeCells, set the YeeCells appropriately
+if ~isempty(X.Bounds)
+    X.YeeCells = boundsToYee(X.Bounds, fieldTokens);
 end
 
 % Validate duration
@@ -96,23 +93,6 @@ if length(X.TimeData) ~= 0
     elseif size(X.TimeData, 1) ~= length(fieldTokens) && ...
         size(X.TimeData, 1) ~= 1
         error('TimeData must have size [nFields, timesteps] or [timsteps].');
-    end
-end
-
-% Validate mask
-if length(X.MaskData) ~= 0
-    if ~iscell(X.MaskData)
-        X.MaskData = {X.MaskData};
-    end
-    if length(X.MaskData) ~= size(X.YeeCells, 1)
-        error('Please provide each source region mask in its own cell.');
-    end
-    
-    for ll = 1:length(X.MaskData)
-        yeeSize = X.YeeCells(ll,4:6) - X.YeeCells(ll,1:3) + 1;
-        if size(X.MaskData{ll}) ~= [yeeSize, length(fieldTokens)]
-            error('Mask #%i needs to have size [yeeCells, numFields]', ll);
-        end
     end
 end
 

@@ -11,18 +11,21 @@ function addOutput(filename, fields, varargin)
 %       'exx', 'exy', etc.      off-diagonal electric field subcomponents
 %       'hx', 'hy', 'hz'        magnetic fields
 %       'hxx', 'hxy', etc.      off-diagonal magnetic field subcomponents
-%       'jx', 'jy', 'jz'        electric currents
-%       'kx', 'ky', 'kz'        magnetic currents
-%   E and H fields may be saved in the same file, and J and K fields may be
-%   saved in the same file, but at present currents and fields must be saved in
-%   separate files.
+%       'dx', 'dy', 'dz'        D field
+%       'bx', 'by', 'bz'        B field 
+%   The order of fields in the file will always be 
 %
 %   Named parameters:
 %       YeeCells        The region of the grid to save; [x0 y0 z0 x1 y1 z1] will
 %                       save all cells (x, y, z) satisfying x0 <= x <= x1,
 %                       y0 <= y <= y1, z0 <= z <= z1.  Multiple-row arrays will
 %                       cause Trogdor to save multiple regions in one file.
-%                       (required)
+%                       (YeeCells or Bounds required)
+%       Bounds          The region of the simulation to save, in real units;
+%                       [x0 y0 z0 x1 y1 z1] will determine the Yee cell rect
+%                       [m0 n0 p0 m1 n1 p1] to save, suitably for the grid
+%                       resolution.
+%                       (YeeCells or Bounds required)
 %       Duration        The range of timesteps on which to save data; [t0 t1]
 %                       will save all timesteps t such that t0 <= t <= t1.
 %                       Multiple-row arrays will cause Trogdor to save multiple
@@ -53,9 +56,13 @@ function addOutput(filename, fields, varargin)
 %                       Use this to measure E and H at the same point!
 %                       (default: unused)
 %           
+
+import t6.*
+
 grid = t6.TrogdorSimulation.instance().currentGrid();
 
 X.YeeCells = []; % [x y z x y z]
+X.Bounds = [];
 X.Duration = [];  % [first last]
 X.Stride = []; % scalar
 X.Period = []; % scalar
@@ -63,13 +70,15 @@ X.InterpolationPoint = []; % [x y z] from 0 to 1
 
 X = parseargs(X, varargin{:});
 
-if length(X.YeeCells) == 0
-    error('YeeCells required.');
+t6.validateYeeCellsAndBounds(X);
+
+fieldTokens = tokenizeFields(fields, 'd e b h');
+
+% If we obtained Bounds and not YeeCells, set the YeeCells appropriately
+if ~isempty(X.Bounds)
+    X.YeeCells = boundsToYee(X.Bounds, fieldTokens);
 end
 
-if size(X.YeeCells, 2) ~= 6
-    error('YeeCells must have six columns.');
-end
 if length(X.Duration) == 0
     X.Duration = [0, t6.TrogdorSimulation.instance().NumT-1];
 elseif size(X.Duration, 2) ~= 2
@@ -82,7 +91,7 @@ elseif size(X.Stride, 2) ~= 3
 elseif size(X.Stride, 1) == 1
     X.Stride = repmat(X.Stride, size(X.YeeCells, 1), 1);
 elseif size(X.Stride, 1) ~= size(X.YeeCells, 1)
-    error('Stride must have as many rows as YeeCells.');
+    error('Stride must have as many rows as YeeCells or Bounds.');
 end
 if length(X.Period) == 0
     X.Period = ones(size(X.Duration, 1), 1);

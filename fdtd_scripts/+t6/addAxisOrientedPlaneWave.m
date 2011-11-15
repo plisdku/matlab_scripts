@@ -11,11 +11,21 @@ function addAxisOrientedPlaneWave(varargin)
 %       YeeCells    The cells making up the total-field region of the grid;
 %                   [x0 y0 z0 x1 y1 z1] specifies all cells (x, y, z)
 %                   where x0 <= x <= x1, y0 <= y <= y1, z0 <= z <= z1.
-%                   (required)
+%                   (YeeCells or Bounds required)
+%       Bounds      The real extent of the total-field region of the grid;
+%                   [x0 y0 z0 x1 y1 z1] will be rounded outwards to the next
+%                   largest full Yee rectangle [m0 n0 p0 m1 n1 p1], suitably for
+%                   the grid resolution.
+%                   (YeeCells or Bounds required)
 %       Duration    The range of timesteps on which to source fields; [t0 t1]
 %                   will source on timesteps t such that t0 <= t <= t1.  Using
 %                   multiple rows specifies multiple ranges of timesteps.
 %                   (default: all timesteps)
+%       FieldFunction   A function of time, e.g. @(t) sin(omega*t).  If more
+%                   than one field component is specified, then this argument
+%                   must be a cell array with one function per field component,
+%                   e.g. {exFunc eyFunc}.
+%                   (FieldFunction or TimeData required)
 %       TimeData    An array of size [nFields nTimesteps].  If the Duration
 %                   is specified as [0 10] then TimeData needs 11 columns, one
 %                   for each sourced timestep.  (required)
@@ -37,34 +47,22 @@ grid = t6.TrogdorSimulation.instance().currentGrid();
 
 X.Field = '';
 X.YeeCells = [];
+X.Bounds = [];
 X.Duration = [];
 X.Direction = [];
+X.FieldFunction = [];
 X.TimeData = [];
 X.OmitSide = [];
 X = parseargs(X, varargin{:});
 
+t6.validateYeeCellsAndBounds(X);
 
 % Validate fields; should be a single string with some tokens in it
-fieldTokens = {};
-remainder = X.Field;
-while ~strcmp(remainder, '')
-    [token, remainder] = strtok(remainder);
-    if ~strcmp(token, '')
-        fieldTokens = {fieldTokens{:}, token};
-        
-        if length(token) ~= 2
-            error('Bad field %s', token);
-        elseif (token(1) ~= 'e' && token(1) ~= 'h') || ...
-            (token(2) < 'x' || token(2) > 'z')
-            token(1)
-            token(2)
-            error('Bad field %s', token);
-        end
-    end
-end
+fieldTokens = tokenizeFields(X.Field, 'e h');
 
-if size(X.YeeCells, 2) ~= 6
-    error('YeeCells must have six columns.');
+% If we obtained Bounds and not YeeCells, set the YeeCells appropriately
+if ~isempty(X.Bounds)
+    X.YeeCells = boundsToYee(X.Bounds, fieldTokens);
 end
 
 if length(X.Duration) == 0

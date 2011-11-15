@@ -13,7 +13,7 @@ classdef OutputFile < handle
     properties (SetAccess = private)
         FileName = '';
         Regions = struct('YeeCells', [], 'Size', [], 'Stride', [], ...
-            'NumYeeCells', []);
+            'NumYeeCells', [], 'Bounds', []);
         Durations = {}; % struct: d.First, d.Last, d.Period, d.NumTimesteps
         Materials = {};  % used in grid reports
         HalfCells = {};  % used in grid reports
@@ -22,6 +22,7 @@ classdef OutputFile < handle
         Fields = {};
         Dxyz = [0 0 0];
         Dt = 0;
+        Origin = [0 0 0];
         DateString = '';
         SpecFileName = '';   % set in constructor
         TrogdorVersionString = '';
@@ -49,6 +50,14 @@ classdef OutputFile < handle
         
         function nR = numRegions(obj)
             nR = size(obj.Regions.YeeCells, 1);
+        end
+        
+        % obtain # of samples per field per timestep
+        function fv = fieldValues(obj)
+            fv = 0;
+            for rr = 1:obj.numRegions
+                fv = fv + prod(obj.Regions.Size(rr,:));
+            end
         end
         
         n = numFramesAvailable(obj);

@@ -17,9 +17,9 @@ while ~strcmp(remainder, '')
     end
 end
 
-if size(X.YeeCells, 2) ~= 6
-    error('YeeCells must have six columns.');
-end
+%if size(X.YeeCells, 2) ~= 6
+%    error('YeeCells must have six columns.');
+%end
 
 if length(X.Duration) == 0
     X.Duration = [0, t6.TrogdorSimulation.instance().NumT-1];

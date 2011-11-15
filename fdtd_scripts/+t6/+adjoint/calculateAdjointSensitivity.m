@@ -103,9 +103,6 @@ while tBeginChunk <= numT
             adjE = adjBuffer(indexD,bufferIndex(tAdj(1):tAdj(2)));
             fwdD = fwdDBuffer(indexD, (tFwd(1):tFwd(2))-tFwd(1)+1);
             
-            %fwdD = reshape(fwdBuffer(indexD,2, (tFwd(1):tFwd(2))-tFwd(1)+1), ...
-            %    size(adjE));
-            
             dotProdDE = -sum(coeffD.*sum(adjE.*fwdD, 2));
             
             sumSensitivity = sumSensitivity + dotProdDE;
@@ -123,9 +120,6 @@ while tBeginChunk <= numT
             
             adjE = adjBuffer(indexE,bufferIndex(tAdj(1):tAdj(2)));
             fwdE = fwdEBuffer(indexE, (tFwd(1):tFwd(2))-tFwd(1)+1);
-            
-            %fwdE = reshape(fwdBuffer(indexE, 1, (tFwd(1):tFwd(2))-tFwd(1)+1), ...
-            %    size(adjE));
             
             dotProdEE = sum(coeffE.*sum(adjE.*fwdE, 2));
             

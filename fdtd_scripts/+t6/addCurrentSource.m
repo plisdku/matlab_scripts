@@ -1,7 +1,7 @@
 function addCurrentSource(varargin)
 %addCurrentSource Add a source of electric and/or magnetic current to the grid.
-%   addCurrentSource('Field', 'ky', 'YeeCells', [0 0 0 0 100 0], 'TimeData', ...
-%       sin(1:numT)) will drive the grid with a sinusoidal magnetic current ky
+%   addCurrentSource('Field', 'my', 'YeeCells', [0 0 0 0 100 0], 'TimeData', ...
+%       sin(1:numT)) will drive the grid with a sinusoidal magnetic current my
 %       along a line from (0,0,0) to (0,100,0) on every timestep.
 %
 %   Usage: addCurrentSource(named parameters)
@@ -11,21 +11,32 @@ function addCurrentSource(varargin)
 %                   'mx', 'my', 'mz'    magnetic currents
 %                   'jx', 'jy', 'jz'    electric currents
 %                   Any combination of fields may be used, but they should be
-%                   specified in order: kx before ky, magnetic before electric
+%                   specified in order: mx before my, magnetic before electric
 %                   (required)
 %       YeeCells    The region of the grid in which to add electromagnetic
 %                   current; [x0 y0 z0 x1 y1 z1] will source all cells (x, y, z)
 %                   where x0 <= x <= x1, y0 <= y <= y1, z0 <= z <= z1.  Multiple
 %                   rows may be used to source in multiple regions.
-%                   (required)
+%                   (YeeCells or Bounds required)
+%       Bounds      The region of the simulation space in which to add
+%                   electromagnetic current; [x0 y0 z0 x1 y1 z1] in real units
+%                   will be used to choose the YeeCells [m0 n0 p0 m1 n1 p1] in
+%                   which to source fields, suitably for the grid resolution
+%                   (YeeCells or Bounds required)
 %       Duration    The range of timesteps on which to source currents; [t0 t1]
 %                   will source on timesteps t such that t0 <= t <= t1.  Using
 %                   multiple rows specifies multiple ranges of timesteps.
 %                   (default: all timesteps)
+%       FieldFunction   A function of space and time, e.g.
+%                   @(x, y, z, t) sin(x).*cos(y).*tan(z).*exp(-t).
+%                   If more than one current component is specified, then this
+%                   argument must be a cell array with one function per field
+%                   component, e.g. {jxFunc, jyFunc, jzFunc}.
+%                   (FieldFunction, TimeData, or SpaceTimeData required)
 %       TimeData    An array of size [nFields nTimesteps].  If the Duration
 %                   is specified as [0 10] then TimeData needs 11 columns, one
 %                   for each sourced timestep.
-%                   (TimeData or SpaceTimeFile required)
+%                   (FieldFunction, TimeData or SpaceTimeFile required)
 %       SpaceTimeData An array of size [nFields nTimesteps*nCells].
 %       SpaceTimeFile   Name of a file that will contain the current for each
 %                   cell at each timestep.  When using SpaceTimeFile, Trogdor
@@ -48,31 +59,55 @@ function addCurrentSource(varargin)
 %   at which data is required.  After this data is written in the correct order
 %   to a binary file called 'currentInput', Trogdor can be run again to
 %   completion.
+
+import t6.*
+
 grid = t6.TrogdorSimulation.instance().currentGrid();
 
 X.Field = '';
 X.YeeCells = [];
+X.Bounds = [];
 X.Duration = [];
+X.FieldFunction = [];
 X.TimeData = [];
 X.SpaceTimeData = [];
 X.SpaceTimeFile = [];
 X = parseargs(X, varargin{:});
 
 t6.validateDataRequestParameters(X);
+t6.validateYeeCellsAndBounds(X);
 
 % Validate fields; should be a single string with some tokens in it
-fieldTokens = {};
-remainder = X.Field;
-while ~strcmp(remainder, '')
-    [token, remainder] = strtok(remainder);
-    if ~strcmp(token, '')
-        fieldTokens = {fieldTokens{:}, token};
-        if (~checkCurrentName(token))
-            error('Bad field %s', token);
-        end
-    end
+fieldTokens = tokenizeFields(X.Field, 'j m je mh');
+
+% If we obtained Bounds and not YeeCells, set the YeeCells appropriately
+if ~isempty(X.Bounds)
+    X.YeeCells = boundsToYee(X.Bounds, fieldTokens);
 end
 
+% Validate duration
+if isempty(X.Duration)
+    X.Duration = [0, t6.TrogdorSimulation.instance().NumT-1];
+elseif size(X.Duration, 2) ~= 2
+    error('Duration must have two columns (first and last timestep).');
+end
+
+% Evaluate the field function at all the right places and times
+if ~isempty(X.FieldFunction)
+    
+    if ~iscell(X.FieldFunction)
+        X.FieldFunction = {X.FieldFunction};
+    end
+    
+    if isempty(X.Bounds)
+        X.SpaceTimeData = myCurrent_YeeCells(X.YeeCells(1,:),...
+            X.Duration(1,:), fieldTokens, X.FieldFunction);
+    else
+        X.SpaceTimeData = myCurrent_Bounds(X.YeeCells(1,:), ...
+            X.Bounds(1,:), X.Duration(1,:), fieldTokens, X.FieldFunction);
+    end
+    
+end
 
 obj = struct;
 obj.type = 'CurrentSource';
@@ -85,22 +120,122 @@ obj.spaceTimeFile = X.SpaceTimeFile;
 
 grid.CurrentSources = {grid.CurrentSources{:}, obj};
 
+
+
+% Find the correct (x,y,z,t) coordinates to evaluate the source functions
+% at.
+function src = myCurrent_YeeCells(yeeRegion, duration, fieldTokens,...
+    fieldFunction)
+
+src = zeros([yeeRegion(4:6)-yeeRegion(1:3)+1, numel(fieldTokens), ...
+    duration(2) - duration(1,1) + 1]);
+
+for ff = 1:numel(fieldTokens)
+    offset = t6.xml.fieldOffset(fieldTokens{ff});
+
+    yeeX = yeeRegion(1):yeeRegion(4);
+    yeeY = yeeRegion(2):yeeRegion(5);
+    yeeZ = yeeRegion(3):yeeRegion(6);
+    timesteps = duration(1):duration(2);
+
+    x = t6.grid().Origin(1) + offset(1) + yeeX*t6.sim().Dxyz(1);
+    y = t6.grid().Origin(2) + offset(2) + yeeY*t6.sim().Dxyz(2);
+    z = t6.grid().Origin(3) + offset(3) + yeeZ*t6.sim().Dxyz(3);
+    t = offset(4) + timesteps*t6.sim().Dt;
+
+    [xx yy zz tt] = ndgrid(x,y,z,t);
+    
+    src(:,:,:,ff,:) = fieldFunction{ff}(xx,yy,zz,tt);
+    
+    %src(:,:,:,ff,:) = reshape(X.FieldFunction{ff}(xx(:), yy(:), zz(:), tt(:)),...
+    %    size(xx));
 end
 
-function isOK = checkCurrentName(token)
+return
 
-isOK = 0;
 
-if length(token) == 2
-    if (token(1) == 'j' || token(1) == 'm') && ...
-       (token(2) >= 'x' && token(2) <= 'z')
-        isOK = 1;
+
+function src = myCurrent_Bounds(yeeRegion, bounds, duration, fieldTokens,...
+    fieldFunction)
+
+dxyz = t6.sim().Dxyz;
+src = zeros([yeeRegion(4:6)-yeeRegion(1:3)+1, numel(fieldTokens), ...
+    duration(2) - duration(1) + 1]);
+
+for ff = 1:numel(fieldTokens)
+    offset = t6.xml.fieldOffset(fieldTokens{ff});
+    
+    support = t6.boundsToYee(bounds(1,:), fieldTokens{ff});
+    
+    yeeX = support(1):support(4);
+    yeeY = support(2):support(5);
+    yeeZ = support(3):support(6);
+    
+    % Physical points in space at which the current will be provided
+    currCoords = cell(3,1);
+    currCoords{1} = t6.grid().Origin(1) + offset(1) + yeeX*dxyz(1);
+    currCoords{2} = t6.grid().Origin(2) + offset(2) + yeeY*dxyz(2);
+    currCoords{3} = t6.grid().Origin(3) + offset(3) + yeeZ*dxyz(3);
+    
+    evalCoords = cell(3,1); % points in real space at which to evaluate function
+    weights = cell(3,1); % interpolation weights
+    for xyz = 1:3
+        if bounds(xyz) == bounds(xyz+3) % zero-width in this dim
+            if yeeRegion(xyz) < yeeRegion(xyz+3)
+                % if the grid itself is not lower-dimensioned, then this is
+                % really a delta-function distribution in one dimension.
+                % Take the specified current to be a total current and
+                % determine the appropriate density by dividing by dx.
+                evalCoords{xyz} = [bounds(xyz), bounds(xyz)];
+                weights{xyz} = (1 - abs(evalCoords{xyz}-currCoords{xyz})/dxyz(xyz))/dxyz(xyz);
+            else % the grid is low-dimensioned.
+                evalCoords{xyz} = bounds(xyz);
+                weights{xyz} = 1.0;
+            end
+        else
+            % Physical bounds of cells centered at current samples
+            cellLeft = max(bounds(xyz), currCoords{xyz} - dxyz(xyz));
+            cellRight = min(bounds(xyz+3), currCoords{xyz} + dxyz(xyz));
+            
+            w = @(x) 1-abs(x);
+            
+            evalCoords{xyz} = 0.5*(cellLeft + cellRight);
+            weights{xyz} = w( (evalCoords{xyz} - currCoords{xyz})/dxyz(xyz) ) .* ...
+                (cellRight-cellLeft)/dxyz(xyz);
+        end
     end
-elseif length(token) == 3
-    if (strcmp(token(1:2), 'je') || strcmp(token(1:2), 'mh')) && ...
-       (token(3) >= 'x' && token(3) <= 'z')
-        isOK = 1;
+    
+    fprintf('Source distrib:\n');
+    for xx = 1:numel(evalCoords{1})
+        fprintf('Weight %2.2f at %2.2f\n', weights{1}(xx), ...
+            currCoords{1}(xx));
     end
+    
+    timesteps = duration(1):duration(2);
+    t = offset(4) + timesteps*t6.sim().Dt;
+
+    [xx yy zz tt] = ndgrid(evalCoords{:},t);
+    
+    rawCurrent = fieldFunction{ff}(xx,yy,zz,tt);
+    
+    scaledCurrent = bsxfun(@times, reshape(weights{1}, [], 1, 1), ...
+        bsxfun(@times, reshape(weights{2}, 1, [], 1), ...
+        bsxfun(@times, reshape(weights{3}, 1, 1, []), rawCurrent)));
+    
+    % The scaled current may not be the full size of the source region.  Fill in the appropriate
+    % elements.  This amounts to finding an index offset.
+    
+    indicesX = 1 + yeeX - yeeRegion(1);
+    indicesY = 1 + yeeY - yeeRegion(2);
+    indicesZ = 1 + yeeZ - yeeRegion(3);
+    
+    src(indicesX, indicesY, indicesZ,ff,:) = scaledCurrent;
 end
 
-end
+return
+
+
+
+
+
+
