@@ -3,7 +3,7 @@ function addCurrentSource(varargin)
 %   grid.  addCurrentSource('Field', 'ky', 'YeeCells', [0 0 0 0 100 0], 'TimeData', ...
 %       sin(1:numT)) will drive the grid with a sinusoidal magnetic current ky
 %       along a line from (0,0,0) to (0,100,0) on every timestep.  The
-%       units of current density are SI, e.g. amperes/m^2.
+%       units of current density are SI, i.e. J in amperes/m^2, K in V/m^2.
 %
 %   The electric and magnetic current densities are applied in the update equations as
 %       dD/dt = curl(H) - J
@@ -33,7 +33,7 @@ function addCurrentSource(varargin)
 %       TimeData    Current density on each timestep, an array of size
 %                   [nFields nTimesteps].  If the Duration is specified as [0 10]
 %                   then TimeData needs 11 columns, one for each sourced timestep.
-%                   Units: SI (j has units of curl(H), k has units of curl(E))
+%                   Units: SI (j in A/m^2, k in V/m^2)
 %                   (TimeData or SpaceTimeFile required)
 %       MaskFile    Name of a file that will contain a per-field, per-cell
 %                   prefactor to multiply the source by.  When using MaskFile,
