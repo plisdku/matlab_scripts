@@ -21,10 +21,11 @@ function addHardSource(varargin)
 %       Duration    The range of timesteps on which to source fields; [t0 t1]
 %                   will source on timesteps t such that t0 <= t <= t1.  Using
 %                   multiple rows specifies multiple ranges of timesteps.
-%                   (default: all timesteps)
-%       TimeData    An array of size [nFields nTimesteps].  If the Duration
-%                   is specified as [0 10] then TimeData needs 11 columns, one
-%                   for each sourced timestep.
+%                   (default: [0, numT - 1] for a simulation with numT timesteps)
+%       TimeData    Fields on each timestep, an array of size [nFields nTimesteps].
+%                   If the Duration is specified as [0 10] then TimeData needs 11
+%                   columns, one for each sourced timestep.
+%                   Units: SI (e in V/m, h in A/m).
 %                   (TimeData or SpaceTimeData required)
 %       MaskData    A per-field, per-cell prefactor to multiply the source by.
 %                   If YeeCells specifies a rectangle of size [nx ny nz] then
@@ -38,7 +39,8 @@ function addHardSource(varargin)
 %                   If YeeCells has multiple rows, then SpaceTimeData must be
 %                   a cell array with one entry per row of YeeCells.  If the 
 %                   Duration is specified as [0 10] then SpaceTimeData must
-%                   provide data for 11 timesteps.
+%                   provide data for 11 timesteps.  See TimeData for units.
+%                   (TimeData or SpaceTimeData required.)
 %
 %   Example:
 %

@@ -25,10 +25,11 @@ function addCustomTFSFSource(varargin)
 %       Duration    The range of timesteps on which to source fields; [t0 t1]
 %                   will source on timesteps t such that t0 <= t <= t1.  Using
 %                   multiple rows specifies multiple ranges of timesteps.
-%                   (default: all timesteps)
+%                   (default: [0, numT - 1] for a simulation with numT timesteps)
 %       SpaceTimeFile   Name of a file that will contain the fields for each
 %                   cell at each timestep.  Trogdor's data request file will
-%                   be named [SpaceTimeFile, '.m'].  (required)
+%                   be named [SpaceTimeFile, '.m'].  The fields in the file must 
+%                   use SI units (e in V/m, h in A/m).  (required)
 %       Symmetries  A three-vector indicating the symmetries of the source wave.
 %                   Omitting symmetries may increase simulation time and
 %                   require more data in the SpaceTimeFile.  Examples:

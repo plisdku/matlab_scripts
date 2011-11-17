@@ -22,7 +22,7 @@ function addPoyntingOutput(fileName, varargin)
 %                       Multiple-row arrays will cause Trogdor to save multiple
 %                       ranges of timesteps; to save only timesteps 100 and 144,
 %                       use addOutput('Duration', [100 100; 144 144]).
-%                       (default: all timesteps)
+%                       (default: [0, numT - 1] for a simulation with numT timesteps)
 %       Stride          Spatial sampling period.  Set to [2 2 2] to save every
 %                       second cell in X, Y and Z (cutting file size by 8).  If
 %                       there are multiple rows in YeeCells, the same Stride

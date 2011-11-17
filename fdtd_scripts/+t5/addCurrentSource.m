@@ -5,6 +5,13 @@ function addCurrentSource(varargin)
 %       along a line from (0,0,0) to (0,100,0) on every timestep.  The
 %       units of current density are SI, e.g. amperes/m^2.
 %
+%   The electric and magnetic current densities are applied in the update equations as
+%       dD/dt = curl(H) - J
+%       dB/dt = -curl(E) - K
+%
+%   A single cell with a Jz source may be thought of as a dx*dy*dz rectangle of
+%   constant current density.
+%   
 %   Usage: addCurrentSource(named parameters)
 %
 %   Named parameters:
@@ -22,10 +29,11 @@ function addCurrentSource(varargin)
 %       Duration    The range of timesteps on which to source currents; [t0 t1]
 %                   will source on timesteps t such that t0 <= t <= t1.  Using
 %                   multiple rows specifies multiple ranges of timesteps.
-%                   (default: all timesteps)
-%       TimeData    An array of size [nFields nTimesteps].  If the Duration
-%                   is specified as [0 10] then TimeData needs 11 columns, one
-%                   for each sourced timestep.
+%                   (default: [0, numT - 1] for a simulation with numT timesteps)
+%       TimeData    Current density on each timestep, an array of size
+%                   [nFields nTimesteps].  If the Duration is specified as [0 10]
+%                   then TimeData needs 11 columns, one for each sourced timestep.
+%                   Units: SI (j has units of curl(H), k has units of curl(E))
 %                   (TimeData or SpaceTimeFile required)
 %       MaskFile    Name of a file that will contain a per-field, per-cell
 %                   prefactor to multiply the source by.  When using MaskFile,
@@ -41,7 +49,8 @@ function addCurrentSource(varargin)
 %                   and a set of timesteps at which to provide electromagnetic
 %                   current values.  The space-time data file must be provided
 %                   according to this data request before the simulation may
-%                   run.  (SpaceTimeFile or TimeData required.)
+%                   run.  See TimeData for units in the file.
+%                   (SpaceTimeFile or TimeData required.)
 %
 %   Example:
 %

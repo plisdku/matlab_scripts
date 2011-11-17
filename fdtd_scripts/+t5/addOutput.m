@@ -14,7 +14,7 @@ function addOutput(filename, fields, varargin)
 %   E and H fields may be saved in the same file, and J and K fields may be
 %   saved in the same file, but at present currents and fields must be saved in
 %   separate files.
-%
+%   
 %   Named parameters:
 %       YeeCells        The region of the grid to save; [x0 y0 z0 x1 y1 z1] will
 %                       save all cells (x, y, z) satisfying x0 <= x <= x1,
@@ -26,7 +26,7 @@ function addOutput(filename, fields, varargin)
 %                       Multiple-row arrays will cause Trogdor to save multiple
 %                       ranges of timesteps; to save only timesteps 100 and 144,
 %                       use addOutput('Duration', [100 100; 144 144]).
-%                       (default: all timesteps)
+%                       (default: [0, numT - 1] for a simulation with numT timesteps)
 %       Stride          Spatial sampling period.  Set to [2 2 2] to save every
 %                       second cell in X, Y and Z (cutting file size by 8).  If
 %                       there are multiple rows in YeeCells, the same Stride
@@ -47,7 +47,8 @@ function addOutput(filename, fields, varargin)
 %                       measuring the fields all at one location in space by
 %                       trilinear interpolation.  This will NOT resample in
 %                       time.  Applicable only to E and H fields.
-%                       Use this to measure E and H at the same point!
+%                       Use this to measure E and H at the exact same points in
+%                       space!
 %                       (default: unused)
 %           
 grid = t5.TrogdorSimulation.instance().currentGrid();

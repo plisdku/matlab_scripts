@@ -15,10 +15,12 @@ function addAxisOrientedPlaneWave(varargin)
 %       Duration    The range of timesteps on which to source fields; [t0 t1]
 %                   will source on timesteps t such that t0 <= t <= t1.  Using
 %                   multiple rows specifies multiple ranges of timesteps.
-%                   (default: all timesteps)
-%       TimeData    An array of size [nFields nTimesteps].  If the Duration
-%                   is specified as [0 10] then TimeData needs 11 columns, one
-%                   for each sourced timestep.  (required)
+%                   (default: [0, numT - 1] for a simulation with numT timesteps)
+%       TimeData    Fields as a function of time, an array of size
+%                   [nFields nTimesteps].  If the Duration is specified as [0 10]
+%                   then TimeData needs 11 columns, one for each sourced timestep.
+%                   Units: SI (e in V/m, h in A/m)
+%                   (required)
 %       OmitSide    An axis-aligned unit vector or cell array of axis-aligned
 %                   unit vectors.  The unit vector [1 0 0] specifies the +X
 %                   side of the TFSF boundary and instructs Trogdor to not

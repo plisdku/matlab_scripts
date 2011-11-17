@@ -4,6 +4,9 @@ function addSoftSource(varargin)
 %       sin(1:numT)) will add sin(timestep) to the ez field at (50,50,50) on
 %       every timestep.
 %
+%   WARNING: This function is deprecated.  It's unphysical and will probably be
+%   removed in the future.  Please try to use addCurrentSource instead.
+%
 %   Usage: addSoftSource(named parameters)
 %
 %   Named parameters:
@@ -21,10 +24,11 @@ function addSoftSource(varargin)
 %       Duration    The range of timesteps on which to source fields; [t0 t1]
 %                   will source on timesteps t such that t0 <= t <= t1.  Using
 %                   multiple rows specifies multiple ranges of timesteps.
-%                   (default: all timesteps)
+%                   (default: [0, numT - 1] for a simulation with numT timesteps)
 %       TimeData    An array of size [nFields nTimesteps].  If the Duration
 %                   is specified as [0 10] then TimeData needs 11 columns, one
 %                   for each sourced timestep.
+%                   Units: SI (
 %                   (TimeData or SpaceTimeData required)
 %       MaskData    A per-field, per-cell prefactor to multiply the source by.
 %                   If YeeCells specifies a rectangle of size [nx ny nz] then
@@ -50,6 +54,9 @@ function addSoftSource(varargin)
 %   timesteps 0:10 and 100:110, where ex varies sinusoidally and hx varies
 %   as a decaying exponential.
 grid = t5.TrogdorSimulation.instance().currentGrid();
+
+warning(['addSoftSource is deprecated because it makes no sense. ', ...
+    'Use addCurrentSource instead.']);
 
 X.Field = '';
 X.YeeCells = [];
