@@ -1,5 +1,6 @@
 function newLossyDielectric(name, varargin)
-%newLossyDielectric Declare a new dielectric material with DC conductivity
+%newLossyDielectric Declare a new dielectric material with constant 
+%   conductivity.
 %   newLossyDielectric('Air') declares a "lossy" dielectric material with the
 %       default parameters epsr = 1, mur = 1, and sigma = 0
 %   newLossyDielectric('Conductive Air', 'sigma', 100) declares a dielectric
@@ -8,7 +9,7 @@ function newLossyDielectric(name, varargin)
 %   Named parameters:
 %       epsr    relative electric permittivity (default 1.0)
 %       mur     relative magnetic permeability (default 1.0)
-%       sigma   DC electrical conductivity (default 0.0)
+%       sigma   electrical conductivity [S/m] (default 0.0)
 
 sim = t5.TrogdorSimulation.instance();
 

@@ -79,12 +79,12 @@ if ~isempty(X.Bounds)
     X.YeeCells = boundsToYee(X.Bounds, fieldTokens);
 end
 
-if length(X.Duration) == 0
+if isempty(X.Duration)
     X.Duration = [0, t6.TrogdorSimulation.instance().NumT-1];
 elseif size(X.Duration, 2) ~= 2
     error('Duration must have two columns (first and last timestep).');
 end
-if length(X.Stride) == 0
+if isempty(X.Stride)
     X.Stride = ones(size(X.YeeCells, 1), 3);
 elseif size(X.Stride, 2) ~= 3
     error('Stride must have three columns (x, y, z).');
@@ -93,7 +93,7 @@ elseif size(X.Stride, 1) == 1
 elseif size(X.Stride, 1) ~= size(X.YeeCells, 1)
     error('Stride must have as many rows as YeeCells or Bounds.');
 end
-if length(X.Period) == 0
+if isempty(X.Period)
     X.Period = ones(size(X.Duration, 1), 1);
 elseif size(X.Period, 1) == 1
     X.Period = repmat(X.Period, size(X.Duration, 1), 1);
@@ -101,7 +101,7 @@ elseif size(X.Period, 1) ~= size(X.Duration, 1)
     error('Period must have as many rows as Duration.');
 end
 
-if length(X.InterpolationPoint) ~= 0
+if ~isempty(X.InterpolationPoint)
     if length(X.InterpolationPoint) ~= 3
         error('Please provide a 3D interpolation point.');
     end
@@ -119,7 +119,7 @@ obj.duration = X.Duration; % validated
 obj.stride = X.Stride; % validated
 obj.period = X.Period; % validated
 
-if length(X.InterpolationPoint) ~= 0
+if ~isempty(X.InterpolationPoint)
     obj.interpolationPoint = X.InterpolationPoint;
 end
 

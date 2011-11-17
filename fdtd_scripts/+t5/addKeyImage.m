@@ -41,6 +41,10 @@ if ndims(image) ~= 2 && ndims(image) ~= 3
     error('Key image must be 2D with optional third RGB dimension.');
 end
 
+if ~strcmpi(class(image), 'double')
+    error('Key image must be an array of double precision numbers.');
+end
+
 obj = struct;
 obj.type = 'KeyImage';
 obj.yeeCells = yeeCells;

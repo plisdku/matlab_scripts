@@ -1,8 +1,9 @@
 function addCurrentSource(varargin)
-%addCurrentSource Add a source of electric and/or magnetic current to the grid.
-%   addCurrentSource('Field', 'ky', 'YeeCells', [0 0 0 0 100 0], 'TimeData', ...
+%addCurrentSource Add a source of electric and/or magnetic current density to the
+%   grid.  addCurrentSource('Field', 'ky', 'YeeCells', [0 0 0 0 100 0], 'TimeData', ...
 %       sin(1:numT)) will drive the grid with a sinusoidal magnetic current ky
-%       along a line from (0,0,0) to (0,100,0) on every timestep.
+%       along a line from (0,0,0) to (0,100,0) on every timestep.  The
+%       units of current density are SI, e.g. amperes/m^2.
 %
 %   Usage: addCurrentSource(named parameters)
 %
