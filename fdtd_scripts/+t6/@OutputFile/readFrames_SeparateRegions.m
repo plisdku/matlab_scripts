@@ -1,4 +1,4 @@
-function data = readFrames_SeparateRegions(obj, numFrames)
+function data = readFrames_SeparateRegions(obj, numFrames, dataX, dataY, dataZ, outX, outY, outZ)
 
 % There are always two cases:
 %   1.  The file contains multiple Regions
@@ -110,4 +110,55 @@ elseif obj.numRegions() > 1
 else
     error('OutputFile has %d regions, how weird.', length(sizes));
 end
+
+% Interpolate as desired
+
+% dataX, dataY, dataZ are cell arrays of size {nRegions, nFields}.
+% outX, outY, outZ are cell arrays of size {nRegions}, or just arrays (1 region).
+
+if nargin == 8
+    fprintf('Interpolating too');
+    
+    if ~iscell(data)
+        % interpolate the array
+        
+        outData = zeros(numel(outX), numel(outY), numel(outZ), Nf, Nt);
+        
+        for ff = 1:numFields
+            outData(:,:,:,ff,:) = gridInterp(...
+                dataX{1,ff}, dataY{1,ff}, dataZ{1,ff}, ...
+                outX, outY, outZ);
+        end
+        
+        data = outData;
+        clear outData; % no reason for this
+    else
+        % interpolate the regions
+        outData = cell(numel(data));
+        
+        for rr = 1:numRegions
+            outData{rr} = zeros(numel(outX{rr}), numel(outY{rr}), numel(outZ{rr}), Nf, Nt);
+            
+            for ff = 1:numFields
+                outData{rr}(:,:,:,ff,:) = gridInterp(...
+                    dataX{rr,ff}, dataY{rr,ff}, dataZ{rr,ff}, ...
+                    outX{rr}, outY{rr}, outZ{rr});
+            end
+        end
+        
+        data = outData;
+        clear outData; % no reason for this
+    end
+end
+
+
+
+
+
+
+
+
+
+
+
 

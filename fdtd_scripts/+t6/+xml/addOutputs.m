@@ -25,8 +25,14 @@ for oo = 1:length(grid.Outputs)
         regionXML.setAttribute('yeeCells', ...
             sprintf('%i ', output.yeeCells(rr,:)));
         regionXML.setAttribute('stride', sprintf('%i ', output.stride(rr,:)));
+        
+        if size(output.bounds, 1) == size(output.yeeCells, 1)
+            regionXML.setAttribute('bounds', sprintf('%i ', output.bounds(rr,:)));
+        end
+        
         elemXML.appendChild(regionXML);
     end
+    
     gridXML.appendChild(elemXML);
 end
 

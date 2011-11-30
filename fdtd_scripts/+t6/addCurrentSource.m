@@ -207,11 +207,11 @@ for ff = 1:numel(fieldTokens)
         end
     end
     
-    fprintf('Source distrib:\n');
-    for xx = 1:numel(evalCoords{1})
-        fprintf('Weight %2.2f at %2.2f\n', weights{1}(xx), ...
-            currCoords{1}(xx));
-    end
+    %fprintf('Source distrib:\n');
+    %for xx = 1:numel(evalCoords{1})
+    %    fprintf('Weight %2.2f at %2.2f\n', weights{1}(xx), ...
+    %        currCoords{1}(xx));
+    %end
     
     timesteps = duration(1):duration(2);
     t = offset(4) + timesteps*t6.sim().Dt;

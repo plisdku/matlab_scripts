@@ -12,7 +12,7 @@ end
 
 offset = xml.fieldOffset(fieldTokens{1});
 
-yeeCells = t6.yeeCells(bounds - [offset(1:3) offset(1:3)]);
+yeeCells = t6.yeeCells(bsxfun(@minus, bounds, [offset(1:3) offset(1:3)]));
 for ff = 2:numel(fieldTokens)
     offset = xml.fieldOffset(fieldTokens{1});
     for rr = 1:size(bounds, 1)

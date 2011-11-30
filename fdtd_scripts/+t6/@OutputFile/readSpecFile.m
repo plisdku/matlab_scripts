@@ -42,6 +42,7 @@ obj.Regions.YeeCells = zeros(numRegions, 6);
 obj.Regions.Size = zeros(numRegions, 3);
 obj.Regions.Stride = zeros(numRegions, 3);
 obj.Regions.NumYeeCells = zeros(numRegions, 1);
+obj.Regions.Bounds = nan(numRegions, 6);
 
 obj.Durations = cell(numDurations, 1);
 nRegion = 1;
@@ -157,14 +158,22 @@ try % everything else, but close file before rethrow
             % For field outputs
             case 'region'
                 [dat, count] = sscanf(remainder, ...
-                    ' [[%f, %f, %f], [%f, %f, %f]] stride [%f, %f, %f]');
+                    ' [[%f, %f, %f], [%f, %f, %f]] stride [%f, %f, %f] bounds [[%f, %f, %f], [%f, %f, %f]]');
                 if count == 9
                     obj.Regions.YeeCells(nRegion,:) = dat(1:6)';
                     obj.Regions.Size(nRegion,:) = ceil( (dat(4:6)-dat(1:3)+1) ./ dat(7:9))';
                     obj.Regions.Stride(nRegion,:) = dat(7:9)';
                     obj.Regions.NumYeeCells(nRegion) = prod(obj.Regions.Size(nRegion,:));
                     nRegion = nRegion + 1;
+                elseif count == 15
+                    obj.Regions.YeeCells(nRegion,:) = dat(1:6)';
+                    obj.Regions.Size(nRegion,:) = ceil( (dat(4:6)-dat(1:3)+1) ./ dat(7:9))';
+                    obj.Regions.Stride(nRegion,:) = dat(7:9)';
+                    obj.Regions.NumYeeCells(nRegion) = prod(obj.Regions.Size(nRegion,:));
+                    obj.Regions.Bounds(nRegion,:) = dat(10:15)';
+                    nRegion = nRegion + 1;
                 else
+                    count
                     error('Cannot parse line %s', lineFromFile);
                 end
             case 'duration'

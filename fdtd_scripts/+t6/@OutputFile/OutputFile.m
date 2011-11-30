@@ -52,6 +52,10 @@ classdef OutputFile < handle
             nR = size(obj.Regions.YeeCells, 1);
         end
         
+        function yesNo = hasBounds(obj)
+            yesNo = ~any(isnan(obj.Regions.Bounds(:));
+        end
+        
         % obtain # of samples per field per timestep
         function fv = fieldValues(obj)
             fv = 0;
@@ -71,6 +75,8 @@ classdef OutputFile < handle
         open(obj)
         data = readFrames(obj, varargin)
         close(obj)
+        
+        seekFrame(obj, frame)
     end
     
     methods (Access = private)

@@ -12,8 +12,8 @@ X.Regions = 'Separate';
 X = parseargs(X, varargin{:});
 
 % What does this do?
-% It reads all the fields!  All of them!  A quick but slow approach
-% would use readFrame.  I'll try that first.
+% It reads all the fields!  All of them!  A simple but slow approach
+% would use readFrames().  I'll try that first.
 
 obj.open
 try
@@ -52,15 +52,15 @@ for chunk = 1:numChunks
         someData = obj.readFrames('NumFrames', framesPerChunk);
         for rr = 1:length(someData)
             valuesPerRegion = obj.Regions.NumYeeCells(rr)*length(obj.Fields);
-            i1 = (frameNum-1)*valuesPerRegion + 1;
-            i2 = i1 + valuesPerRegion*framesPerChunk - 1;
+            i1 = (frameNum-1)*valuesPerRegion + 1; % start of region
+            i2 = i1 + valuesPerRegion*framesPerChunk - 1; % end of region
             data{rr}(i1:i2) = someData{rr}(:);
         end
     else
         someData = obj.readFrames('NumFrames', framesPerChunk, 'Regions', ...
             'Together');
-        i1 = (frameNum-1)*obj.FrameSize + 1;
-        i2 = i1 + obj.FrameSize*framesPerChunk - 1;
+        i1 = (frameNum-1)*obj.FrameSize + 1; % start of frame
+        i2 = i1 + obj.FrameSize*framesPerChunk - 1; % end of frame
         data(i1:i2) = someData(:);
     end
 end

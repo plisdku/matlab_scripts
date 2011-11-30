@@ -13,7 +13,7 @@ function addOutput(filename, fields, varargin)
 %       'hxx', 'hxy', etc.      off-diagonal magnetic field subcomponents
 %       'dx', 'dy', 'dz'        D field
 %       'bx', 'by', 'bz'        B field 
-%   The order of fields in the file will always be 
+%   The order of fields in the file will always be D, E, B, H.
 %
 %   Named parameters:
 %       YeeCells        The region of the grid to save; [x0 y0 z0 x1 y1 z1] will
@@ -72,7 +72,7 @@ X = parseargs(X, varargin{:});
 
 t6.validateYeeCellsAndBounds(X);
 
-fieldTokens = tokenizeFields(fields, 'd e b h');
+fieldTokens = mySortTokens(tokenizeFields(fields, 'd e b h'));
 
 % If we obtained Bounds and not YeeCells, set the YeeCells appropriately
 if ~isempty(X.Bounds)
@@ -115,6 +115,7 @@ obj.type = 'Output';
 obj.fields = fields;
 obj.filename = filename;
 obj.yeeCells = X.YeeCells; % validated
+obj.bounds = X.Bounds; % validated
 obj.duration = X.Duration; % validated
 obj.stride = X.Stride; % validated
 obj.period = X.Period; % validated
@@ -124,3 +125,39 @@ if ~isempty(X.InterpolationPoint)
 end
 
 grid.Outputs = {grid.Outputs{:}, obj};
+
+end
+
+
+function toks = mySortTokens(tokens)
+
+vals = zeros(size(tokens));
+
+for tt = 1:numel(tokens)
+    switch lower(tokens{tt}(1))
+        case 'd'
+            vals(tt) = 1;
+        case 'e'
+            vals(tt) = 2;
+        case 'b'
+            vals(tt) = 3;
+        case 'h'
+            vals(tt) = 4;
+        case 'j'
+            vals(tt) = 5;
+        case 'm'
+            vals(tt) = 6;
+    end
+end
+
+[unused, ii] = sort(vals);
+
+if any(ii ~= 1:numel(ii))
+    warning('Output fields have been reordered to D, E, B, H.');
+end
+
+toks = tokens(ii);        
+    
+end % function tokenPrecedence
+
+
