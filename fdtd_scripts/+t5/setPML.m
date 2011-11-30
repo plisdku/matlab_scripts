@@ -40,6 +40,10 @@ if length(X.Depth) ~= 0
     grid.PML = X.Depth;
 end
 
+if any(X.Depth < 0)
+    error('PML depths must all be nonnegative.');
+end
+
 if length(X.Material) ~= 0
     
     index = t5.indexOf(X.Material, sim.Materials);
