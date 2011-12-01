@@ -9,5 +9,3 @@ elseif any(rect(1:3) > rect(4:6))
 elseif any(rect ~= round(rect))
     valid = 0;
 end
-
-    

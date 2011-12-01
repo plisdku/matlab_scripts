@@ -65,9 +65,17 @@ if length(X.YeeCells) == 0
     error('YeeCells required.');
 end
 
+
 if size(X.YeeCells, 2) ~= 6
     error('YeeCells must have six columns.');
 end
+
+for rr = 1:size(X.YeeCells, 1)
+    if ~t5.validateRect(X.YeeCells(rr,:))
+        error(sprintf('Invalid YeeCells [%i %i %i %i %i %i]', X.YeeCells(rr,:)));
+    end
+end
+
 if length(X.Duration) == 0
     X.Duration = [0, t5.TrogdorSimulation.instance().NumT-1];
 elseif size(X.Duration, 2) ~= 2
