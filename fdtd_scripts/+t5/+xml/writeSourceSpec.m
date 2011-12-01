@@ -38,7 +38,10 @@ if isfield(source, 'timeData')
         fprintf(fh, 'duration from %i to %i period 1\n', source.duration(dd,:));
     end
     
-    fprintf(fh, 'region [(0, 0, 0), (0, 0, 0)] stride (1, 1, 1)\n');
+    for yy = 1:size(source.yeeCells, 1)
+        fprintf(fh, 'region [(%i, %i, %i), (%i, %i, %i)] stride (1, 1, 1)\n',...
+            source.yeeCells(yy,:));
+    end
     
     fclose(fh);
 end
