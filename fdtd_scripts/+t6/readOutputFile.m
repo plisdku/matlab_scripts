@@ -3,10 +3,8 @@ function data = readOutputFile(fileName, varargin)
 %   alldat = readOutputFile(filename) is a shortcut for using OutputFile to
 %   read the file.  (Provided for back-compatibility with Trogdor 4 scripts.)
 
-import t6.*
-
 X.Regions = 'Separate';
 X = parseargs(X, varargin{:});
 
-file = OutputFile(fileName);
+file = t6.OutputFile(fileName);
 data = file.read('Regions', X.Regions);

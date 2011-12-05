@@ -53,7 +53,7 @@ classdef OutputFile < handle
         end
         
         function yesNo = hasBounds(obj)
-            yesNo = ~any(isnan(obj.Regions.Bounds(:));
+            yesNo = ~any(isnan(obj.Regions.Bounds(:)));
         end
         
         % obtain # of samples per field per timestep
