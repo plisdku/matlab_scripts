@@ -33,7 +33,9 @@ function addKeyImage(yeeCells, image, imageRow, imageCol, varargin)
 %
 %   COORDINATES:
 %
-%   If your image looks right when you plot it with imagesc:
+%   If your image looks right when you plot it with imagesc (that is, the
+%   rightward direction on your screen is what you want to be X and the
+%   upward direction on your screen is what you want to be Y):
 %
 %       imagesc(keyImage);
 %       xlabel('x')
@@ -42,14 +44,14 @@ function addKeyImage(yeeCells, image, imageRow, imageCol, varargin)
 %   then to actually insert it into the grid so that right on your screen
 %   is the x-axis and up on your screen is the y-axis, do it like this:
 %
-%   addKeyImage(boundingBox, keyImage, [0 1 0], [1 0 0], ...);
+%   addKeyImage(boundingBox, keyImage, [1 0 0], [0 1 0], ...);
 %
 %   If your image coordinates are already interpreted as (x,y), then to
 %   insert it into the simulation so that the first index (x) increases
 %   along the simulation x axis and the second index (y) increases along
 %   the simulation y axis, do it like this:
 %
-%   addKeyImage(boundingBox, keyImage, [1 0 0], [0 1 0], ...);
+%   addKeyImage(boundingBox, keyImage, [0 1 0], [-1 0 0], ...);
 %
 grid = t5.TrogdorSimulation.instance().currentGrid();
 
