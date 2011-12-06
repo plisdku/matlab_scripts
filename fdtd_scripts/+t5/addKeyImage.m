@@ -30,7 +30,27 @@ function addKeyImage(yeeCells, image, imageRow, imageCol, varargin)
 %
 %   Pixels in greyscale keyImage data must vary from 0 to 1.
 %   Pixels in RGB keyImage data must vary from 0 to 1 in each channel (R, G, B).
-
+%
+%   COORDINATES:
+%
+%   If your image looks right when you plot it with imagesc:
+%
+%       imagesc(keyImage);
+%       xlabel('x')
+%       ylabel('y')
+%
+%   then to actually insert it into the grid so that right on your screen
+%   is the x-axis and up on your screen is the y-axis, do it like this:
+%
+%   addKeyImage(boundingBox, keyImage, [0 1 0], [1 0 0], ...);
+%
+%   If your image coordinates are already interpreted as (x,y), then to
+%   insert it into the simulation so that the first index (x) increases
+%   along the simulation x axis and the second index (y) increases along
+%   the simulation y axis, do it like this:
+%
+%   addKeyImage(boundingBox, keyImage, [1 0 0], [0 1 0], ...);
+%
 grid = t5.TrogdorSimulation.instance().currentGrid();
 
 if ~t5.validateRect(yeeCells)

@@ -94,6 +94,23 @@ function [f, freqs, resid, residFrac] = spectrum(fileName, varargin)
 %   samples in the signal and the sampling interval.  This facilitates
 %   comparison of spectra of signals taken with different sampling
 %   intervals or from FDTD simulations of different total durations.
+%
+%   DIMENSIONS:
+%
+%       fieldData = analysis.spectrum('electricFields');
+%
+%   fieldData will be an array of size [Nx Ny Nz Nf Nfreq] where
+%       Nx is the number of output YeeCells in x
+%       Ny is the number of output YeeCells in y
+%       Nz is the number of output YeeCells in z
+%       Nf is the number of fields (e.g. ex, ey and ez)
+%       Nfreq is the number of frequencies
+%
+%   If the output file contained multiple blocks of Yee cells, as would
+%   happen when addOutput is called with a multi-row 'YeeCells' argument,
+%   analysis.spectrum will produce a cell array with one cell per row
+%   of 'YeeCells'.  Each cell will contain an array of size [Nx Ny Nz Nf
+%   Nt] corresponding to its YeeCell bounds.
 
 import t5.*;
 

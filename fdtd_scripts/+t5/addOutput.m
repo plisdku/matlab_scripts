@@ -50,6 +50,23 @@ function addOutput(filename, fields, varargin)
 %                       Use this to measure E and H at the exact same points in
 %                       space!
 %                       (default: unused)
+%
+%   To load an output file into a Matlab array, use readOutputFile:
+%
+%       fieldData = readOutputFile('electricFields');
+%
+%   fieldData will be an array of size [Nx Ny Nz Nf Nt] where
+%       Nx is the number of output YeeCells in x
+%       Ny is the number of output YeeCells in y
+%       Nz is the number of output YeeCells in z
+%       Nf is the number of fields (e.g. ex, ey and ez)
+%       Nt is the number of saved timesteps
+%
+%   If there are multiple rows in the 'YeeCells' argument when addOutput is
+%   called, readOutputFile will produce a cell array with one cell per row
+%   of 'YeeCells'.  Each cell will contain an array of size [Nx Ny Nz Nf
+%   Nt] corresponding to its YeeCell bounds.
+%
 %           
 grid = t5.TrogdorSimulation.instance().currentGrid();
 
