@@ -1,9 +1,14 @@
 function iii = bandwidth(x, varargin)
-% bandwidth Return the frequency at which a spectrum drops below -3 dB
+% bandwidth Return the frequency at which a spectrum drops below -3 dB.
 %
-%   bandwidth(x) returns the 3 dB point
+%   bandwidth(x) returns the 3 dB point of the power abs(x).^2
 %   bandwidth(x, dB) provides the level explicitly
-
+%
+% Example usage:
+%   [srcSpectrum, freqs] = analysis.spectrum(srcFn(dt*(1:numTimesteps)), 'Dt', dt);
+%   srcBandwidth = freqs(analysis.bandwidth(srcSpectrum(1:round(end/2))));
+%   bandwidthLambda = 2*pi*3e8/srcBandwidth;
+%
 if nargin > 1
     dBlevel = varargin{1};
 else
