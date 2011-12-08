@@ -29,7 +29,7 @@ function [f, freqs, resid, residFrac] = spectrum(fileName, varargin)
 %   may be used to obtain F.
 %   
 %   Example:
-%       freq = 0.1
+%       freq = 0.1;
 %       t = 0:10;
 %       f = cos(freq*t);
 %       F = t5.analysis.spectrum(f(9:10), 'Time', t(9:10), ...
