@@ -13,7 +13,7 @@ if (nargin < 2)
     period = 1;
 end
 
-file = OutputFile(fileName);
+file = t5.OutputFile(fileName);
 
 fieldNames = {};
 for nn = 1:length(file.Fields)
