@@ -32,7 +32,7 @@ function [f, freqs, resid, residFrac] = spectrum(fileName, varargin)
 %       freq = 0.1
 %       t = 0:10;
 %       f = cos(freq*t);
-%       F = analysis.spectrum(f(9:10), 'Time', t(9:10), ...
+%       F = t5.analysis.spectrum(f(9:10), 'Time', t(9:10), ...
 %           'SteadyStateFrequency', freq)
 %   
 %   Output:
@@ -98,7 +98,7 @@ function [f, freqs, resid, residFrac] = spectrum(fileName, varargin)
 %
 %   DIMENSIONS:
 %
-%       fieldData = analysis.spectrum('electricFields');
+%       fieldData = t5.analysis.spectrum('electricFields');
 %
 %   fieldData will be an array of size [Nx Ny Nz Nf Nfreq] where
 %       Nx is the number of output YeeCells in x
