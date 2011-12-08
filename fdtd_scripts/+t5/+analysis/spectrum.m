@@ -32,7 +32,8 @@ function [f, freqs, resid, residFrac] = spectrum(fileName, varargin)
 %       freq = 0.1
 %       t = 0:10;
 %       f = cos(freq*t);
-%       F = spectrum(f(9:10), 'Time', t, 'SteadyStateFrequency', freq)
+%       F = analysis.spectrum(f(9:10), 'Time', t(9:10), ...
+%           'SteadyStateFrequency', freq)
 %   
 %   Output:
 %
