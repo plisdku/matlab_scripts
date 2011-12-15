@@ -78,7 +78,7 @@ else
     
     flux = sumFluxes(pv, positions, X.Normal);
 end
-    
+
 
 function flux = sumFluxes(pv, positions, normal)
 
