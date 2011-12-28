@@ -17,5 +17,6 @@ precisionString = [obj.Precision, '=>', obj.Precision];
 if count ~= readLength
     error('Squirrels are dead to me');
 end
+obj.NextFrameNumber = obj.NextFrameNumber + numFrames;
 
 data = reshape(data, readLength/numFields/numFrames, numFields, numFrames);

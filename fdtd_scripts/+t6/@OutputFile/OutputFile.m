@@ -7,6 +7,11 @@ classdef OutputFile < handle
         RegionOffsetsInFields = [0]; % measured in # values, not bytes
         BytesPerValue = 4;
         FileHandle = -1;
+        %SavedFrame = []; % this is needed for time interpolation
+        SavedFrame = {};
+        SavedFrameNumber = -1;
+        NextFrameNumber = -1;
+        SampleTimes = [];
     end
     
     % The following properties can be set only by class methods
@@ -52,6 +57,10 @@ classdef OutputFile < handle
             nR = size(obj.Regions.YeeCells, 1);
         end
         
+        function nF = numFields(obj)
+            nF = numel(obj.Fields);
+        end
+        
         function yesNo = hasBounds(obj)
             yesNo = ~any(isnan(obj.Regions.Bounds(:)));
         end
@@ -69,8 +78,6 @@ classdef OutputFile < handle
         [xx, yy, zz] = positions(obj);
         nn = timesteps(obj);
         tt = times(obj);
-        
-        data = read(obj, varargin); % single stream of data from all regions
         
         open(obj)
         data = readFrames(obj, varargin)

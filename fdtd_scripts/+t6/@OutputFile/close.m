@@ -11,3 +11,4 @@ if returnVal ~= 0
 end
 
 obj.FileHandle = -1;
+obj.SavedFrame = [];

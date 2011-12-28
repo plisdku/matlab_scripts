@@ -9,3 +9,5 @@ if obj.FileHandle == -1
     error('Data file cannot be opened.');
 end
 
+obj.NextFrameNumber = 1;
+%obj.Durations{1}.First+1;

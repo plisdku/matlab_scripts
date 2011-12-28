@@ -8,7 +8,7 @@ if strcmp(X.Regions, 'Separate')
     jj = cell(obj.numRegions(), 1);
     kk = cell(obj.numRegions(), 1);
     
-    for rr = 1:obj.numRegions()
+    for rr = 1:obj.numRegions
         ii{rr} = obj.Regions.YeeCells(rr,1):obj.Regions.Stride(rr,1):obj.Regions.YeeCells(rr,4);
         jj{rr} = obj.Regions.YeeCells(rr,2):obj.Regions.Stride(rr,2):obj.Regions.YeeCells(rr,5);
         kk{rr} = obj.Regions.YeeCells(rr,3):obj.Regions.Stride(rr,3):obj.Regions.YeeCells(rr,6);

@@ -1,6 +1,6 @@
 function tt = times(obj)
 
-tt = cell(length(obj.Durations), length(obj.Fields));
+tt = cell(length(obj.Fields), 1);
 
 nn = obj.timesteps();
 if ~iscell(nn)
@@ -8,9 +8,9 @@ if ~iscell(nn)
 end
 
 for dd = 1:length(obj.Durations)
-for ff = 1:obj.numFields())
+for ff = 1:length(obj.Fields)
     offset = obj.Fields{ff}.Offset(4);
-    tt{dd,ff} = obj.Dt*(nn{dd} + offset);
+    tt{ff} = [tt{ff}, reshape(obj.Dt*(nn{dd} + offset), 1, [])];
 end
 end
 
