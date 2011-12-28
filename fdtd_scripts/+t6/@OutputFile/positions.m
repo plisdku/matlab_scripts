@@ -1,6 +1,6 @@
 function [xx, yy, zz] = positions(obj, varargin)
 
-xx = cell(length(obj.Regions), length(obj.Fields));
+xx = cell(obj.numRegions(), length(obj.Fields));
 yy = xx;
 zz = xx;
 
@@ -12,7 +12,7 @@ if ~iscell(ii)
     kk = {kk};
 end
 
-for rr = 1:size(obj.Regions.YeeCells, 1)
+for rr = 1:obj.numRegions()
 for ff = 1:length(obj.Fields)
     offset = obj.Fields{ff}.Offset;
     xx{rr,ff} = obj.Dxyz(1)*(ii{rr} + offset(1)) + obj.Origin(1);

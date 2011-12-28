@@ -8,7 +8,7 @@ if ~iscell(nn)
 end
 
 for dd = 1:length(obj.Durations)
-for ff = 1:length(obj.Fields)
+for ff = 1:obj.numFields())
     offset = obj.Fields{ff}.Offset(4);
     tt{dd,ff} = obj.Dt*(nn{dd} + offset);
 end

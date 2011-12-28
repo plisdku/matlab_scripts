@@ -41,7 +41,7 @@ else
     error('No Regions available.  Read GridReports with readFrames(1).');
 end
 
-warning('I think I can unify the two paragraphs of chunk reading');
+%warning('I think I can unify the two paragraphs of chunk reading');
 % Copy in the data by chunks as far as possible
 for chunk = 1:numChunks
     frameNum = (chunk-1)*framesPerChunk + 1;
