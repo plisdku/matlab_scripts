@@ -7,4 +7,8 @@ X.Regions = 'Separate';
 X = parseargs(X, varargin{:});
 
 file = t6.OutputFile(fileName);
-data = file.read('Regions', X.Regions);
+try
+file.open();
+data = file.readFrames('Regions', X.Regions);
+end
+file.close();

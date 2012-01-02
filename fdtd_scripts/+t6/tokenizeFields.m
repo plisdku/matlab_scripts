@@ -13,7 +13,7 @@ else
 end
 
 remainder = fieldString;
-while ~isempty(remainder)
+while any(isletter(remainder))
     [tokens{end+1}, remainder] = strtok(remainder);
 end
 
@@ -30,7 +30,7 @@ for ff = 1:numel(tokens)
     end
     
     if ~ok
-        error('Invalid field %s', tokens{ff});
+        error('Invalid field (%s)', tokens{ff});
     end
 end
 

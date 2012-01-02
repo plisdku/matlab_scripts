@@ -13,6 +13,10 @@ X.Courant = 0.99;
 
 X = parseargs(X, varargin{:});
 
+if any(X.NumCells < 1)
+    error('All elements of NumCells must be at least 1.');
+end
+
 dxyz = (X.Bounds(4:6) - X.Bounds(1:3)) ./ X.NumCells;
 dxyz(dxyz == 0) = 1;
 
