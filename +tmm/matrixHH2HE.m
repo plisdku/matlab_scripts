@@ -2,13 +2,14 @@ function hh2he = matrixHH2HE(omega, k, x, varargin)
 % matrixHH2HE Return the 2x2 matrix converting H_forward and H_backward
 %   amplitudes and phases (measured from zero) to H and E at a point.
 % 
-% Usage: ee2eh = matrixHH2HE(omega, k, x, mur)
+% Usage: hh2he = matrixHH2HE(omega, k, x, epsr)
 %   omega   angular frequency [1/s]
 %   k       longitudinal wavenumber, possibly complex [1/m]
 %   x       longitudinal position [m]
 %   epsr     (optional) relative permittivity [unitless]
 %
-% The fields are assumed to be in SI units.
+% The fields are assumed to be in SI units.  If k has a positive imaginary
+% part, the forward fields will be attenuated.
 %
 % The inverse function is matrixHE2HH.
 

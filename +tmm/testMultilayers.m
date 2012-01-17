@@ -56,7 +56,6 @@ disp('Fresnel equations, s-polarization: passed');
 
 %% TM
 
-inputH = 1;
 reflections = 0*thetas;
 for nn = 1:length(thetas)
     theta1 = thetas(nn);
@@ -65,8 +64,11 @@ for nn = 1:length(thetas)
     
     kParallel = sin(theta1)*ks(1);
     
-    [Hx, Ey, Ez, T, R] = solveTM(boundaries, epsr, mur, inputH, omega, ...
+    [Hx, Ey, Ez, T, R] = solveTM(boundaries, epsr, mur, omega, ...
         kParallel);
+    %[Hx, Ey, Ez, T, R] = solveTM('Boundaries', boundaries, ...
+    %    'Permittivity', epsr, 'Permeability', mur, 'Frequency', omega, ...
+    %    'Wavevector', kParallel);
     reflections(nn) = R;
     checkRelativelyClose(R, fresnelR_p(n(1), n(2), theta1, theta2));
 end

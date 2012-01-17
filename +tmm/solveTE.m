@@ -1,7 +1,7 @@
-function [Ex, Hy, Hz, T, R, epsrEx, murHy, murHz] = solveTE(boundaries, ...
+function [Ex, Hy, Hz, T, R, epsrEx, murHy, murHz, transferEE] = solveTE(boundaries, ...
     epsr, mur, inputE, omega, kParallel, varargin)
 % Usage:
-% [Ex, Hy, Hz, T, R, epsrEx, murHy, murHz] = solveTE(boundaries, epsr, mur,
+% [Ex, Hy, Hz, T, R, epsrEx, murHy, murHz, transferMatrix] = solveTE(boundaries, epsr, mur,
 %   inputE, omega, kParallel, outputPosEx, outputPosHy, outputPosHz)
 %
 % Ex is an array of transverse E fields measured at outputPosEx
@@ -57,6 +57,7 @@ c = 1/sqrt(eps0*mu0);
 n = sqrt(epsr.*mur);
 
 ks = sqrt(omega^2*n.^2/c^2 - kParallel^2);
+ks(imag(ks) < 0) = -ks(imag(ks) < 0); % decay goes the right way now
 
 % Make matrices to convert [E+, E-] in layer n to [E+, E-] in layer n+1,
 % and vice-versa
@@ -83,6 +84,8 @@ for nLayer = 1:length(forwardMatrix)
     transferEE = forwardMatrix{nLayer}*transferEE;
     transferLayer{nLayer+1} = transferEE;
 end
+
+% The transfer matrix is transferEE.
 
 E0 = transferEE \ [1;0];
 t = 1/E0(1);

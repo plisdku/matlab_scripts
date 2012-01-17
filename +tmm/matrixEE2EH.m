@@ -8,7 +8,8 @@ function ee2eh = matrixEE2EH(omega, k, x, varargin)
 %   x       longitudinal position [m]
 %   mur     (optional) relative permeability [unitless]
 %
-% The fields are assumed to be in SI units.
+% The fields are assumed to be in SI units.  If k has a positive imaginary
+% part, the forward fields will be attenuated.
 %
 % The inverse function is matrixEH2EE.
 

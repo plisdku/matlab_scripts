@@ -1,8 +1,8 @@
-function [Hx, Ey, Ez, T, R, murHx, epsrEy, epsrEz] = solveTM(boundaries, ...
-    epsr, mur, inputH, omega, kParallel, varargin)
+function [Hx, Ey, Ez, T, R, murHx, epsrEy, epsrEz, transferHH] = solveTM(...
+    boundaries, epsr, mur, omega, kParallel, varargin)
 % Usage:
-% [Hx, Ey, Ez, T, R, murHx, epsrEy, epsrEz] = solveTM(boundaries, epsr,
-%   mur, inputH, omega, kParallel, outputPosHx, outputPosEy, outputPosEz)
+% [Hx, Ey, Ez, T, R, murHx, epsrEy, epsrEz, transferMatrix] = solveTM(boundaries, epsr,
+%   mur, omega, kParallel, outputPos, forceBoundModes)
 %
 % Hx is an array of transverse H fields measured at outputPosHx
 % Ey is an array of transverse E fields measured at outputPosEy
@@ -23,32 +23,38 @@ function [Hx, Ey, Ez, T, R, murHx, epsrEy, epsrEz] = solveTM(boundaries, ...
 % mur is an array of relative permeabilities, one per layer, including the
 % media before and after the multilayer [unitless]
 % 
-% inputH is the amplitude of incoming H at the left [arbitrary units]
-% 
-% outputPosHx is a vector of positions to evaluate the Hx field at.
-% (optional) [meters]
-% 
-% outputPosEy is a vector of positions to evaluate the Ey field at.
-% (optional) [meters]
+% outputPos is a vector of positions to evaluate the fields at.  It may
+% also be a cell array with three vectors of positions, one each for Hx, Ey
+% and Ez. (optional) [meters]
 %
-% outputPosEz is a vector of positions to evaluate the Ez field at.
-% (optional) [meters]
+% forceBoundModes can be true or false (false by default).  If true, the
+% transfer matrices and field amplitudes will be adjusted so no inbound
+% waves are present. (optional)
 
-import tmm.*;
-
+outputPos = [];
 outputPosHx = [];
 outputPosEy = [];
 outputPosEz = [];
 
-if nargin > 6
-    outputPosHx = reshape(varargin{1},1,[]);
-    if nargin > 7
-        outputPosEy = reshape(varargin{2},1,[]);
-        if nargin > 8
-            outputPosEz = reshape(varargin{3},1,[]);
-        end
+if numel(varargin) > 0
+    outputPos = varargin{1};
+    if iscell(outputPos)
+        outputPosHx = outputPos{1};
+        outputPosEy = outputPos{2};
+        outputPosEz = outputPos{3};
+    else
+        outputPosHx = outputPos;
+        outputPosEy = outputPos;
+        outputPosEz = outputPos;
     end
 end
+
+forceBoundModes = false;
+if numel(varargin) > 1
+    forceBoundModes = varargin{2};
+end
+
+import tmm.*;
 
 mu0 = 4e-7*pi;
 eps0 = 8.854187817e-12;
@@ -57,7 +63,7 @@ c = 1/sqrt(eps0*mu0);
 n = sqrt(epsr.*mur);
 
 ks = sqrt(omega^2*n.^2/c^2 - kParallel^2);
-%ks(imag(ks) < 0) = conj(ks(imag(ks) < 0)); % decay goes the right way now?
+ks(imag(ks) < 0) = -ks(imag(ks) < 0); % decay goes the right way now
 
 % Make matrices to convert [H+, H-] in layer n to [H+, H-] in layer n+1,
 % and vice-versa
@@ -92,6 +98,14 @@ T = abs(t)^2;
 R = abs(r)^2;
 %assert( abs( 1.0 - T - R ) < 1e-6 ); % t^2 + r^2 = 1 % not generally true
 
+%% For mode solutions:
+
+%if X.ForceBoundMode
+if forceBoundModes
+    H0(1) = 0;
+    transferLayer{end}(2,:) = 0;
+end
+
 %% Get the forward and backward E in each layer (use transferLayer)
 
 Hx = 0*outputPosHx;
@@ -123,7 +137,7 @@ for nLayer = 1:length(boundaries)+1
          outputPosEz <= intervals(nLayer+1));
     end
     
-    Hn = transferLayer{nLayer}*H0/H0(1)*inputH;
+    Hn = transferLayer{nLayer}*H0;
     
     for ii = indicesHx
         z = outputPosHx(ii);
