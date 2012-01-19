@@ -66,9 +66,6 @@ for nn = 1:length(thetas)
     
     [Hx, Ey, Ez, T, R] = solveTM(boundaries, epsr, mur, omega, ...
         kParallel);
-    %[Hx, Ey, Ez, T, R] = solveTM('Boundaries', boundaries, ...
-    %    'Permittivity', epsr, 'Permeability', mur, 'Frequency', omega, ...
-    %    'Wavevector', kParallel);
     reflections(nn) = R;
     checkRelativelyClose(R, fresnelR_p(n(1), n(2), theta1, theta2));
 end

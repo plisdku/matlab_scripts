@@ -2,7 +2,7 @@ function [Ex, Hy, Hz, T, R, epsrEx, murHy, murHz, transferEE] = solveTE(boundari
     epsr, mur, inputE, omega, kParallel, varargin)
 % Usage:
 % [Ex, Hy, Hz, T, R, epsrEx, murHy, murHz, transferMatrix] = solveTE(boundaries, epsr, mur,
-%   inputE, omega, kParallel, outputPosEx, outputPosHy, outputPosHz)
+%   inputE, omega, ky, outputPosEx, outputPosHy, outputPosHz)
 %
 % Ex is an array of transverse E fields measured at outputPosEx
 % Hy is an array of transverse H fields measured at outputPosHy
@@ -15,7 +15,7 @@ function [Ex, Hy, Hz, T, R, epsrEx, murHy, murHz, transferEE] = solveTE(boundari
 % 
 % boundaries is an array of positions where E and H are continuous [meters]
 % 
-% kParallel is the k vector parallel to the boundary. [1/meters]
+% ky is the k vector parallel to the boundary. [1/meters]
 %
 % epsr is an array of relative permittivities, one per layer, including the
 % media before and after the multilayer [unitless]
@@ -145,7 +145,8 @@ for nLayer = 1:length(boundaries)+1
         z = outputPosHz(ii);
         ee2eh = matrixEE2EH(omega, ks(nLayer), z, mur(nLayer));
         EH = ee2eh*En;
-        Hz(ii) = EH(2)*kParallel/ks(nLayer);
+        Hz(ii) = -EH(1)*kParallel/omega/mur(nLayer)/mu0;
+        %Hz(ii) = EH(2)*kParallel/ks(nLayer); % WRONG
     end
     
     epsrEx(indicesEx) = epsr(nLayer);

@@ -2,7 +2,7 @@ function [Hx, Ey, Ez, T, R, murHx, epsrEy, epsrEz, transferHH] = solveTM(...
     boundaries, epsr, mur, omega, kParallel, varargin)
 % Usage:
 % [Hx, Ey, Ez, T, R, murHx, epsrEy, epsrEz, transferMatrix] = solveTM(boundaries, epsr,
-%   mur, omega, kParallel, outputPos, forceBoundModes)
+%   mur, omega, ky, outputPos, forceBoundModes)
 %
 % Hx is an array of transverse H fields measured at outputPosHx
 % Ey is an array of transverse E fields measured at outputPosEy
@@ -15,7 +15,7 @@ function [Hx, Ey, Ez, T, R, murHx, epsrEy, epsrEz, transferHH] = solveTM(...
 % 
 % boundaries is an array of positions where E and H are continuous [meters]
 % 
-% kParallel is the k vector parallel to the boundary. [1/meters]
+% ky is the k vector parallel to the boundary. [1/meters]
 % 
 % epsr is an array of relative permittivities, one per layer, including the
 % media before and after the multilayer [unitless]
@@ -157,7 +157,8 @@ for nLayer = 1:length(boundaries)+1
         z = outputPosEz(ii);
         hh2he = matrixHH2HE(omega, ks(nLayer), z, epsr(nLayer));
         HE = hh2he*Hn;
-        Ez(ii) = -HE(2)*kParallel/ks(nLayer);
+        Ez(ii) = -HE(1)*kParallel/omega/epsr(nLayer)/eps0;
+        %Ez(ii) = -HE(2)*kParallel/ks(nLayer); % WRONG
     end
     
     murHx(indicesHx) = mur(nLayer);
