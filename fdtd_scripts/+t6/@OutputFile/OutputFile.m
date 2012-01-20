@@ -7,7 +7,6 @@ classdef OutputFile < handle
         RegionOffsetsInFields = [0]; % measured in # values, not bytes
         BytesPerValue = 4;
         FileHandle = -1;
-        %SavedFrame = []; % this is needed for time interpolation
         SavedFrame = {};
         SavedFrameNumber = -1;
         NextFrameNumber = -1;
@@ -74,13 +73,13 @@ classdef OutputFile < handle
         end
         
         n = numFramesAvailable(obj);
-        [ii, jj, kk] = yeeCells(obj, varargin); % ('Regions', [1 3], 'Fields', {'ex', 'ez'})
-        [xx, yy, zz] = positions(obj);
+        ijk = yeeCells(obj, varargin); % ('Regions', [1 3], 'Fields', {'ex', 'ez'})
+        xyz = positions(obj, varargin);
         nn = timesteps(obj);
-        tt = times(obj);
+        tt = times(obj, varargin);
         
         open(obj)
-        data = readFrames(obj, varargin)
+        [data, positions] = readFrames(obj, varargin)
         close(obj)
         
         seekFrame(obj, frame)

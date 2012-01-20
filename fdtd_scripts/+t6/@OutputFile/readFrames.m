@@ -1,4 +1,4 @@
-function data = readFrames(obj, varargin)
+function [data, positions] = readFrames(obj, varargin)
 % outputFile.readFrames()
 % outputFile.readFrames(numFrames)
 % outputFile.readFrames(numFrames, 'Regions', 'Together')
@@ -9,12 +9,21 @@ X.Regions = 'Separate';
 X.Size = [];
 X.Times = [];
 X.Positions = [];
-X.InterpolateSpace = obj.hasBounds();
+X.InterpolateSpace = [];
 
 X = parseargs(X, varargin{:});
+if isempty(X.InterpolateSpace)
+    X.InterpolateSpace = obj.hasBounds();
+end
 
 if obj.FileHandle == -1
     error('No data file is open.  Try open()?');
+end
+
+if ~isempty(X.Positions)
+    if ~iscell(X.Positions)
+        X.Positions = {X.Positions(:,1), X.Positions(:,2), X.Positions(:,3)};
+    end
 end
 
 % Figure out whether to interpolate in space and/or time.
@@ -23,7 +32,8 @@ end
 
 if X.InterpolateSpace
     if isempty(X.Positions)
-        % fill in some natural sampling points
+        % fill in some natural sampling points.
+        X.Positions = naturalSamplingPositions(obj, X.Size);
     end
 elseif ~isempty(X.Positions)
     X.InterpolateSpace = true;
@@ -40,4 +50,36 @@ if strcmp(X.Regions, 'Separate')
 else
     data = obj.readFrames_RegionsTogether(X.NumFrames);
 end
+
+if ~isempty(X.Positions)
+    positions = X.Positions;
+else
+    positions = obj.positions();
+end
+
+
+
+function pos = naturalSamplingPositions(obj, numSamplesInRegions)
+
+pos = cell(obj.numRegions, 3);
+for rr = 1:obj.numRegions()
+    if isempty(numSamplesInRegions)
+        numSamples = (obj.Regions.Bounds(rr,4:6) - obj.Regions.Bounds(rr,1:3)) ...
+            ./ obj.Dxyz;
+    else
+        numSamples = numSamplesInRegions(rr,:);
+    end
+    numSamples = round(numSamples);
+    numSamples(numSamples < 1) = 1;
+
+    for xyz = 1:3
+        if numSamples(xyz) > 1
+            pos{rr,xyz} = linspace(obj.Regions.Bounds(rr,xyz), ...
+                obj.Regions.Bounds(rr,xyz+3), numSamples(xyz));
+        else
+            pos{rr,xyz} = obj.Regions.Bounds(rr,xyz);
+        end
+    end    
+end
+
 

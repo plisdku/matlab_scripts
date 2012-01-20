@@ -11,6 +11,7 @@ import t6.*
 X.Period = 1;
 X.YLim = [-1 1];
 X.CLim = [];
+X.UnitString = [];
 X = parseargs(X, varargin{:});
 
 period = X.Period;
@@ -23,7 +24,7 @@ end
 file = OutputFile(fileName);
 
 fieldNames = {};
-for nn = 1:length(file.Fields)
+for nn = 1:file.numFields()
     fieldNames{nn} = file.Fields{nn}.Name;
 end
 
@@ -31,17 +32,21 @@ if file.numRegions() > 1
     error('Function does not yet work with multi-region outputs.');
 end
 
-if length(file.Fields) > 1
-    dim = [file.Regions.Size(1,:), length(file.Fields)];
+if file.numFields() > 1
+    xyzPos = file.positions('Field', 1);
+    dim = [cellfun(@numel, xyzPos), file.numFields()];
+    %dim = [file.Regions.Size(1,:), file.numFields()];
 else
-    dim = file.Regions.Size;
+    %dim = file.Regions.Size;
+    xyzPos = file.positions();
+    dim = cellfun(@numel, xyzPos);
 end
 
 numFrames = file.numFramesAvailable;
 
 % Dimension cases
 %
-% 1 1 1         One field componen at a point: time trace
+% 1 1 1         One field component at a point: time trace
 % 1 1 1 3       Three components at a point: threefold time trace
 % 1 1 N, perms  1D output: plot 1D movie
 % 1 1 N 3       1D output: plot threefold 1D movie
@@ -49,7 +54,9 @@ numFrames = file.numFramesAvailable;
 % M N 1 3       2D output: plot 2D movie with three parts
 
 if (prod(dim(1:3)) == 1)   % All 0D cases
-    data = file.read;
+    file.open();
+    data = file.readFrames();
+    file.close();
     if (length(dim) == 3)
         plot(squeeze(data));
     elseif (length(dim) == 4)  % assuming dim4 = 3
@@ -96,10 +103,6 @@ elseif (nnz(dim(1:3) == 1) == 2)   % All 1D cases
     end
 elseif (nnz(dim(1:3) == 1) == 1)    % All 2D cases
     
-    coords = 'xyz';
-    [xPos yPos zPos] = file.positions;
-    xyzPos = {xPos yPos zPos};
-    
     if file.Regions.Size(1,1) == 1
         row = 2; col = 3;
     elseif file.Regions.Size(1,2) == 1
@@ -108,10 +111,13 @@ elseif (nnz(dim(1:3) == 1) == 1)    % All 2D cases
         row = 1; col = 2;
     end
     
-    if (length(dim) == 3)
+    if file.numFields() == 1
         frameNum = 1;
-        file.open
+        file.open();
         data = file.readFrames('NumFrames', 1);
+        
+        xyzPos = file.positions(); % size {3}
+        
         while frameNum <= numFrames
             if (mod(frameNum, period) == 0)
                 imagesc_centered(xyzPos{row}, xyzPos{col}, ...
@@ -120,8 +126,8 @@ elseif (nnz(dim(1:3) == 1) == 1)    % All 2D cases
                 set(gca, 'YDir', 'Normal');
                 colorbar;
                 title(sprintf('Frame %i', frameNum));
-                xlabel(sprintf('%s (m)', coords(row)));
-                ylabel(sprintf('%s (m)', coords(col)));
+                xlabel(sprintf('%s%s', char('w'+row), X.UnitString));
+                ylabel(sprintf('%s%s', char('w'+col), X.UnitString));
                 pause(0.01);
             end
             if frameNum < numFrames
@@ -129,7 +135,7 @@ elseif (nnz(dim(1:3) == 1) == 1)    % All 2D cases
             end
             frameNum = frameNum + 1;
         end
-    elseif (length(dim) == 4)
+    elseif file.numFields() == 3
         frameNum = 1;
         file.open
         data = file.readFrames('NumFrames', 1);
@@ -141,7 +147,6 @@ elseif (nnz(dim(1:3) == 1) == 1)    % All 2D cases
                 clf
                 if diff(xyzPos{row}{2}([1 end])) < ...
                     diff(xyzPos{col}{2}([1 end]))
-                %if datsize(1) < datsize(2)   % tall skinny
                     subplot(131);
                     imagesc_centered(xyzPos{row}{1}, xyzPos{col}{1}, ...
                         transpose(squeeze(data(:,:,:,1))));
@@ -149,8 +154,8 @@ elseif (nnz(dim(1:3) == 1) == 1)    % All 2D cases
                     set(gca, 'YDir', 'Normal');
                     colorbar;
                     title(file.Fields{1}.Name);
-                    xlabel(sprintf('%s (m)', coords(row)));
-                    ylabel(sprintf('%s (m)', coords(col)));
+                    xlabel(sprintf('%s%s', char('w'+row), X.UnitString));
+                    ylabel(sprintf('%s%s', char('w'+col), X.UnitString));
                     
                     subplot(132)
                     imagesc_centered(xyzPos{row}{2}, xyzPos{col}{2}, ...
@@ -159,8 +164,8 @@ elseif (nnz(dim(1:3) == 1) == 1)    % All 2D cases
                     set(gca, 'YDir', 'Normal');
                     colorbar;
                     title(file.Fields{2}.Name);
-                    xlabel(sprintf('%s (m)', coords(row)));
-                    ylabel(sprintf('%s (m)', coords(col)));
+                    xlabel(sprintf('%s%s', char('w'+row), X.UnitString));
+                    ylabel(sprintf('%s%s', char('w'+col), X.UnitString));
                     
                     subplot(133)
                     imagesc_centered(xyzPos{row}{3}, xyzPos{col}{3}, ...
@@ -169,9 +174,8 @@ elseif (nnz(dim(1:3) == 1) == 1)    % All 2D cases
                     set(gca, 'YDir', 'Normal');
                     colorbar;
                     title(file.Fields{3}.Name);
-                    xlabel(sprintf('%s (m)', coords(row)));
-                    ylabel(sprintf('%s (m)', coords(col)));
-                    %suptitle(sprintf('Frame %i', frameNum));
+                    xlabel(sprintf('%s%s', char('w'+row), X.UnitString));
+                    ylabel(sprintf('%s%s', char('w'+col), X.UnitString));
                 else
                     subplot(311)
                     imagesc_centered(xyzPos{row}{1}, xyzPos{col}{1}, ...
@@ -180,8 +184,8 @@ elseif (nnz(dim(1:3) == 1) == 1)    % All 2D cases
                     set(gca, 'YDir', 'Normal');
                     colorbar;
                     title(file.Fields{1}.Name);
-                    xlabel(sprintf('%s (m)', coords(row)));
-                    ylabel(sprintf('%s (m)', coords(col)));
+                    xlabel(sprintf('%s%s', char('w'+row), X.UnitString));
+                    ylabel(sprintf('%s%s', char('w'+col), X.UnitString));
                     
                     subplot(312)
                     imagesc_centered(xyzPos{row}{2}, xyzPos{col}{2}, ...
@@ -190,8 +194,8 @@ elseif (nnz(dim(1:3) == 1) == 1)    % All 2D cases
                     set(gca, 'YDir', 'Normal');
                     colorbar;
                     title(file.Fields{2}.Name);
-                    xlabel(sprintf('%s (m)', coords(row)));
-                    ylabel(sprintf('%s (m)', coords(col)));
+                    xlabel(sprintf('%s%s', char('w'+row), X.UnitString));
+                    ylabel(sprintf('%s%s', char('w'+col), X.UnitString));
                     
                     subplot(313)
                     imagesc_centered(xyzPos{row}{3}, xyzPos{col}{3}, ...
@@ -200,9 +204,8 @@ elseif (nnz(dim(1:3) == 1) == 1)    % All 2D cases
                     set(gca, 'YDir', 'Normal');
                     colorbar;
                     title(file.Fields{3}.Name);
-                    xlabel(sprintf('%s (m)', coords(row)));
-                    ylabel(sprintf('%s (m)', coords(col)));
-                    %suptitle(sprintf('Frame %i', frameNum));
+                    xlabel(sprintf('%s%s', char('w'+row), X.UnitString));
+                    ylabel(sprintf('%s%s', char('w'+col), X.UnitString));
                 end
                 pause(0.01);
             end

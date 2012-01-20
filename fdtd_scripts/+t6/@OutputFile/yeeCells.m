@@ -1,8 +1,33 @@
-function [ii, jj, kk] = yeeCells(obj, varargin)
+function yees = yeeCells(obj, varargin)
 
 X.Regions = 'Separate'; % Separate or Together
+X.Region = [];
 X = parseargs(X, varargin{:});
 
+validateArguments(obj, X);
+
+if isempty(X.Region)
+    X.Region = 1;
+end
+
+yees = cell(1,3);
+if strcmpi(X.Regions, 'Separate')
+    for xyz = 1:3
+        yees{xyz} = obj.Regions.YeeCells(X.Region,xyz) : ...
+            obj.Regions.Stride(X.Region,xyz) : ...
+            obj.Regions.YeeCells(X.Region, xyz+3);
+    end
+elseif strcmpi(X.Regions, 'Together')
+    
+    for rr = 1:obj.numRegions()
+        [ii, jj, kk] = unrollRegion(obj.Regions.YeeCells(rr,:));
+        yees{1} = [yees{1}, ii];
+        yees{2} = [yees{2}, jj];
+        yees{3} = [yees{3}, kk];
+    end
+end
+
+%{
 if strcmp(X.Regions, 'Separate')
     ii = cell(obj.numRegions(), 1);
     jj = cell(obj.numRegions(), 1);
@@ -19,6 +44,7 @@ if strcmp(X.Regions, 'Separate')
         jj = jj{1};
         kk = kk{1};
     end
+
 elseif strcmp(X.Regions, 'Together')
     ii = [];
     jj = [];
@@ -33,7 +59,19 @@ elseif strcmp(X.Regions, 'Together')
 else
     error('Invalid Regions option');
 end
+%}
 
+function validateArguments(obj, X)
+
+if ~strcmpi(X.Regions, 'Separate') && ~strcmpi(X.Regions, 'Together')
+    error('Regions must be Separate or Together');
+end
+
+if strcmpi(X.Regions, 'Separate')
+    if obj.numRegions() > 1 && isempty(X.Region)
+        error('More than one region is present in this file.  Please select one using the Region argument.');
+    end
+end
 
 function [ii, jj, kk] = unrollRegion(yeeCells)
 

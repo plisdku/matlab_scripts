@@ -169,27 +169,30 @@ for ff = 1:numel(fieldTokens)
     
     support = t6.boundsToYee(bounds(1,:), fieldTokens{ff});
     
-    yeeX = support(1):support(4);
-    yeeY = support(2):support(5);
-    yeeZ = support(3):support(6);
+    % Yee cells over which field ff is nonzero.  This is a subset of
+    % yeeRegion.
+    supportYee{1} = support(1):support(4);
+    supportYee{2} = support(2):support(5);
+    supportYee{3} = support(3):support(6);
     
     % Physical points in space at which the current will be provided
     currCoords = cell(3,1);
-    currCoords{1} = t6.grid().Origin(1) + offset(1) + yeeX*dxyz(1);
-    currCoords{2} = t6.grid().Origin(2) + offset(2) + yeeY*dxyz(2);
-    currCoords{3} = t6.grid().Origin(3) + offset(3) + yeeZ*dxyz(3);
+    currCoords{1} = t6.grid().Origin(1) + offset(1) + supportYee{1}*dxyz(1);
+    currCoords{2} = t6.grid().Origin(2) + offset(2) + supportYee{2}*dxyz(2);
+    currCoords{3} = t6.grid().Origin(3) + offset(3) + supportYee{3}*dxyz(3);
     
     evalCoords = cell(3,1); % points in real space at which to evaluate function
     weights = cell(3,1); % interpolation weights
     for xyz = 1:3
         if bounds(xyz) == bounds(xyz+3) % zero-width in this dim
-            if yeeRegion(xyz) < yeeRegion(xyz+3)
+            if numel(supportYee{xyz}) > 1
                 % if the grid itself is not lower-dimensioned, then this is
                 % really a delta-function distribution in one dimension.
                 % Take the specified current to be a total current and
                 % determine the appropriate density by dividing by dx.
                 evalCoords{xyz} = [bounds(xyz), bounds(xyz)];
                 weights{xyz} = (1 - abs(evalCoords{xyz}-currCoords{xyz})/dxyz(xyz))/dxyz(xyz);
+                
             else % the grid is low-dimensioned.
                 evalCoords{xyz} = bounds(xyz);
                 weights{xyz} = 1.0;
@@ -227,9 +230,9 @@ for ff = 1:numel(fieldTokens)
     % The scaled current may not be the full size of the source region.  Fill in the appropriate
     % elements.  This amounts to finding an index offset.
     
-    indicesX = 1 + yeeX - yeeRegion(1);
-    indicesY = 1 + yeeY - yeeRegion(2);
-    indicesZ = 1 + yeeZ - yeeRegion(3);
+    indicesX = 1 + supportYee{1} - yeeRegion(1);
+    indicesY = 1 + supportYee{2} - yeeRegion(2);
+    indicesZ = 1 + supportYee{3} - yeeRegion(3);
     
     src(indicesX, indicesY, indicesZ,ff,:) = scaledCurrent;
 end

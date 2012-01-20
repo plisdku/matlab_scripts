@@ -23,7 +23,7 @@ plot3(X.Units*controlVertices(:,1), X.Units*controlVertices(:,2), ...
 hold on
 
 matlColors = {'g', 'k', 'g', 'y'};
-if (numel(theMesh.permittivity) > 1)
+%if (numel(theMesh.permittivity) > 1)
     
     for pp = 1
         patch('Vertices', X.Units*theMesh.permittivity{pp}.vertices, ...
@@ -31,7 +31,7 @@ if (numel(theMesh.permittivity) > 1)
             'FaceColor', matlColors{pp}, 'FaceAlpha', 0.2, 'EdgeAlpha', 0.02)
     end
     view(2) % top-down
-end
+%end
 
 
 if ~isempty(X.Sensitivity)

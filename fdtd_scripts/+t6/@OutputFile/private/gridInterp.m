@@ -28,7 +28,7 @@ end
 B = A;
 
 indicesAll = repmat({':'}, 1, numdim); % useful variable factored from loop
-    
+
 for dim = 1:numdim
 if size(A,dim) > 1
     xIn = x{dim};

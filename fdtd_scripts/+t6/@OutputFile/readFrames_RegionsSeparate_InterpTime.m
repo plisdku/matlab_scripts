@@ -11,9 +11,16 @@ if ~isempty(X.Positions)
     assert(iscell(X.Positions));
     assert(all(size(X.Positions) == [obj.numRegions(), 3]));
     
-    [posX posY posZ] = obj.positions();
+    samplePositionsInFile = cell(obj.numRegions(), obj.numFields());
+    for rr = 1:obj.numRegions
+        for ff = 1:obj.numFields
+            samplePositionsInFile{rr,ff} = obj.positions('InterpolateSpace', ...
+                false);
+        end
+    end
+    
     subReadData = @(obj, numFrames) readFromFile(obj, numFrames, ...
-        posX, posY, posZ, X.Positions);
+        samplePositionsInFile, X.Positions);
 else
     subReadData = @(obj, numFrames) readFromFile(obj, numFrames);
 end

@@ -1,3 +1,9 @@
+% Rotate  Matrix transformation for geometry
+% 
+% Example constructor:
+%
+% r = Rotate(@(p) [cos(p) -sin(p) 0; sin(p) cos(p) 0; 0 0 1], childMeshes);
+%
 classdef Rotate < t6.model.Node
     
     properties

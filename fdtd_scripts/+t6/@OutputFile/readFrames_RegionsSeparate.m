@@ -12,9 +12,19 @@ if ~isempty(X.Positions)
     assert(iscell(X.Positions));
     assert(all(size(X.Positions) == [obj.numRegions(), 3]));
     
-    [posX posY posZ] = obj.positions();
+    % Here I need to cache the region & field positions as present in the
+    % file (raw Yee positions, for instance).
+    
+    samplePositionsInFile = cell(obj.numRegions(), obj.numFields());
+    for rr = 1:obj.numRegions
+        for ff = 1:obj.numFields
+            samplePositionsInFile{rr,ff} = obj.positions(...
+                'Field', ff, 'InterpolateSpace', false);
+        end
+    end
+    
     subReadData = @(obj, numFrames) readFromFile(obj, numFrames, ...
-        posX, posY, posZ, X.Positions);
+        samplePositionsInFile, X.Positions);
 else
     subReadData = @(obj, numFrames) readFromFile(obj, numFrames);
 end

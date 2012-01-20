@@ -1,4 +1,4 @@
-function data = readFromFile(obj, numFrames, dataX, dataY, dataZ, outXYZ)
+function data = readFromFile(obj, numFrames, dataXYZ, outXYZ)
 
 numFields = length(obj.Fields);
 
@@ -51,7 +51,7 @@ end
 
 %% Interpolate if desired
 
-if nargin == 6
+if nargin == 4
     %fprintf('Interpolating too');
     
     for rr = 1:obj.numRegions()
@@ -61,7 +61,7 @@ if nargin == 6
         if numel(outData) > 0
         for ff = 1:numFields
             outData(:,:,:,ff,:) = gridInterp(...
-                dataX{rr,ff}, dataY{rr,ff}, dataZ{rr,ff}, ...
+                dataXYZ{rr,ff}{1}, dataXYZ{rr,ff}{2}, dataXYZ{rr,ff}{3}, ...
                 data{rr}(:,:,:,ff,:), ...
                 outXYZ{rr,1}, outXYZ{rr,2}, outXYZ{rr,3});
             %outData(:,:,:,ff,:) = blah;

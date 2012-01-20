@@ -1,4 +1,10 @@
-% Representation of a cylinder.
+% Cylinder  Representation of a cylinder
+%
+% Constructor example: create a triangle
+%
+% c = Cylinder(@(p) [0 0 0 1 1 1]', 'NumSides', 3, ...
+%   'Permittivity', 'Air', 'Permeability', 'Air');
+%
 classdef Cylinder < t6.model.Node
     
     properties
