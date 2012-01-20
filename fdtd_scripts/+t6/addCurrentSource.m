@@ -165,7 +165,7 @@ src = zeros([yeeRegion(4:6)-yeeRegion(1:3)+1, numel(fieldTokens), ...
     duration(2) - duration(1) + 1]);
 
 for ff = 1:numel(fieldTokens)
-    offset = t6.xml.fieldOffset(fieldTokens{ff});
+    offset = t6.xml.fieldOffset(fieldTokens{ff}) .* [dxyz 1];
     
     support = t6.boundsToYee(bounds(1,:), fieldTokens{ff});
     
