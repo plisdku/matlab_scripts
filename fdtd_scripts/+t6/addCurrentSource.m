@@ -12,8 +12,8 @@ function addCurrentSource(varargin)
 %                   'mx', 'my', 'mz'    magnetic current densities
 %                   'jx', 'jy', 'jz'    electric current densities
 %                   Any combination of fields may be used, but they should be
-%                   specified in order: mx before my, magnetic before
-%                   electric.
+%                   specified in order: mx before my, electric before
+%                   magnetic.
 %                   (required)
 %       YeeCells    The region of the grid in which to add electromagnetic
 %                   current; [x0 y0 z0 x1 y1 z1] will source all cells (x, y, z)
@@ -161,11 +161,12 @@ function src = myCurrent_Bounds(yeeRegion, bounds, duration, fieldTokens,...
     fieldFunction)
 
 dxyz = t6.sim().Dxyz;
+dt = t6.sim().Dt;
 src = zeros([yeeRegion(4:6)-yeeRegion(1:3)+1, numel(fieldTokens), ...
     duration(2) - duration(1) + 1]);
 
 for ff = 1:numel(fieldTokens)
-    offset = t6.xml.fieldOffset(fieldTokens{ff}) .* [dxyz 1];
+    offset = t6.xml.fieldOffset(fieldTokens{ff}) .* [dxyz dt];
     
     support = t6.boundsToYee(bounds(1,:), fieldTokens{ff});
     
@@ -216,9 +217,21 @@ for ff = 1:numel(fieldTokens)
     %        currCoords{1}(xx));
     %end
     
+    % Things get a little gross here.  At timestep 0,
+    % D(1) - D(0) = J(0.5)
+    % B(1.5) - B(0.5) = M(1.0)
+    %
+    % so I have to manually adjust the offset of the M field to move
+    % forward one timestep.
+    
+    actualTimeOffset = offset(4);
+    if offset(4) == 0
+        offset(4) = offset(4) + dt;
+    end
+    
     timesteps = duration(1):duration(2);
-    t = offset(4) + timesteps*t6.sim().Dt;
-
+    t = actualTimeOffset + timesteps*t6.sim().Dt;
+    
     [xx yy zz tt] = ndgrid(evalCoords{:},t);
     
     rawCurrent = fieldFunction{ff}(xx,yy,zz,tt);
