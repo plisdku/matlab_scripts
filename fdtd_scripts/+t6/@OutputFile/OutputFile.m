@@ -94,4 +94,9 @@ classdef OutputFile < handle
     methods (Static, Access = private)
         n = getIndexOfStringInCellArray(cellArray, stringToFind);
     end
+    
+    methods (Static)
+        [starts, ends, lengths] = chunkTimesteps(nFirst, nLast, ...
+            frameSize, bytes);
+    end
 end
