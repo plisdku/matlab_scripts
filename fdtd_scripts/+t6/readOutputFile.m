@@ -13,8 +13,15 @@ X = parseargs(X, varargin{:});
 file = t6.OutputFile(fileName);
 %try
 file.open();
+
+if nargout > 1
 [data, positions] = file.readFrames('Regions', X.Regions, 'Positions', X.Positions, ...
     'Times', X.Times, 'Size', X.Size, 'InterpolateSpace', X.InterpolateSpace);
+else
+data = file.readFrames('Regions', X.Regions, 'Positions', X.Positions, ...
+    'Times', X.Times, 'Size', X.Size, 'InterpolateSpace', X.InterpolateSpace);
+end
+    
 %end
 file.close();
 

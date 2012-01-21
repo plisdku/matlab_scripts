@@ -20,6 +20,14 @@ classdef TrogdorGrid < handle
     end
     
     methods
-        yeeCells = extent(obj);
+        function nc = numCells(obj, varargin)
+            if numel(varargin) == 0
+                nc = obj.YeeCells([4:6]) - obj.YeeCells([1:3]) + 1;
+            else
+                nc = obj.numCells();
+                nc = nc(varargin{1});
+            end
+        end
+        %yeeCells = extent(obj);
     end
 end

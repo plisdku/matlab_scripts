@@ -185,7 +185,17 @@ for ff = 1:numel(fieldTokens)
     evalCoords = cell(3,1); % points in real space at which to evaluate function
     weights = cell(3,1); % interpolation weights
     for xyz = 1:3
-        if bounds(xyz) == bounds(xyz+3) % zero-width in this dim
+        
+        if t6.grid().numCells(xyz) == 1
+            if numel(supportYee{xyz}) > 1
+                error(['Current source bounds are too large in the ', ...
+                    '%s direction'], char('w'+xyz));
+            end
+            
+            evalCoords{xyz} = bounds(xyz);
+            weights{xyz} = 1.0;
+            
+        elseif bounds(xyz) == bounds(xyz+3) % zero-width in this dim
             if numel(supportYee{xyz}) > 1
                 % if the grid itself is not lower-dimensioned, then this is
                 % really a delta-function distribution in one dimension.
@@ -196,20 +206,34 @@ for ff = 1:numel(fieldTokens)
                 
             else % the grid is low-dimensioned.
                 evalCoords{xyz} = bounds(xyz);
-                weights{xyz} = 1.0;
+                weights{xyz} = 1.0/dxyz(xyz);
             end
         else
             % Physical bounds of cells centered at current samples
             cellLeft = max(bounds(xyz), currCoords{xyz} - dxyz(xyz));
             cellRight = min(bounds(xyz+3), currCoords{xyz} + dxyz(xyz));
             
-            w = @(x) 1-abs(x);
-            
+            % This is a midpoint rule for a boxcar smoothing.
             evalCoords{xyz} = 0.5*(cellLeft + cellRight);
-            weights{xyz} = w( (evalCoords{xyz} - currCoords{xyz})/dxyz(xyz) ) .* ...
-                (cellRight-cellLeft)/dxyz(xyz);
+            weights{xyz} = 0.5*(cellRight-cellLeft)/dxyz(xyz);
+            
+            % This is a midpoint rule for a triangle smoothing.
+            % Also, this is a crappy, crappy approximation, riddled with errors.
+            % Whenever evalCoords == currCoords, w(x) == w(0) == 2, when it
+            % really ought to be 1... (that is, 2*(cellRight-cellLeft)).
+            %w = @(x) 1-abs(x);
+            %
+            %evalCoords{xyz} = 0.5*(cellLeft + cellRight);
+            %weights{xyz} = w( (evalCoords{xyz} - currCoords{xyz})/dxyz(xyz) ) .* ...
+            %    (cellRight-cellLeft)/dxyz(xyz);
         end
+        
     end
+    
+    %fprintf('Field %i weights:\n', ff);
+    %weights{1}
+    %fprintf('Sum of weights: %2.4g\n', sum(weights{1}))
+    %keyboard
     
     %fprintf('Source distrib:\n');
     %for xx = 1:numel(evalCoords{1})
@@ -226,7 +250,7 @@ for ff = 1:numel(fieldTokens)
     
     actualTimeOffset = offset(4);
     if offset(4) == 0
-        offset(4) = offset(4) + dt;
+        actualTimeOffset = offset(4) + dt;
     end
     
     timesteps = duration(1):duration(2);
@@ -236,12 +260,19 @@ for ff = 1:numel(fieldTokens)
     
     rawCurrent = fieldFunction{ff}(xx,yy,zz,tt);
     
+    %figure(1000)
+    %plot(rawCurrent(:));
+    %pause
+    
     scaledCurrent = bsxfun(@times, reshape(weights{1}, [], 1, 1), ...
         bsxfun(@times, reshape(weights{2}, 1, [], 1), ...
         bsxfun(@times, reshape(weights{3}, 1, 1, []), rawCurrent)));
     
-    % The scaled current may not be the full size of the source region.  Fill in the appropriate
-    % elements.  This amounts to finding an index offset.
+    %keyboard
+    
+    % The scaled current may not be the full size of the source region.
+    % Fill in the appropriate elements.  This amounts to finding an index 
+    % offset.
     
     indicesX = 1 + supportYee{1} - yeeRegion(1);
     indicesY = 1 + supportYee{2} - yeeRegion(2);
