@@ -4,6 +4,8 @@ function generate(direction, omega, dielectricEpsilon, modeIndex)
 %        generate(direction, frequency, dielectricEpsilon, modeIndex)
 %
 
+import t5.dev.multilayerMode.*
+
 tfsfreq_0;
 
 posE = {afp.posEx, afp.posEy, afp.posEz};

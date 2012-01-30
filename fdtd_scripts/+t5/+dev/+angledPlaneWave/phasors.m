@@ -51,6 +51,8 @@ function [E, H, freqs] = phasors(direction, polarization, sourceSamples,...
 
 import t5.dev.angledPlaneWave.*
 
+direction = reshape(direction, 1, []);
+
 tfsfreq_0;
 
 %% cutoff stuff
@@ -157,9 +159,17 @@ boundariesH = dz*[(ehHalfCells+1)/2 heHalfCells/2] + firstSampleZ;
 % here!
 epsilonDispersion = cell(numel(dielectricEpsilon, 1));
 muDispersion = epsilonDispersion;
-for layer = 1:numel(dielectricEpsilon)
-    epsilonDispersion{layer} = Constitutives.dielectric(dielectricEpsilon(layer));
-    muDispersion{layer} = Constitutives.permeability(1);
+
+if iscell(dielectricEpsilon)
+    epsilonDispersion = dielectricEpsilon;
+    for layer = 1:numel(dielectricEpsilon)
+        muDispersion{layer} = Constitutives.permeability(1);
+    end
+else
+    for layer = 1:numel(dielectricEpsilon)
+        epsilonDispersion{layer} = Constitutives.dielectric(dielectricEpsilon(layer));
+        muDispersion{layer} = Constitutives.permeability(1);
+    end
 end
 
 solver = AFPMultilayer(dxyz, dt, boundariesE, boundariesH, ...
