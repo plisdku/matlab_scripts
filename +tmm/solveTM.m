@@ -2,7 +2,7 @@ function [Hx, Ey, Ez, T, R, murHx, epsrEy, epsrEz, transferHH] = solveTM(...
     boundaries, epsr, mur, omega, kParallel, varargin)
 % Usage:
 % [Hx, Ey, Ez, T, R, murHx, epsrEy, epsrEz, transferMatrix] = solveTM(boundaries, epsr,
-%   mur, omega, ky, outputPos, forceBoundModes)
+%   mur, omega, ky, outputPos, forceBoundModes, normalizationPos)
 %
 % Hx is an array of transverse H fields measured at outputPosHx
 % Ey is an array of transverse E fields measured at outputPosEy
@@ -29,7 +29,11 @@ function [Hx, Ey, Ez, T, R, murHx, epsrEy, epsrEz, transferHH] = solveTM(...
 %
 % forceBoundModes can be true or false (false by default).  If true, the
 % transfer matrices and field amplitudes will be adjusted so no inbound
-% waves are present. (optional)
+% waves are present.  The modes returned will be normalized to unit "power".
+% (optional)
+%
+
+import tmm.*;
 
 outputPos = [];
 outputPosHx = [];
@@ -39,13 +43,13 @@ outputPosEz = [];
 if numel(varargin) > 0
     outputPos = varargin{1};
     if iscell(outputPos)
-        outputPosHx = outputPos{1};
-        outputPosEy = outputPos{2};
-        outputPosEz = outputPos{3};
+        outputPosHx = reshape(outputPos{1}, 1, []);
+        outputPosEy = reshape(outputPos{2}, 1, []);
+        outputPosEz = reshape(outputPos{3}, 1, []);
     else
-        outputPosHx = outputPos;
-        outputPosEy = outputPos;
-        outputPosEz = outputPos;
+        outputPosHx = reshape(outputPos, 1, []);
+        outputPosEy = reshape(outputPos, 1, []);
+        outputPosEz = reshape(outputPos, 1, []);
     end
 end
 
@@ -53,8 +57,6 @@ forceBoundModes = false;
 if numel(varargin) > 1
     forceBoundModes = varargin{2};
 end
-
-import tmm.*;
 
 mu0 = 4e-7*pi;
 eps0 = 8.854187817e-12;
@@ -100,10 +102,15 @@ R = abs(r)^2;
 
 %% For mode solutions:
 
+normalizationPos = [];
+
 %if X.ForceBoundMode
 if forceBoundModes
     H0(1) = 0;
     transferLayer{end}(2,:) = 0;
+    
+    normalizationPos = linspace(boundaries(1) - 3*2*pi/abs(ks(1)), ...
+        boundaries(end) + 3*2*pi/abs(ks(end)), 10000);
 end
 
 %% Get the forward and backward E in each layer (use transferLayer)
@@ -115,12 +122,16 @@ murHx = Hx;
 epsrEy = Ey;
 epsrEz = Ez;
 
+Ez_normalization = 0*normalizationPos;
+Hx_normalization = 0*normalizationPos;
+
 intervals = [-inf, boundaries(:)', inf];
 for nLayer = 1:length(boundaries)+1
     
     indicesHx = [];
     indicesEy = [];
     indicesEz = [];
+    indicesNormalization = [];
     
     if ~isempty(outputPosHx)
         indicesHx = find( outputPosHx > intervals(nLayer) & ...
@@ -135,6 +146,11 @@ for nLayer = 1:length(boundaries)+1
     if ~isempty(outputPosEz)
         indicesEz = find(outputPosEz > intervals(nLayer) & ...
          outputPosEz <= intervals(nLayer+1));
+    end
+    
+    if ~isempty(normalizationPos)
+        indicesNormalization = find(normalizationPos > intervals(nLayer) & ...
+            normalizationPos <= intervals(nLayer+1));
     end
     
     Hn = transferLayer{nLayer}*H0;
@@ -157,15 +173,30 @@ for nLayer = 1:length(boundaries)+1
         z = outputPosEz(ii);
         hh2he = matrixHH2HE(omega, ks(nLayer), z, epsr(nLayer));
         HE = hh2he*Hn;
-        Ez(ii) = -HE(1)*kParallel/omega/epsr(nLayer)/eps0;
-        %Ez(ii) = -HE(2)*kParallel/ks(nLayer); % WRONG
+        Ez(ii) = HE(1)*kParallel/omega/epsr(nLayer)/eps0;
+    end
+    
+    for ii = indicesNormalization
+        z = normalizationPos(ii);
+        hh2he = matrixHH2HE(omega, ks(nLayer), z, epsr(nLayer));
+        HE = hh2he*Hn;
+        Hx_normalization(ii) = HE(1);
+        Ez_normalization(ii) = HE(1)*kParallel/omega/epsr(nLayer)/eps0;
     end
     
     murHx(indicesHx) = mur(nLayer);
-    epsrHy(indicesEy) = epsr(nLayer);
-    epsrHz(indicesEz) = epsr(nLayer);
+    epsrEy(indicesEy) = epsr(nLayer);
+    epsrEz(indicesEz) = epsr(nLayer);
 end
 
+
+if ~isempty(normalizationPos)
+    modeEnergy = trapz(normalizationPos, Ez_normalization.*Hx_normalization);
+
+    Hx = Hx / sqrt(modeEnergy);
+    Ey = Ey / sqrt(modeEnergy);
+    Ez = Ez / sqrt(modeEnergy);
+end
 
 
 

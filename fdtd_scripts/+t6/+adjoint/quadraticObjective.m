@@ -157,23 +157,46 @@ function B = multTensor(T, A, dim)
 %    dim = 1;
 %end
 
-if dim < 1 || dim > ndims(T)
-    if size(A, 2) > 1
-        error('dim must be valid dimension of T');
-    else
-        dim = 1;
-    end
+if isscalar(A)
+    B = A*T;
+    return
 end
 
-permutedDims = [dim, 1:dim-1, dim+1:ndims(T)];
-sz = size(T);
-szPermuted = sz(permutedDims);
+if dim < 1
+    error('dim = 0');
+elseif dim > ndims(T)
+    % Singleton dimensions get stripped off the end of arrays in Matlab.
+    % That's the only good reason why this sort of problem should crop up.
+    % Fix by adding a singleton dimension to the front of T, doing the A*T
+    % operation, and then pushing that singleton dimension to the back of
+    % T.  We can't expect to give T any dimensions beyond dim.  Stupid
+    % Matlab.
+    tPerm = reshape(T, [1 size(T)]);
+    
+    szPermuted = [1 size(T)];
+    
+    prodTensor = reshape(A*tPerm(:,:), [size(A,1), size(T)]);
+    B = ipermute(prodTensor, [dim 1:dim-1]);
+else
+    % This is the usual case.  Put desired dimension first.
+    permutedDims = [dim, 1:dim-1, dim+1:ndims(T)];
+    sz = size(T);
+    szPermuted = sz(permutedDims);
+    tPerm = permute(T, permutedDims); % Put the desired dimension first
+    
+    prodTensor = reshape(A*tPerm(:,:), [size(A,1), szPermuted(2:end)]);
+    B = ipermute(prodTensor, permutedDims);
+end
 
+%if dim < 1 || dim > ndims(T)
+%    if size(A, 2) > 1
+%        error('dim must be valid dimension of T');
+%    else
+%        %dim = 1;
+%        dim 
+%    end
+%end
 
-tPerm = permute(T, permutedDims); % Put the desired dimension first
-prodTensor = reshape(A*tPerm(:,:), [size(A,1), szPermuted(2:end)]);
-
-B = ipermute(prodTensor, permutedDims);
 
 
 

@@ -158,7 +158,7 @@ k_fits = n_fits*k0;
 
 t22_func = @(k) reflectionDenominator(boundaries, epsr, mur, omega, k);
 
-for nn = 1:length(n_fits)
+for nn = 1:numel(n_fits) % going backwards puts modes in order low-to-high
     
     kScale = [real(k_fits(nn)), imag(k_fits(nn))];
     kStart = [real(k_fits(nn)), imag(k_fits(nn))];
@@ -180,6 +180,8 @@ for nn = 1:length(n_fits)
 end
 
 
+[whatever, ii] = sort(-abs(k_better));
+k_better = k_better(ii);
 
 function y = lorentzians(x, amplitudes, x0, gamma)
 

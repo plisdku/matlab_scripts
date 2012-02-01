@@ -18,6 +18,17 @@ function setPML(varargin)
 %   Named parameters may be combined, so 'Sigma', 'Alpha', 'Kappa' and 'Depth'
 %   may be set all at once; however, 'Depth' and 'Material' cannot be set at
 %   once as all materials have the same PML thickness.
+%
+%   The default PML parameters in Trogdor 5 are:
+%
+%     sigma = '(d^3)*0.8*4/(((mu0/eps0)^0.5)*dx)'
+%     alpha = '(1-d)*3e8*eps0/(50*dx)'
+%     kappa = '1 + (5-1)*(d^3)'
+%
+%   Sigma and kappa are taken from Taflove's suggested values.
+%   I chose alpha, the complex frequency shift, to interpret wavelengths
+%   longer than 50*dx as mostly evanescent.
+
 
 sim = t6.TrogdorSimulation.instance();
 grid = t6.TrogdorSimulation.instance().currentGrid();

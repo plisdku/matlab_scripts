@@ -1,8 +1,8 @@
-function [Ex, Hy, Hz, T, R, epsrEx, murHy, murHz, transferEE] = solveTE(boundaries, ...
-    epsr, mur, inputE, omega, kParallel, varargin)
+function [Ex, Hy, Hz, T, R, epsrEx, murHy, murHz, transferEE] = solveTE(...
+    boundaries, epsr, mur, omega, kParallel, varargin)
 % Usage:
 % [Ex, Hy, Hz, T, R, epsrEx, murHy, murHz, transferMatrix] = solveTE(boundaries, epsr, mur,
-%   inputE, omega, ky, outputPosEx, outputPosHy, outputPosHz)
+%   omega, ky, outputPos, forceBoundModes)
 %
 % Ex is an array of transverse E fields measured at outputPosEx
 % Hy is an array of transverse H fields measured at outputPosHy
@@ -23,32 +23,39 @@ function [Ex, Hy, Hz, T, R, epsrEx, murHy, murHz, transferEE] = solveTE(boundari
 % mur is an array of relative permeabilities, one per layer, including the
 % media before and after the multilayer [unitless]
 % 
-% inputE is the amplitude of incoming E at the left [arbitrary units]
-% 
-% outputPosEx is a vector of positions to evaluate the Ex field at.
-% (optional) [meters]
-% 
-% outputPosHy is a vector of positions to evaluate the Hy field at.
-% (optional) [meters]
+% outputPos is a vector of positions to evaluate the fields at.  It may
+% also be a cell array with three vectors of positions, one each for Ex, Hy
+% and Hz. (optional) [meters]
 %
-% outputPosHz is a vector of positions to evaluate the Hz field at.
-% (optional) [meters]
+% forceBoundModes can be true or false (false by default).  If true, the
+% transfer matrices and field amplitudes will be adjusted so no inbound
+% waves are present. (optional)
 
 import tmm.*;
 
+outputPos = [];
 outputPosEx = [];
 outputPosHy = [];
 outputPosHz = [];
 
-if nargin > 6
-    outputPosEx = reshape(varargin{1},1,[]);
-    if nargin > 7
-        outputPosHy = reshape(varargin{2},1,[]);
-        if nargin > 8
-            outputPosHz = reshape(varargin{3},1,[]);
-        end
+if numel(varargin) > 0
+    outputPos = varargin{1};
+    if iscell(outputPos)
+        outputPosEx = outputPos{1};
+        outputPosHy = outputPos{2};
+        outputPosHz = outputPos{3};
+    else
+        outputPosEx = outputPos;
+        outputPosHy = outputPos;
+        outputPosHz = outputPos;
     end
 end
+
+forceBoundModes = false;
+if numel(varargin) > 1
+    forceBoundModes = varargin{2};
+end
+
 
 mu0 = 4e-7*pi;
 eps0 = 8.854187817e-12;
@@ -94,6 +101,14 @@ T = abs(t)^2;
 R = abs(r)^2;
 %assert( abs( 1.0 - T - R ) < 1e-6 ); % t^2 + r^2 = 1 % not generally true
 
+%% For mode solutions:
+
+%if X.ForceBoundMode
+if forceBoundModes
+    E0(1) = 0;
+    transferLayer{end}(2,:) = 0;
+end
+
 %% Get the forward and backward E in each layer (use transferLayer)
 
 Ex = 0*outputPosEx;
@@ -125,7 +140,7 @@ for nLayer = 1:length(boundaries)+1
          outputPosHz <= intervals(nLayer+1));
     end
     
-    En = transferLayer{nLayer}*E0/E0(1)*inputE;
+    En = transferLayer{nLayer}*E0/E0(1);
     
     for ii = indicesEx
         z = outputPosEx(ii);

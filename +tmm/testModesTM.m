@@ -22,12 +22,38 @@ kMax = 4*k0;
 
 %%
 
-[ks, t22, kvals] = modesTM(boundaries, epsr, mur, omega, kMin, kMax);
+[ks, t22, kvals] = tmm.modesTM(boundaries, epsr, mur, omega, kMin, kMax);
 
 assert(length(ks) == 1);
 assert(abs(ks-k_spp) < 1e-3 * abs(k_spp));
 
 fprintf('Surface plasmon dispersion test: passed\n');
+
+%% Normalization test
+
+boundaries = [0 1000e-9];
+epsr = [1, 5+0.1i, 2];
+mur = ones(size(epsr));
+
+[ks, t22, kvals] = tmm.modesTM(boundaries, epsr, mur, omega, 1.01*k0, 3*k0);
+
+for nn = 1:length(ks)
+
+    k = ks(nn);
+
+    % Plot a mode
+
+    outPos = linspace(boundaries(1)-500e-9, boundaries(end)+500e-9);
+
+    [hx ey ez bigT bigR mux epsy epsz txMat] = tmm.solveTM(boundaries, epsr, mur, omega, ...
+        k, outPos, true);
+    
+    energy = trapz(outPos, hx.*ez);
+    assert(real(energy) > 0.99);
+    assert(real(energy) < 1.01);
+end
+
+fprintf('Mode normalization test: passed\n');
 
 %{
 for nn = 1:length(ks)

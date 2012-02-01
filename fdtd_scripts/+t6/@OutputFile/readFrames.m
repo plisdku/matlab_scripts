@@ -53,10 +53,10 @@ end
 
 if ~isempty(X.Positions)
     positions = X.Positions;
-else
+elseif nargout > 1
     if obj.numFields() == 1
         positions = obj.positions();
-    elseif nargout > 1
+    else
         warning('There are multiple fields in this file.  Not computing positions.');
     end
 end

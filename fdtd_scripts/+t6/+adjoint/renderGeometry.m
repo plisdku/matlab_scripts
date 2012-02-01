@@ -1,5 +1,6 @@
 function renderGeometry(varargin)
-
+% renderGeometry('Model', m, 'Parameters', p, 'MeasurePosition', mp, ...
+%   'SourcePosition', sp, 'Units', 1, 'Sensitivity', sen);
 X.Model = [];
 X.Parameters = [];
 X.MeasurePosition = [];

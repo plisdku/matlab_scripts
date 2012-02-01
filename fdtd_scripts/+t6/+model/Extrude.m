@@ -1,5 +1,26 @@
-% Representation of an extruded thing.  It should be a simply-connected
-% polygon.
+% Extrude  Representation of extruded polyhedron
+%
+% Usage:
+%
+% ex = Extrude('Vertices', xyVertFunc, 'Z', heightFunc, 'Permittivity',
+%   epsString);
+%
+%   xyVertFunc:     function of parameter vector, returning x coordinates
+%                   in the first column and y coordinates in the second
+%                   column.  The xy pairs bound the region of material to
+%                   fill in.
+%
+%   heightFunc:     function of parameter vector, returning a two-element
+%                   column vector [z0 z1].  The xy polygon specified by the
+%                   'Vertices' argument will be extruded vertically from
+%                   z=z0 to z=z1.
+%
+%   Permittivity:   name of the permittivity model representing this
+%                   material
+%
+%   Permeability:   name of the permeability model representing this
+%                   material
+%
 classdef Extrude < t6.model.Node
     
     properties

@@ -87,7 +87,8 @@ yVals = unique([posE{1}(:,xyz); posE{2}(:,xyz); posE{3}(:,xyz); ...
 
 %[hz ex ey] = tmm.solveTM(waveguideBoundaries, epsr, mur, omega, kx, ...
 %    {afp.posHz(:,xyz), afp.posEx(:,xyz), afp.posEy(:,xyz)}, true);
-[hz ex ey] = tmm.solveTM(waveguideBoundaries, epsr, mur, omega, kx, yVals, true);
+[hz ex ey] = tmm.solveTM(waveguideBoundaries, epsr, mur, omega, kx, yVals, ...
+    true);
 
 %% Now we need to transform the fields the right way.
 % There's a coordinate transformation and a vector transformation.
@@ -102,8 +103,9 @@ for exyz = 1:3
     posTMM = (A \ posE{exyz}')';
     
     % 2. Get the fields in TMM-land
-    tmmE = [spline(yVals, ex, posTMM(:,2)') .* exp(1i*kx*posTMM(:,1)'); ...
-        spline(yVals, ey, posTMM(:,2)') .* exp(1i*kx*posTMM(:,1)')];
+    
+    tmmE = [subSafeSpline(yVals, ex, posTMM(:,2)') .* exp(1i*kx*posTMM(:,1)'); ...
+        subSafeSpline(yVals, ey, posTMM(:,2)') .* exp(1i*kx*posTMM(:,1)')];
     
     % 3. Get the fields for AFP
     E{exyz} = AE(exyz,:) * tmmE;
@@ -115,8 +117,25 @@ for hxyz = 1:3
     posTMM = (A \ posH{exyz}')';
     
     % 2. Get the fields in TMM-land
-    tmmH = spline(yVals, hz, posTMM(:,2)') .* exp(1i*kx*posTMM(:,1)');
+    tmmH = subSafeSpline(yVals, hz, posTMM(:,2)') .* exp(1i*kx*posTMM(:,1)');
     
     % 3. Get the fields for AFP
     H{hxyz} = AH(hxyz,:) * tmmH;
 end
+
+function yy = subSafeSpline(x, y, xx)
+% The reason for this function to exist is that Matlab's spline() function
+% will gag if there is only one data point.  Likewise interp1() will bomb
+% if there is only one data point, EVEN IF I have extrapolation turned on,
+% EVEN IF the method I selected is "nearest neighbor".  It's just hardcoded
+% that way, which means it's not robust to cases like spline(0, 1, 0), a
+% sort of thing which could very easily happen in my case.  I just want a
+% table lookup really; why is this so hard?
+
+if numel(y) > 1
+    yy = spline(x,y,xx);
+else
+    yy = repmat(y, size(xx));
+end
+
+
