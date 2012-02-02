@@ -1,7 +1,9 @@
-function generate(direction, omega, dielectricEpsilon, modeIndex)
+function [srcE, srcH] = generate(direction, omega, dielectricEpsilon, modeIndex,...
+    srcFn)
 % generate     Create TM waveguide mode source for multilayer stack.
 % Usage: generate(direction, frequency, dielectricEpsilon)
 %        generate(direction, frequency, dielectricEpsilon, modeIndex)
+%        generate(direction, frequency, dielectricEpsilon, modeIndex, srcFn)
 %
 
 import t5.dev.multilayerMode.*
@@ -18,14 +20,18 @@ k0 = 2*pi/lambda;
 kMin = 1.01*k0;
 kMax = 3*k0;
 
-n0 = 350;
-srcRamp = @(n) 0.5*(1+erf(0.008*(n-n0)));
+if ~exist('srcFn', 'var')
+    t0 = 8*lambda/3e8/afp.dt;
+    width = 4*lambda/3e8/afp.dt;
+    
+    srcFn = @(t) 0.5*(1+erf((t-t0)/width)).*exp(-1i*t*omega);
+end
 
 %% Transform to the time domain and write to file
 
 fprintf('Writing fields to file.\n');
-srcE = @(xyz,n) real(srcRamp(n) .* exp(-1i*n*afp.dt*omega) .* afpE{xyz});
-srcH = @(xyz,n) real(srcRamp(n+0.5) .* exp(-1i*(n+0.5)*afp.dt*omega) .* afpH{xyz});
+srcE = @(xyz,n) real(srcFn(afp.dt*n) .* afpE{xyz});
+srcH = @(xyz,n) real(srcFn(afp.dt*(n+0.5)) .* afpH{xyz});
 
 fh = fopen(afp.inputFile, 'w');
 

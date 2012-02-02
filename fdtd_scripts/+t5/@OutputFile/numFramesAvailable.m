@@ -1,8 +1,11 @@
 function n = numFramesAvailable(obj)
 
-if ~exist(obj.FileName)
+if ~exist(obj.FileName, 'file')
     n = 0;
 else
+    fileStruct = dir(obj.FileName);
+    n = floor(fileStruct.bytes / obj.BytesPerValue / obj.FrameSize);
+    %{
     %determine size of file in bytes (this is gross; Matlab's fault!!! lame API)
     d = dir;
     for nn = 1:length(d)
@@ -10,4 +13,5 @@ else
             n = floor( d(nn).bytes / obj.BytesPerValue / obj.FrameSize );
         end
     end
+    %}
 end

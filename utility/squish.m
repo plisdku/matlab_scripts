@@ -7,6 +7,9 @@ function s = squish(a, dims)
 %
 %   b = squish(a, dims) will remove only certain singleton dimensions from
 %   a.
+%
+% Paul Hansen
+% February 1, 2012
 
 if nargin == 1
     dims = size(a) == 1;
