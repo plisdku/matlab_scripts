@@ -15,3 +15,6 @@ else
     end
     %}
 end
+
+assert(~isnan(n));
+assert(~isinf(n));
