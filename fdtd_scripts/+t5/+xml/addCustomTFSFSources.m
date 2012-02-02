@@ -1,6 +1,7 @@
 function addCustomTFSFSources(grid, gridXML, doc, originTrogdor)
 
 originTwice = [originTrogdor originTrogdor];
+directory = t5.TrogdorSimulation.instance().directoryString;
 
 for ll = 1:length(grid.CustomTFSFSources)
     src = grid.CustomTFSFSources{ll};
@@ -8,7 +9,7 @@ for ll = 1:length(grid.CustomTFSFSources)
     elemXML = doc.createElement('CustomTFSFSource');
     elemXML.setAttribute('yeeCells', ...
         sprintf('%i ', src.yeeCells + originTwice));
-    elemXML.setAttribute('file', src.spaceTimeFile);
+    elemXML.setAttribute('file', [directory, src.spaceTimeFile]);
     elemXML.setAttribute('symmetries', sprintf('%i ', src.symmetries));
     
     for oo = 1:length(src.omitSides)

@@ -1,6 +1,7 @@
 function addCurrentSources(grid, gridXML, doc, originTrogdor)
 global TROG_XML_COUNT___;
 originTwice = [originTrogdor originTrogdor];
+directory = t5.TrogdorSimulation.instance().directoryString;
 
 for ss = 1:length(grid.CurrentSources)
     src = grid.CurrentSources{ss};
@@ -13,8 +14,8 @@ for ss = 1:length(grid.CurrentSources)
     elemXML.setAttribute('fields', fieldstr);
     
     if length(src.timeData) ~= 0
-        %fname = t5.xml.randomName('__currentsource_time_', '', 8);
-        fname = sprintf('__currentsource_time_%i', TROG_XML_COUNT___.currentTime);
+        fname = [directory, ...
+            sprintf('__currentsource_time_%i', TROG_XML_COUNT___.currentTime)];
         TROG_XML_COUNT___.currentTime = TROG_XML_COUNT___.currentTime + 1;
         elemXML.setAttribute('timeFile', fname);
         fh = fopen(fname, 'w');

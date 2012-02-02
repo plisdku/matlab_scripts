@@ -1,6 +1,7 @@
 function addHardSources(grid, gridXML, doc, originTrogdor)
 global TROG_XML_COUNT___;
 originTwice = [originTrogdor originTrogdor];
+directory = t5.TrogdorSimulation.instance().directoryString;
 
 for ss = 1:length(grid.HardSources)
     src = grid.HardSources{ss};
@@ -22,8 +23,8 @@ for ss = 1:length(grid.HardSources)
     % duration from A to B period C
     
     if length(src.timeData) ~= 0
-        %fname = t5.xml.randomName('__hardsource_time_', '', 8);
-        fname = sprintf('__hardsource_time_%i', TROG_XML_COUNT___.hardTime);
+        fname = [directory, ...
+            sprintf('__hardsource_time_%i', TROG_XML_COUNT___.hardTime)];
         TROG_XML_COUNT___.hardTime = TROG_XML_COUNT___.hardTime + 1;
         elemXML.setAttribute('timeFile', fname);
         fh = fopen(fname, 'w');
@@ -37,8 +38,8 @@ for ss = 1:length(grid.HardSources)
     end
     
     if length(src.maskData) ~= 0
-        %fname = t5.xml.randomName('__hardsource_mask_', '', 8);
-        fname = sprintf('__hardsource_mask_%i', TROG_XML_COUNT___.hardMask);
+        fname = [directory, ...
+            sprintf('__hardsource_mask_%i', TROG_XML_COUNT___.hardMask)];
         TROG_XML_COUNT___.hardMask = TROG_XML_COUNT___.hardMask + 1;
         elemXML.setAttribute('maskFile', fname);
         fh = fopen(fname, 'w');
@@ -63,9 +64,8 @@ for ss = 1:length(grid.HardSources)
     end
     
     if length(src.spaceTimeData) ~= 0
-        %fname = t5.xml.randomName('__hardsource_spacetime_', '', 8);
-        fname = sprintf('__hardsource_spacetime_%i', ...
-            TROG_XML_COUNT___.hardSpaceTime);
+        fname = [directory, sprintf('__hardsource_spacetime_%i', ...
+            TROG_XML_COUNT___.hardSpaceTime)];
         TROG_XML_COUNT___.hardSpaceTime = TROG_XML_COUNT___.hardSpaceTime + 1;
         elemXML.setAttribute('spaceTimeFile', fname);
         fh = fopen(fname, 'w');

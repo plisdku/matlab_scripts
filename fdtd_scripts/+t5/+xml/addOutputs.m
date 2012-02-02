@@ -1,6 +1,7 @@
 function addOutputs(grid, gridXML, doc, originTrogdor)
 
 originTwice = [originTrogdor originTrogdor];
+directory = t5.TrogdorSimulation.instance().directoryString;
 
 for oo = 1:length(grid.Outputs)
     output = grid.Outputs{oo};

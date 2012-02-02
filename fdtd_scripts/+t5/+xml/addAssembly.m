@@ -3,6 +3,7 @@ global TROG_XML_COUNT___;
 doc = documentNode;
 
 originTwice = [originTrogdor originTrogdor];
+directory = t5.TrogdorSimulation.instance().directoryString;
 
 assemblyXML = doc.createElement('Assembly');
 
@@ -35,9 +36,8 @@ for aa = 1:length(assembly)
                 sprintf('%i ', assembly{aa}.yeeCells + originTwice));
             elemXML.setAttribute('row', assembly{aa}.row);
             elemXML.setAttribute('column', assembly{aa}.column);
-            %imfilename = t5.xml.randomName('__keyimage_', '.bmp', 8);
-            imfilename = sprintf('__keyimage_%i.bmp', ...
-                TROG_XML_COUNT___.keyImage);
+            imfilename = [directory, sprintf('__keyimage_%i.bmp', ...
+                TROG_XML_COUNT___.keyImage)];
             TROG_XML_COUNT___.keyImage = TROG_XML_COUNT___.keyImage + 1;
             elemXML.setAttribute('file', imfilename);
             
@@ -94,9 +94,8 @@ for aa = 1:length(assembly)
             if isfield(assembly{aa}, 'fillStyle')
                 elemXML.setAttribute('fillStyle', assembly{aa}.fillStyle);
             end
-            %imfilename = t5.xml.randomName('__heightmap_', '.bmp', 8);
-            imfilename = sprintf('__heightmap_%i.bmp', ...
-                TROG_XML_COUNT___.heightMap);
+            imfilename = [directory, sprintf('__heightmap_%i.bmp', ...
+                TROG_XML_COUNT___.heightMap)];
             TROG_XML_COUNT___.heightMap = TROG_XML_COUNT___.heightMap + 1;
             elemXML.setAttribute('file', imfilename);
             imwrite(assembly{aa}.image, imfilename, 'bmp');
