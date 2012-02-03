@@ -183,7 +183,12 @@ end
 if isempty(X.Frequency) && isempty(X.SteadyStateFrequency)
     
     freqs = 2*pi*(0:numT-1) / (numT * X.Dt);
-    f = fft(data, [], timeAxis) / numT;
+    
+    phaseFactor = exp(-1i*freqs*X.Time(1));
+    phaseFactorSize = [ones(1, timeAxis-1), numel(phaseFactor)];
+    
+    f = bsxfun(@times, fft(data, [], timeAxis) / numT, ...
+    	reshape(phaseFactor, phaseFactorSize));
     
 elseif ~isempty(X.SteadyStateFrequency)
     
@@ -232,9 +237,9 @@ else
     szHarm = [numel(X.Frequency), szTFD(2:end)];
     
     freqs = reshape(X.Frequency, [], 1);
-    times = reshape(X.Time, 1, []);
+    timestamps = reshape(X.Time, 1, []);
     
-    phaseFactors = exp(-1i*freqs*times);
+    phaseFactors = exp(-1i*freqs*timestamps);
     
     harmonics = reshape(phaseFactors*timeFirstData(:,:), szHarm);
     f = ipermute(harmonics, timeFirstIndices) / numT;
