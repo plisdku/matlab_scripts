@@ -74,7 +74,7 @@ phiRPM = unwrap(angle(t22));
 %% Make a list of plausible resonances
 
 yy = gradient(phiRPM, nEff);
-yy = yy / max(yy(:));
+yy = yy / max(abs(yy(:)));
 
 inds = findLocalMax(yy, 3);
 

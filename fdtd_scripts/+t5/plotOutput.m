@@ -1,4 +1,4 @@
-function plotOutput(fileName, period)
+function plotOutput(fileName, varargin)
 % plotOutput(fileName, period)
 %   Plot 1D and 2D output data from FDTD program.  1D data will be
 %   plotted vs time, and 2D output will be presented frame by frame
@@ -9,8 +9,21 @@ function plotOutput(fileName, period)
 
 import t5.*
 
-if (nargin < 2)
-    period = 1;
+if nargin == 2
+    period = varargin{1};
+else
+    X.Period = 1;
+    if exist('orangecrush', 'file')
+        X.Colormap = 'orangecrush';
+    else
+        X.Colormap = [];
+    end
+    X = parseargs(X, varargin{:});
+    
+    period = X.Period;
+    if ~isempty(X.Colormap)
+        colormap(X.Colormap);
+    end
 end
 
 file = t5.OutputFile(fileName);

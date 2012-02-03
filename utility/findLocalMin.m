@@ -7,8 +7,9 @@ function indices = findLocalMin(x, neighborhood)
 %
 %   Neighborhood should be a scalar or a vector the same size as x.
 
-indices = [];
+indices = findLocalMax(-x, neighborhood);
 
+%{
 if (length(neighborhood) == length(x))
     nhood = neighborhood;
 elseif (length(neighborhood) == 1)
@@ -28,4 +29,4 @@ for (jj = 1:length(x))
         indices = [indices, jj];
     end
 end
-
+%}

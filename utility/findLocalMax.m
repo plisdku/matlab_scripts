@@ -17,15 +17,30 @@ else
     error('Input neighborhood must be scalar or vector of same size as x.');
 end
 
-for (jj = 1:length(x))
+for jj = 1:length(x)
     minIndex = max([1, jj-nhood(jj)]);
     maxIndex = min([length(x), jj+nhood(jj)]);
     
+    maxVal = max(x(minIndex:maxIndex));
     
-    [val, iii] = max(x(minIndex:maxIndex));
     
-    if (val == x(jj))
+    if maxVal == x(jj)
         indices = [indices, jj];
     end
+    
+    %if maxVal == x(jj) && sum(x(minIndex:maxIndex) == maxVal) == 1
+    %    indices = [indices, jj];
+    %end
+    
+    %{
+    [valLeft, indLeft] = max(x(minIndex:jj));
+    [valRight, indRight] = max(x(jj:maxIndex));
+    
+    %if (val == x(jj))
+    if (indLeft == jj-minIndex+1) && (indRight == 1)
+    %if jj == minIndex + iii - 1
+        indices = [indices, jj];
+    end
+    %}
 end
 
