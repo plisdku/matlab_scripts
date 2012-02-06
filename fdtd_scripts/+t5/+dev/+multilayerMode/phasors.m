@@ -108,7 +108,7 @@ for exyz = 1:3
         subSafeSpline(yVals, ey, posTMM(:,2)') .* exp(1i*kx*posTMM(:,1)')];
     
     % 3. Get the fields for AFP
-    E{exyz} = AE(exyz,:) * tmmE;
+    E{exyz} = reshape(AE(exyz,:) * tmmE, [], 1);
 end
 
 for hxyz = 1:3
@@ -120,7 +120,7 @@ for hxyz = 1:3
     tmmH = subSafeSpline(yVals, hz, posTMM(:,2)') .* exp(1i*kx*posTMM(:,1)');
     
     % 3. Get the fields for AFP
-    H{hxyz} = AH(hxyz,:) * tmmH;
+    H{hxyz} = reshape(AH(hxyz,:) * tmmH, [], 1);
 end
 
 function yy = subSafeSpline(x, y, xx)

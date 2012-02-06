@@ -22,6 +22,11 @@ if isfield(source, 'timeData')
     fprintf(fh, 'unitVector1 (0, 1, 0)\n');
     fprintf(fh, 'unitVector2 (0, 0, 1)\n');
     
+    % THIS IS A HACK: Feb 6 2012
+    % The point is to allow the user to read the __tfsfsource and __currentsource
+    % files directly in analysis scripts.  Gross, huh?
+    yeeCells = source.yeeCells(1, [1:3, 1:3]);
+    
     % CustomTFSFSource must provide all E and H fields and has no "field".
     if isfield(source, 'field')
         fieldList = source.field;
@@ -38,10 +43,14 @@ if isfield(source, 'timeData')
         fprintf(fh, 'duration from %i to %i period 1\n', source.duration(dd,:));
     end
     
-    for yy = 1:size(source.yeeCells, 1)
-        fprintf(fh, 'region [(%i, %i, %i), (%i, %i, %i)] stride (1, 1, 1)\n',...
-            source.yeeCells(yy,:));
-    end
+    % Hack part two: print out a one-cell region explicitly.  Yawn.
+    fprintf(fh, 'region [(%i, %i, %i), (%i, %i, %i)] stride (1, 1, 1)\n', ...
+        yeeCells(1,:));
+        
+%    for yy = 1:size(source.yeeCells, 1)
+%        fprintf(fh, 'region [(%i, %i, %i), (%i, %i, %i)] stride (1, 1, 1)\n',...
+%            source.yeeCells(yy,:));
+%    end
     
     fclose(fh);
 end

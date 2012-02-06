@@ -19,7 +19,7 @@ X = parseargs(X, varargin{:});
 if ~isstr(X.XML); error('Invalid filename'); end
 if ~isstr(X.Directory); error('Invalid directory name'); end
 
-if ~exist(X.Directory, 'dir')
+if ~isempty(X.Directory) && ~exist(X.Directory, 'dir')
     try mkdir(X.Directory)
     catch exception
         error('Could not create helper directory!');
@@ -55,5 +55,6 @@ doc = t5.xml.generateXML(sim);
 directory = t5.TrogdorSimulation.instance().directoryString;
 
 xmlwrite([directory, X.XML], doc);
+t5.TrogdorSimulation.clear();
 
 

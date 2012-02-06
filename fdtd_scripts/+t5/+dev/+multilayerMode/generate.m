@@ -20,12 +20,13 @@ k0 = 2*pi/lambda;
 kMin = 1.01*k0;
 kMax = 3*k0;
 
-if ~exist('srcFn', 'var')
-    t0 = 8*lambda/3e8/afp.dt;
-    width = 4*lambda/3e8/afp.dt;
-    
-    srcFn = @(t) 0.5*(1+erf((t-t0)/width)).*exp(-1i*t*omega);
-end
+% I think providing a default srcFn is a bad idea, now.
+%if ~exist('srcFn', 'var')
+%    t0 = 8*lambda/3e8/afp.dt;
+%    width = 4*lambda/3e8/afp.dt;
+%    
+%    srcFn = @(t) 0.5*(1+erf((t-t0)/width)).*exp(-1i*t*omega);
+%end
 
 %% Transform to the time domain and write to file
 
