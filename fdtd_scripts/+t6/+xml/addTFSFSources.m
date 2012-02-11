@@ -2,6 +2,7 @@ function addTFSFSources(grid, gridXML, doc, origin)
 global TROG_XML_COUNT___;
 %originTwice = [originTrogdor originTrogdor];
 precisionString = t6.TrogdorSimulation.instance().Precision;
+directory = t6.TrogdorSimulation.instance().directoryString;
 
 for ll = 1:length(grid.TFSFSources)
     src = grid.TFSFSources{ll};
@@ -34,7 +35,7 @@ for ll = 1:length(grid.TFSFSources)
     end
     
     %dataFileName = t6.xml.randomName('__tfsfsource_', '', 8);
-    dataFileName = sprintf('__tfsfsource_%i', TROG_XML_COUNT___.tfsfTime);
+    dataFileName = [directory, sprintf('__tfsfsource_%i', TROG_XML_COUNT___.tfsfTime)];
     TROG_XML_COUNT___.tfsfTime = TROG_XML_COUNT___.tfsfTime + 1;
     elemXML.setAttribute('file', dataFileName);
     fh = fopen(dataFileName, 'w');

@@ -8,6 +8,7 @@ classdef TrogdorSimulation < handle
         Dt = 0
         NumT = 0
         Precision = 'float32';
+        Directory = '';
     end
     
     methods
@@ -23,6 +24,14 @@ classdef TrogdorSimulation < handle
                 error('Not a valid grid handle.');
             end
             obj.CurrentGrid = grid;
+        end
+        
+        function str = directoryString(obj)
+            if isempty(obj.Directory)
+                str = '';
+            else
+                str = [obj.Directory, filesep()];
+            end
         end
     end
     

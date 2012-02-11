@@ -39,6 +39,8 @@ if length(X.TimeData) ~= 0
 end
 
 % Check for contradictory specifications
+% space time file is deprecated
+%{
 if length(X.SpaceTimeFile) ~= 0
     if length(X.TimeData) ~= 0
         error('Cannot use both TimeData and SpaceTimeFile.');
@@ -46,3 +48,4 @@ if length(X.SpaceTimeFile) ~= 0
         error('Cannot use both MaskFile and SpaceTimeFile.');
     end
 end
+%}

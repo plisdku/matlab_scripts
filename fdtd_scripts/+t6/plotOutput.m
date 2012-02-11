@@ -16,6 +16,10 @@ X = parseargs(X, varargin{:});
 
 period = X.Period;
 
+if exist('orangecrush', 'file')
+    colormap orangecrush;
+end
+
 imagesc_args = {};
 if ~isempty(X.CLim)
     imagesc_args = {X.CLim};

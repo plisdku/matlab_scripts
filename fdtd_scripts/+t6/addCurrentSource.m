@@ -73,7 +73,7 @@ X.Duration = [];
 X.FieldFunction = [];
 X.TimeData = [];
 X.SpaceTimeData = [];
-X.SpaceTimeFile = [];
+%X.SpaceTimeFile = [];
 X = parseargs(X, varargin{:});
 
 t6.validateDataRequestParameters(X);
@@ -101,6 +101,7 @@ if ~isempty(X.FieldFunction)
         X.FieldFunction = {X.FieldFunction};
     end
     
+    %{
     if isempty(X.Bounds)
         X.SpaceTimeData = myCurrent_YeeCells(X.YeeCells(1,:),...
             X.Duration(1,:), fieldTokens, X.FieldFunction);
@@ -108,6 +109,7 @@ if ~isempty(X.FieldFunction)
         X.SpaceTimeData = myCurrent_Bounds(X.YeeCells(1,:), ...
             X.Bounds(1,:), X.Duration(1,:), fieldTokens, X.FieldFunction);
     end
+    %}
     
 end
 
@@ -115,15 +117,19 @@ obj = struct;
 obj.type = 'CurrentSource';
 obj.field = fieldTokens;
 obj.yeeCells = X.YeeCells;
+obj.bounds = X.Bounds;
 obj.duration = X.Duration;
+obj.fieldFunction = X.FieldFunction;
 obj.timeData = X.TimeData;
 obj.spaceTimeData = X.SpaceTimeData;
-obj.spaceTimeFile = X.SpaceTimeFile;
+
+%obj.spaceTimeFile = X.SpaceTimeFile;
 
 grid.CurrentSources = {grid.CurrentSources{:}, obj};
 
 
 
+%{
 % Find the correct (x,y,z,t) coordinates to evaluate the source functions
 % at.
 function src = myCurrent_YeeCells(yeeRegion, duration, fieldTokens,...
@@ -162,6 +168,7 @@ function src = myCurrent_Bounds(yeeRegion, bounds, duration, fieldTokens,...
 
 dxyz = t6.sim().Dxyz;
 dt = t6.sim().Dt;
+
 src = zeros([yeeRegion(4:6)-yeeRegion(1:3)+1, numel(fieldTokens), ...
     duration(2) - duration(1) + 1]);
 
@@ -282,6 +289,8 @@ for ff = 1:numel(fieldTokens)
 end
 
 return
+
+%}
 
 
 

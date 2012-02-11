@@ -418,7 +418,8 @@ else % OutputHarmonic-type functionality
     chunkBytes = 50e6;
     frameSizes = file.Regions.Size;
     frameSizes(:,4) = numFields;
-    [chunkStarts, chunkEnds] = t6.OutputFile.chunkTimesteps(1, numT, frameSizes, chunkBytes);
+    frameBytes = prod(frameSizes)*8;
+    [chunkStarts, chunkEnds] = t6.OutputFile.chunkTimesteps(1, numT, frameBytes, chunkBytes);
     numChunks = numel(chunkStarts);
     
     file.open;

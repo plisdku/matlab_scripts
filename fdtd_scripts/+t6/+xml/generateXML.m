@@ -27,8 +27,8 @@ root.setAttribute('dt', num2str(sim.Dt, 10));
 root.setAttribute('numT', num2str(sim.NumT));
 
 t6.xml.addMaterials(doc, sim);
-t6.xml.addGrids(doc, sim);
 
+t6.xml.addGrids(doc, sim);
 
 documentNode = doc;
 

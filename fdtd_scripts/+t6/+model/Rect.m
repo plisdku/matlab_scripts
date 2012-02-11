@@ -1,5 +1,12 @@
 classdef Rect < t6.model.Node
-    
+% Rect  Representation of an axis-aligned rectangle
+% 
+% Constructor example:
+%
+% r = Rect(@(p) [0 0 0 1 1 1]', 'Permittivity', 'Air');
+%
+% The bounding box should be a column vector.  (WHY IS THIS?)
+% 
     properties
         func = @(params) [0 0 0 1 1 1]';
         permittivity = 'none';

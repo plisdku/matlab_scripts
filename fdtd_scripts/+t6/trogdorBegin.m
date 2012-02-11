@@ -20,6 +20,8 @@ end
 dxyz = (X.Bounds(4:6) - X.Bounds(1:3)) ./ X.NumCells;
 dxyz(dxyz == 0) = 1;
 
+assert(numel(dxyz) == 3);
+
 dimensions = [];
 for xyz = 1:3
     if X.Bounds(xyz) < X.Bounds(xyz+3) && X.NumCells(xyz) > 1
@@ -38,6 +40,8 @@ sim.Dt = dt;
 sim.NumT = numTimesteps;
 sim.Grids = [];
 sim.CurrentGrid = [];
+
+assert(numel(sim.Dxyz) == 3);
 
 t6.addGrid('Main', [0, 0, 0, X.NumCells-1], X.Bounds(1:3));
 

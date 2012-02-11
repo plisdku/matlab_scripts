@@ -45,8 +45,9 @@ if ~isempty(X.Positions)
     end
 end
 
+frameBytes = sum(prod(frameSizes,2))*8;
 chunkBytes = 10;
-[chunkStarts, chunkEnds] = t6.OutputFile.chunkTimesteps(nFirst, nLast, frameSizes, chunkBytes);
+[chunkStarts, chunkEnds] = t6.OutputFile.chunkTimesteps(nFirst, nLast, frameBytes, chunkBytes);
 numChunks = length(chunkStarts);
 
 % Multi-region

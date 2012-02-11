@@ -8,18 +8,25 @@ function trogdor_end(varargin)
 
 import com.mathworks.xml.XMLUtils.*;
 
-paramFileName = 'params.xml';
-if length(varargin) > 0
-    if ~isstr(varargin{1})
-        error('Invalid filename.');
+X.XML = 'params.xml';
+X.Directory = '';
+X = parseargs(X, varargin{:});
+
+if ~isstr(X.XML); error('Invalid filename'); end
+if ~isstr(X.Directory); error('Invalid directory name'); end
+
+if ~isempty(X.Directory) && ~exist(X.Directory, 'dir')
+    try mkdir(X.Directory)
+    catch exception
+        error('Could not create helper directory!');
     end
-    paramFileName = varargin{:};
 end
 
 % Last things:
 %   store the extent of source grids in links
 
 sim = t6.TrogdorSimulation.instance;
+sim.Directory = X.Directory;
 
 if numel(sim.Grids) > 1
     error('Trogdor 6 does not support multiple grids');
@@ -44,4 +51,6 @@ for gg = 1:length(sim.Grids)
 end
 
 doc = t6.xml.generateXML(sim);
-xmlwrite(paramFileName, doc);
+xmlwrite([sim().directoryString, X.XML], doc);
+
+t6.TrogdorSimulation.clear();

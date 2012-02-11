@@ -55,7 +55,8 @@ if ~isempty(X.Positions)
 end
 
 chunkBytes = 10;
-[chunkStarts, chunkEnds] = chunkTimesteps(nFirst, nLast, frameSizes, chunkBytes);
+frameBytes = sum(prod(frameSizes,2))*8;
+[chunkStarts, chunkEnds] = chunkTimesteps(nFirst, nLast, frameBytes, chunkBytes);
 numChunks = length(chunkStarts);
 chunkSize = chunkEnds(1)-chunkStarts(1)+1;
 bufferLength = chunkSize+1;
