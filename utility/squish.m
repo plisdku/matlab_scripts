@@ -23,4 +23,11 @@ sizeOfA(dims) = [];
 if numel(sizeOfA) == 1
     sizeOfA(2) = 1;
 end
-s = reshape(a, sizeOfA);
+
+if numel(sizeOfA) >= 2
+    s = reshape(a, sizeOfA);
+elseif numel(sizeOfA) == 1
+    s = reshape(a, [], 1);
+else
+    s = a;
+end
