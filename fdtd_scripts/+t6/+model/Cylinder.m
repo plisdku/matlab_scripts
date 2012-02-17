@@ -29,7 +29,7 @@ classdef Cylinder < t6.model.Node
                 obj.permittivity = X.Permittivity;
                 obj.permeability = X.Permeability;
                 obj.numSides = X.NumSides;
-                obj.bounds = bounds;
+                obj.bounds = @(p) transpose(bounds(p));
                 
                 rectCenter = @(r) 0.5*(r(4:6) + r(1:3));
                 rectRadius = @(r) 0.5*(r(4:6) - r(1:3));

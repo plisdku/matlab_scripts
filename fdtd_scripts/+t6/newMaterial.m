@@ -64,7 +64,7 @@ else
     zDenominator = X.ZDenominator;
 end
 
-if ~testStability(zNumerator, zDenominator, sim.Dt, sim.Dxyz, sim.NumCells)
+if ~t6.testStability(zNumerator, zDenominator, sim.Dt, sim.Dxyz, sim.NumCells)
     warning('Material %s appears to be unstable as a permittivity', name);
 end
 

@@ -51,8 +51,8 @@ classdef Rect < t6.model.Node
                 2 4 8; ...
             ];
             
-            corners = obj.func(params);
-            Dcorners = t6.model.jacobian(obj.func, params);
+            corners = transpose(obj.func(params));
+            Dcorners = t6.model.jacobian(@(p) transpose(obj.func(p)), params);
             
             myVerts = zeros(24,1);
             myJacobian = sparse(24, size(params,1));
