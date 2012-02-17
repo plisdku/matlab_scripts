@@ -11,30 +11,36 @@ function setPML(varargin)
 %       and dz for +Z and -Z.
 %   setPML('Kappa', '5') will cause the PML to use a fixed real stretch factor
 %       of 5.
-%   setPML('Alpha', '0') will turn off the CFS-RIPML's complex frequency shift.
-%   setPML('Material', 'Gold', 'Alpha', '0') will set alpha to zero for gold
-%       PML on all grids.
+%   setPML('Alpha', '0') will turn off the CFS-RIPML's complex frequency
+%   shift.
 %
 %   Named parameters may be combined, so 'Sigma', 'Alpha', 'Kappa' and 'Depth'
-%   may be set all at once; however, 'Depth' and 'Material' cannot be set at
-%   once as all materials have the same PML thickness.
+%   may be set all at once.
 %
-%   The default PML parameters in Trogdor 5 are:
+%   The default PML parameters in Trogdor 6 are:
 %
 %     sigma = '(d^3)*0.8*4/(((mu0/eps0)^0.5)*dx)'
-%     alpha = '(1-d)*3e8*eps0/(50*dx)'
+%     alpha = '(1-d)*3e8*eps0/L'
 %     kappa = '1 + (5-1)*(d^3)'
 %
 %   Sigma and kappa are taken from Taflove's suggested values.
-%   I chose alpha, the complex frequency shift, to interpret wavelengths
-%   longer than 50*dx as mostly evanescent.
+%   Alpha is chosen so that wavelengths larger than the simulation space
+%   are assumed to be evanescent.
+%
+%   Variables permitted in the expressions for sigma, alpha and kappa are:
+%       d       distance into the PML, from 0 to 1 (so 1 is the outside of
+%               the grid)
+%       dx      the cell size in the direction of attenuation
+%       L       diagonal extent of the entire simulation
+%       mu0     permeability of free space
+%       eps0    permittivity of free space
+%        
 
 
 sim = t6.TrogdorSimulation.instance();
 grid = t6.TrogdorSimulation.instance().currentGrid();
 
 X.Depth = [];
-X.Material = [];
 X.Kappa = '';
 X.Alpha = '';
 X.Sigma = '';
@@ -45,9 +51,6 @@ if length(X.Depth) ~= 0
         error('PML depth must be a length-six array of integers.');
     end
     
-    if length(X.Material) ~= 0
-        error('Cannot set PML depth per material.');
-    end
     grid.PML = X.Depth;
 end
 
@@ -55,34 +58,14 @@ if any(X.Depth < 0)
     error('PML depths must all be nonnegative integers.');
 end
 
-if length(X.Material) ~= 0
-    
-    index = t6.indexOf(X.Material, sim.Materials);
-    if index == -1
-        error('Material not found.');
-    end
-    
-    if length(X.Kappa) ~= 0
-        sim.Materials{index}.PMLParams.kappa = X.Kappa;
-    end
-    
-    if length(X.Sigma) ~= 0
-        sim.Materials{index}.PMLParams.sigma = X.Sigma;
-    end
-    
-    if length(X.Alpha) ~= 0
-        sim.Materials{index}.PMLParams.alpha = X.Alpha;
-    end
-else
-    if length(X.Kappa) ~= 0
-        grid.PMLParams.kappa = X.Kappa;
-    end
-    
-    if length(X.Sigma) ~= 0
-        grid.PMLParams.sigma = X.Sigma;
-    end
-    
-    if length(X.Alpha) ~= 0
-        grid.PMLParams.alpha = X.Alpha;
-    end
+if length(X.Kappa) ~= 0
+    grid.PMLParams.kappa = X.Kappa;
+end
+
+if length(X.Sigma) ~= 0
+    grid.PMLParams.sigma = X.Sigma;
+end
+
+if length(X.Alpha) ~= 0
+    grid.PMLParams.alpha = X.Alpha;
 end

@@ -38,6 +38,7 @@ sim = t6.TrogdorSimulation.instance();
 sim.Dxyz = dxyz;
 sim.Dt = dt;
 sim.NumT = numTimesteps;
+sim.NumCells = X.NumCells;
 sim.Grids = [];
 sim.CurrentGrid = [];
 

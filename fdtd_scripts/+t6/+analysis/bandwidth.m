@@ -7,7 +7,7 @@ function iii = bandwidth(x, varargin)
 % Example usage:
 %   [srcSpectrum, freqs] = analysis.spectrum(srcFn(dt*(1:numTimesteps)), 'Dt', dt);
 %   srcBandwidth = freqs(analysis.bandwidth(srcSpectrum(1:round(end/2))));
-%   bandwidthLambda = 2*pi*3e8/srcBandwidth;
+%   bandwidthLambda = 2*pi/srcBandwidth;
 %
 if nargin > 1
     dBlevel = varargin{1};

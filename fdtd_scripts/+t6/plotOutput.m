@@ -11,13 +11,16 @@ import t6.*
 X.Period = 1;
 X.YLim = [-1 1];
 X.CLim = [];
+X.Colormap = [];
 X.UnitString = [];
 X = parseargs(X, varargin{:});
 
 period = X.Period;
 
-if exist('orangecrush', 'file')
+if isempty(X.Colormap) && exist('orangecrush', 'file')
     colormap orangecrush;
+elseif ~isempty(X.Colormap)
+    colormap(X.Colormap);
 end
 
 imagesc_args = {};

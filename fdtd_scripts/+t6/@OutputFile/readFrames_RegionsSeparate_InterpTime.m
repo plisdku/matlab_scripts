@@ -56,7 +56,7 @@ end
 
 chunkBytes = 10;
 frameBytes = sum(prod(frameSizes,2))*8;
-[chunkStarts, chunkEnds] = chunkTimesteps(nFirst, nLast, frameBytes, chunkBytes);
+[chunkStarts, chunkEnds] = t6.OutputFile.chunkTimesteps(nFirst, nLast, frameBytes, chunkBytes);
 numChunks = length(chunkStarts);
 chunkSize = chunkEnds(1)-chunkStarts(1)+1;
 bufferLength = chunkSize+1;

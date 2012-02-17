@@ -1,10 +1,14 @@
 function trogdor_end(varargin)
 %trogdor_end End Trogdor simulation description and write parameter file
-%   trogdor_end should be the last function called in describing a Trogdor 5
+%   trogdor_end should be the last function called in describing a Trogdor 6
 %   simulation.  It will write the parameter file params.xml and all other
 %   data files necessary to run the given simulation.
 %
-%   trogdor_end(paramFileName) permits customization of the parameter file name.   
+%   trogdor_end('XML', paramFileName) permits customization of the
+%   parameter file name.
+%
+%   trogdor_end('Directory', 'dat') will put all the auxiliary files into
+%   the directory dat.
 
 import com.mathworks.xml.XMLUtils.*;
 

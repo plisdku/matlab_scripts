@@ -95,7 +95,7 @@ function myWriteSpaceTimeData(fname, spaceTimeData)
 precisionString = t6.TrogdorSimulation.instance().Precision;
 fh = fopen(fname, 'w');
 try
-    count = fwrite(fh, src.spaceTimeData, precisionString);
+    count = fwrite(fh, spaceTimeData, precisionString);
 catch
     error('Could not write current source data file.');
 end
