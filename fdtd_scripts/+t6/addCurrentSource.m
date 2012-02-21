@@ -1,9 +1,11 @@
 function addCurrentSource(varargin)
-%addCurrentSource Add a source of electric and/or magnetic current density to the grid.
-%   addCurrentSource('Field', 'my', 'YeeCells', [0 0 0 0 100 0], 'TimeData', ...
-%       sin(1:numT)) will drive the grid with a sinusoidal magnetic current
-%       density my along a line from (0,0,0) to (0,100,0) on every
-%       timestep.
+%addCurrentSource Add a source of electric and/or magnetic current density
+% to the grid.
+%
+% addCurrentSource('Field', 'my', 'Bounds', [0 0 0 0 100 0], ...
+%   'FieldFunction', @(x,y,z,t) sin(2*pi*y/200)*sin(t/10))
+% Drive the grid with a sinusoidal magnetic current density along a line
+%   from (0,0,0) to (0,100,0).
 %
 %   Usage: addCurrentSource(named parameters)
 %
@@ -51,16 +53,10 @@ function addCurrentSource(varargin)
 %
 %   Example:
 %
-%   addCurrentSource('Field', 'jz', 'YeeCells', [50 50 50 50 50 50; ...
-%       60 60 60 60 60 60], 'Duration', [0 10; 100 110], 'SpaceTimeFile', 
-%       'currentInput');
+%   addCurrentSource('Field', 'jz', 'Bounds', [50 50 50 50 50 50], ...
+%       'FieldFunction', @(x,y,z,t) sin(t/20));
 %
-%   Specify a source of jz electric current in cells (50,50,50) and (60,60,60).
-%   The first time Trogdor is run it will generate a data request file called
-%   'currentInput.m' containing the ordered list of fields, cells and timesteps
-%   at which data is required.  After this data is written in the correct order
-%   to a binary file called 'currentInput', Trogdor can be run again to
-%   completion.
+%   Specify a point z-oriented dipole of amplitude 1 at (50,50,50).
 
 import t6.*
 

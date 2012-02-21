@@ -10,11 +10,20 @@ obj = struct;
 obj.type = 'Mesh';
 
 if nargin == 1
-    X.Vertices = varargin{1}.patchVertices;
-    X.Faces = varargin{1}.faces;
-    X.FreeDirections = varargin{1}.freeDirections();
-    X.Permittivity = varargin{1}.permittivity;
-    X.Permeability = varargin{1}.permeability;
+    if iscell(varargin{1})
+        if numel(varargin{1}) > 1
+            error('Please add one mesh at a time');
+        else
+            theMesh = varargin{1}{1};
+        end
+    else
+        theMesh = varargin{1};
+    end
+    X.Vertices = theMesh.patchVertices;
+    X.Faces = theMesh.faces;
+    X.FreeDirections = theMesh.freeDirections();
+    X.Permittivity = theMesh.permittivity;
+    X.Permeability = theMesh.permeability;
 else
     X.Vertices = [];
     X.Faces = [];

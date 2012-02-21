@@ -1,7 +1,7 @@
 function addOutput(filename, fields, varargin)
 %addOutput Add an electromagnetic field or current output to the simulation
-%   addOutput('electricFields', 'ex ey ez', 'YeeCells', [0 0 0 100 100 100])
-%       will instruct Trogdor to save the ex, ey and ez fields in a binary file
+%   addOutput('electricFields', 'ex ey ez', 'Bounds', [0 0 0 100 100 100])
+%       will instruct Trogdor to save the ex, ey and ez fields in a file
 %       named 'electricFields' on every timestep.
 %   
 %   Usage: addOutput(filename, fields, named parameters)
