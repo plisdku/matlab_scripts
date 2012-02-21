@@ -1,6 +1,6 @@
 function addGrid(name, yeeCells, varargin)
 %addGrid Begin description of an FDTD simulation grid
-%   addGrid('Main Grid', [0 0 0 99 99 0) begins the description of a grid
+%   addGrid('Main Grid', [0 0 0 99 99 0]) begins the description of a grid
 %   called 'Main Grid', spanning 100 yee cells in X and Y and symmetrical
 %   in z.
 %
@@ -22,6 +22,10 @@ end
 
 if numel(varargin) > 0
     grid.Origin = varargin{1};
+end
+
+if numel(varargin) > 1
+    grid.PML = varargin{2};
 end
 
 if ~iscell(sim.Grids)

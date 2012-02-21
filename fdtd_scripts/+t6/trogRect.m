@@ -33,7 +33,7 @@ rect = reshape(rect, [], 6);
 for row = 1:size(rect, 1)
     r = rect(row,:);
     
-    r(4:6) = r(4:6)+1;
+    r(4:6) = r(4:6);
     r = r + [0.1 0.1 0.1 -0.1 -0.1 -0.1];
 
     line(r([1,4]), r([2,2]), r([3,3]), 'Color', colors, extras{:});

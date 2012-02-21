@@ -36,7 +36,6 @@ function setPML(varargin)
 %       eps0    permittivity of free space
 %        
 
-
 sim = t6.TrogdorSimulation.instance();
 grid = t6.TrogdorSimulation.instance().currentGrid();
 
@@ -56,6 +55,10 @@ end
 
 if any(X.Depth < 0)
     error('PML depths must all be nonnegative integers.');
+end
+
+if ~isempty(X.Depth)
+    error('PML depth must be set in trogdorBegin()');
 end
 
 if length(X.Kappa) ~= 0

@@ -26,7 +26,7 @@ hold on
 matlColors = {'g', 'k', 'g', 'y'};
 %if (numel(theMesh.permittivity) > 1)
     
-    for pp = 1
+    for pp = 1:numel(theMesh.permittivity)
         patch('Vertices', X.Units*theMesh.permittivity{pp}.vertices, ...
             'Faces', theMesh.permittivity{pp}.faces,...
             'FaceColor', matlColors{pp}, 'FaceAlpha', 0.2, 'EdgeAlpha', 0.02)

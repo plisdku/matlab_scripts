@@ -4,7 +4,7 @@ function y = yeeCells(bounds)
 
 import t6.*
 
-dxyz = t6.sim().Dxyz;
+dxyz = t6.simulation().Dxyz;
 origin = t6.grid().Origin;
 
 boundsCells = bsxfun(@times, bsxfun(@minus, bounds, [origin origin]), ...

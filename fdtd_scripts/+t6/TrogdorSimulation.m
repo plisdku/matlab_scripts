@@ -8,6 +8,8 @@ classdef TrogdorSimulation < handle
         Dt = 0
         NumT = 0
         NumCells = [1 1 1];
+        NonPMLBounds = [];
+        OuterBounds = [];
         Precision = 'float32';
         Directory = '';
     end

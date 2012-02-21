@@ -67,9 +67,9 @@ for ll = 1:length(grid.TFSFSources)
         end
     end
     
-    if length(fieldTokens) > size(src.timeData, 1)
-        elemXML.setAttribute('polarization', '1 1 1');
-    end
+%    if length(fieldTokens) > size(src.timeData, 1)
+%        elemXML.setAttribute('polarization', '1 1 1');
+%    end
     
     gridXML.appendChild(elemXML);
 end

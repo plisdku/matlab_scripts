@@ -6,7 +6,7 @@ function yeeCells = boundsToYee(bounds, fieldTokens)
 
 import t6.*
 
-dxyz = t6.sim().Dxyz;
+dxyz = t6.simulation().Dxyz;
 
 if ~iscell(fieldTokens)
     fieldTokens = {fieldTokens};

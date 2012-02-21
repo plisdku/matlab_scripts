@@ -43,6 +43,9 @@ function addAxisOrientedPlaneWave(varargin)
 %
 %   Source data into the box [0 0 0 100 100 100] but omit the TFSF correction on
 %   the +Z and -Y faces.
+
+import t6.*
+
 grid = t6.TrogdorSimulation.instance().currentGrid();
 
 X.Field = '';

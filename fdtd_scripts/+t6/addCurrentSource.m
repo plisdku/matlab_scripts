@@ -146,10 +146,10 @@ for ff = 1:numel(fieldTokens)
     yeeZ = yeeRegion(3):yeeRegion(6);
     timesteps = duration(1):duration(2);
 
-    x = t6.grid().Origin(1) + offset(1) + yeeX*t6.sim().Dxyz(1);
-    y = t6.grid().Origin(2) + offset(2) + yeeY*t6.sim().Dxyz(2);
-    z = t6.grid().Origin(3) + offset(3) + yeeZ*t6.sim().Dxyz(3);
-    t = offset(4) + timesteps*t6.sim().Dt;
+    x = t6.grid().Origin(1) + offset(1) + yeeX*t6.simulation().Dxyz(1);
+    y = t6.grid().Origin(2) + offset(2) + yeeY*t6.simulation().Dxyz(2);
+    z = t6.grid().Origin(3) + offset(3) + yeeZ*t6.simulation().Dxyz(3);
+    t = offset(4) + timesteps*t6.simulation().Dt;
 
     [xx yy zz tt] = ndgrid(x,y,z,t);
     
@@ -166,8 +166,8 @@ return
 function src = myCurrent_Bounds(yeeRegion, bounds, duration, fieldTokens,...
     fieldFunction)
 
-dxyz = t6.sim().Dxyz;
-dt = t6.sim().Dt;
+dxyz = t6.simulation().Dxyz;
+dt = t6.simulation().Dt;
 
 src = zeros([yeeRegion(4:6)-yeeRegion(1:3)+1, numel(fieldTokens), ...
     duration(2) - duration(1) + 1]);
@@ -261,7 +261,7 @@ for ff = 1:numel(fieldTokens)
     end
     
     timesteps = duration(1):duration(2);
-    t = actualTimeOffset + timesteps*t6.sim().Dt;
+    t = actualTimeOffset + timesteps*t6.simulation().Dt;
     
     [xx yy zz tt] = ndgrid(evalCoords{:},t);
     

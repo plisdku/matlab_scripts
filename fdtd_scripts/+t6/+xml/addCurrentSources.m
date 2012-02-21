@@ -120,10 +120,10 @@ for ff = 1:numel(fieldTokens)
     yeeZ = yeeRegion(3):yeeRegion(6);
     timesteps = duration(1):duration(2);
 
-    fieldArgs(ff).x = t6.grid().Origin(1) + offset(1) + yeeX*t6.sim().Dxyz(1);
-    fieldArgs(ff).y = t6.grid().Origin(2) + offset(2) + yeeY*t6.sim().Dxyz(2);
-    fieldArgs(ff).z = t6.grid().Origin(3) + offset(3) + yeeZ*t6.sim().Dxyz(3);
-    fieldArgs(ff).t = offset(4) + timesteps*t6.sim().Dt;
+    fieldArgs(ff).x = t6.grid().Origin(1) + offset(1) + yeeX*t6.simulation().Dxyz(1);
+    fieldArgs(ff).y = t6.grid().Origin(2) + offset(2) + yeeY*t6.simulation().Dxyz(2);
+    fieldArgs(ff).z = t6.grid().Origin(3) + offset(3) + yeeZ*t6.simulation().Dxyz(3);
+    fieldArgs(ff).t = offset(4) + timesteps*t6.simulation().Dt;
     
     [fieldArgs(ff).xx fieldArgs(ff).yy fieldArgs(ff).zz] = ndgrid(x,y,z);
 end
@@ -153,8 +153,8 @@ function myWriteCurrent_Bounds(fname, yeeRegion, bounds, fieldTokens, duration, 
 precisionString = t6.TrogdorSimulation.instance().Precision;
 fh = fopen(fname, 'w');
 
-dxyz = t6.sim().Dxyz;
-dt = t6.sim().Dt;
+dxyz = t6.simulation().Dxyz;
+dt = t6.simulation().Dt;
 
 %src = zeros([yeeRegion(4:6)-yeeRegion(1:3)+1, numel(fieldTokens), ...
 %    duration(2) - duration(1) + 1]);
@@ -232,7 +232,7 @@ for ff = 1:numel(fieldTokens)
     end
     
     timesteps = duration(1):duration(2);
-    fieldArgs(ff).t = actualTimeOffset + timesteps*t6.sim().Dt;
+    fieldArgs(ff).t = actualTimeOffset + timesteps*t6.simulation().Dt;
     
     [fieldArgs(ff).xx fieldArgs(ff).yy fieldArgs(ff).zz] = ndgrid(evalCoords{:});
 end

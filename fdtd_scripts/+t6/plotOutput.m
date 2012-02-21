@@ -110,9 +110,11 @@ elseif (nnz(dim(1:3) == 1) == 2)   % All 1D cases
     end
 elseif (nnz(dim(1:3) == 1) == 1)    % All 2D cases
     
-    if file.Regions.Size(1,1) == 1
+    bounds = file.Regions.Bounds(1,:);
+    
+    if bounds(1) == bounds(4)
         row = 2; col = 3;
-    elseif file.Regions.Size(1,2) == 1
+    elseif bounds(2) == bounds(5)
         row = 1; col = 3;
     else
         row = 1; col = 2;
@@ -129,12 +131,12 @@ elseif (nnz(dim(1:3) == 1) == 1)    % All 2D cases
             if (mod(frameNum, period) == 0)
                 imagesc_centered(xyzPos{row}, xyzPos{col}, ...
                     transpose(squeeze(data)), imagesc_args{:});
-                axis image
-                set(gca, 'YDir', 'Normal');
-                colorbar;
+                axis xy image
+                shading interp
                 title(sprintf('Frame %i', frameNum));
                 xlabel(sprintf('%s%s', char('w'+row), X.UnitString));
                 ylabel(sprintf('%s%s', char('w'+col), X.UnitString));
+                colorbar;
                 pause(0.01);
             end
             if frameNum < numFrames
