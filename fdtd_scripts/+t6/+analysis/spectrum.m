@@ -172,7 +172,7 @@ if isempty(X.Frequency) && isempty(X.SteadyStateFrequency)
     freqs = 2*pi*(0:numT-1) / (numT * X.Dt);
     
     phaseFactor = exp(-1i*freqs*X.Time(1));
-    phaseFactorSize = [ones(1, timeAxis-1), numel(phaseFactor)];
+    phaseFactorSize = [ones(1, timeAxis-1), numel(phaseFactor), 1];
     
     f = bsxfun(@times, fft(data, [], timeAxis) / numT, ...
     	reshape(phaseFactor, phaseFactorSize));
