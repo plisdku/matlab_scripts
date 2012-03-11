@@ -3,7 +3,7 @@ classdef Rect < t6.model.Node
 % 
 % Constructor example:
 %
-% r = Rect(@(p) [0 0 0 1 1 1]', 'Permittivity', 'Air');
+% r = Rect(@(p) [0 0 0 1 1 1], 'Permittivity', 'Air');
 %
 % The bounding box should be a column vector.  (WHY IS THIS?)
 % 

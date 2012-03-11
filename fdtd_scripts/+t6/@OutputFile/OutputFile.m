@@ -89,6 +89,7 @@ classdef OutputFile < handle
         readSpecFile(obj)
         data = readFrames_SeparateRegions(obj, numFrames);
         data = readFrames_RegionsTogether(obj, numFrames);
+        pos = naturalSamplingPositions(obj, bounds, region, numSamples);
     end
     
     methods (Static, Access = private)

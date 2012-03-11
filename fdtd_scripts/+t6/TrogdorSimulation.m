@@ -12,6 +12,7 @@ classdef TrogdorSimulation < handle
         OuterBounds = [];
         Precision = 'float32';
         Directory = '';
+        OutputDirectory = '';
     end
     
     methods
@@ -34,6 +35,14 @@ classdef TrogdorSimulation < handle
                 str = '';
             else
                 str = [obj.Directory, filesep()];
+            end
+        end
+        
+        function str = outputDirectoryString(obj)
+            if isempty(obj.OutputDirectory)
+                str = '';
+            else
+                str = [obj.OutputDirectory, filesep()];
             end
         end
     end

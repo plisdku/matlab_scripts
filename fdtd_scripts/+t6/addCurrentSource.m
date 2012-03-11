@@ -37,6 +37,8 @@ function addCurrentSource(varargin)
 %                   argument must be a cell array with one function per field
 %                   component, e.g. {jxFunc, jyFunc, jzFunc}.
 %                   (FieldFunction, TimeData, or SpaceTimeData required)
+%       FieldFunctor    A function F(x,y,z) that returns a function f(t)
+%                   providing the field on each timestep.
 %       TimeData    An array of size [nFields nTimesteps].  If the Duration
 %                   is specified as [0 10] then TimeData needs 11 columns, one
 %                   for each sourced timestep.
@@ -67,6 +69,7 @@ X.YeeCells = [];
 X.Bounds = [];
 X.Duration = [];
 X.FieldFunction = [];
+X.FieldFunctor = [];
 X.TimeData = [];
 X.SpaceTimeData = [];
 %X.SpaceTimeFile = [];
@@ -92,21 +95,15 @@ end
 
 % Evaluate the field function at all the right places and times
 if ~isempty(X.FieldFunction)
-    
     if ~iscell(X.FieldFunction)
         X.FieldFunction = {X.FieldFunction};
     end
-    
-    %{
-    if isempty(X.Bounds)
-        X.SpaceTimeData = myCurrent_YeeCells(X.YeeCells(1,:),...
-            X.Duration(1,:), fieldTokens, X.FieldFunction);
-    else
-        X.SpaceTimeData = myCurrent_Bounds(X.YeeCells(1,:), ...
-            X.Bounds(1,:), X.Duration(1,:), fieldTokens, X.FieldFunction);
+end
+
+if ~isempty(X.FieldFunctor)
+    if ~iscell(X.FieldFunctor)
+        X.FieldFunctor = {X.FieldFunctor};
     end
-    %}
-    
 end
 
 obj = struct;
@@ -116,6 +113,7 @@ obj.yeeCells = X.YeeCells;
 obj.bounds = X.Bounds;
 obj.duration = X.Duration;
 obj.fieldFunction = X.FieldFunction;
+obj.fieldFunctor = X.FieldFunctor;
 obj.timeData = X.TimeData;
 obj.spaceTimeData = X.SpaceTimeData;
 

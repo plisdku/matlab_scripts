@@ -14,10 +14,12 @@ import com.mathworks.xml.XMLUtils.*;
 
 X.XML = 'params.xml';
 X.Directory = '';
+X.OutputDirectory = '';
 X = parseargs(X, varargin{:});
 
 if ~isstr(X.XML); error('Invalid filename'); end
 if ~isstr(X.Directory); error('Invalid directory name'); end
+if ~isstr(X.OutputDirectory); error('Invalid output directory name'); end
 
 if ~isempty(X.Directory) && ~exist(X.Directory, 'dir')
     try mkdir(X.Directory)
@@ -26,11 +28,19 @@ if ~isempty(X.Directory) && ~exist(X.Directory, 'dir')
     end
 end
 
+if ~isempty(X.OutputDirectory) && ~exist(X.OutputDirectory, 'dir')
+    try mkdir(X.OutputDirectory)
+    catch exception
+        error('Could not create output directory!');
+    end
+end
+
 % Last things:
 %   store the extent of source grids in links
 
 sim = t6.TrogdorSimulation.instance;
 sim.Directory = X.Directory;
+sim.OutputDirectory = X.OutputDirectory;
 
 if numel(sim.Grids) > 1
     error('Trogdor 6 does not support multiple grids');

@@ -6,6 +6,9 @@ directory = t6.TrogdorSimulation.instance().directoryString;
 for ss = 1:length(grid.CurrentSources)
     src = grid.CurrentSources{ss};
     
+    fname = [directory, sprintf('__current_%i', TROG_XML_COUNT___.current)];
+    TROG_XML_COUNT___.current = TROG_XML_COUNT___.current + 1;
+    
     elemXML = doc.createElement('CurrentSource');
     fieldstr = '';
     for ff = 1:length(src.field)
@@ -13,9 +16,8 @@ for ss = 1:length(grid.CurrentSources)
     end
     elemXML.setAttribute('fields', fieldstr);
     
+    % Time data
     if ~isempty(src.timeData)
-        fname = [directory, sprintf('__currentsource_time_%i', TROG_XML_COUNT___.currentTime)];
-        TROG_XML_COUNT___.currentTime = TROG_XML_COUNT___.currentTime + 1;
         elemXML.setAttribute('timeFile', fname);
         
         myWriteTimeFile(src.timeData);
@@ -23,10 +25,8 @@ for ss = 1:length(grid.CurrentSources)
         t6.xml.writeSourceSpec(src, 'AutoTimeFile', fname);
     end
     
+    % Space-time data
     if ~isempty(src.spaceTimeData)
-        fname = [directory, sprintf('__currentsource_spacetime_%i',...
-            TROG_XML_COUNT___.currentSpaceTime)];
-        TROG_XML_COUNT___.currentSpaceTime = TROG_XML_COUNT___.currentSpaceTime + 1;
         elemXML.setAttribute('spaceTimeFile', fname);
         
         myWriteSpaceTimeData(fname, src.spaceTimeData);
@@ -34,18 +34,31 @@ for ss = 1:length(grid.CurrentSources)
         t6.xml.writeSourceSpec(src, 'AutoSpaceTimeFile', fname);
     end
     
+    % Field function
     if ~isempty(src.fieldFunction)
-        fname = [directory, sprintf('__currentsource_spacetime_%i',...
-            TROG_XML_COUNT___.currentSpaceTime)];
-        TROG_XML_COUNT___.currentSpaceTime = TROG_XML_COUNT___.currentSpaceTime + 1;
         elemXML.setAttribute('spaceTimeFile', fname);
         
         if isempty(src.bounds)
-            myWriteCurrent_YeeCells(fname, src.yeeCells, src.field, ...
+            writeFunctionCurrent_Yee(fname, src.yeeCells, src.field, ...
                 src.duration, src.fieldFunction);
         else
-            myWriteCurrent_Bounds(fname, src.yeeCells, src.bounds, src.field, ...
+            writeFunctionCurrent_Bounds(fname, src.yeeCells, src.bounds, src.field, ...
                 src.duration, src.fieldFunction);
+        end
+        
+        t6.xml.writeSourceSpec(src, 'AutoSpaceTimeFile', fname);
+    end
+    
+    % Field functor
+    if ~isempty(src.fieldFunctor)
+        elemXML.setAttribute('spaceTimeFile', fname);
+        
+        if isempty(src.bounds)
+            writeFunctorCurrent_Yee(fname, src.yeeCells, src.field, ...
+                src.duration, src.fieldFunctor);
+        else
+            writeFunctorCurrent_Bounds(fname, src.yeeCells, src.bounds, src.field, ...
+                src.duration, src.fieldFunctor);
         end
         
         t6.xml.writeSourceSpec(src, 'AutoSpaceTimeFile', fname);
@@ -54,10 +67,6 @@ for ss = 1:length(grid.CurrentSources)
     if isfield(src, 'spaceTimeFile')
         error('SpaceTimeFile should be gone now');
     end
-    %if ~isempty(src.spaceTimeFile)
-    %    elemXML.setAttribute('spaceTimeFile', src.spaceTimeFile);
-    %    t6.xml.writeSourceSpec(src);
-    %end
     
     % durations and regions.
     for dd = 1:size(src.duration, 1)
@@ -104,14 +113,12 @@ fclose(fh);
 return
 
 
-% Find the correct (x,y,z,t) coordinates to evaluate the source functions
-% at.
-function myWriteCurrent_YeeCells(fname, yeeRegion, fieldTokens, duration, fieldFunction)
-%function src = myCurrent_YeeCells(yeeRegion, duration, fieldTokens,...
-%    fieldFunction)
-precisionString = t6.TrogdorSimulation.instance().Precision;
-fh = fopen(fname, 'w');
+function fieldArgs = yeeCellArguments(yeeRegion, fieldTokens, duration)
 
+fieldArgs = struct('x', cell(size(fieldTokens)), ...
+    'y', cell(size(fieldTokens)), ...
+    'z', cell(size(fieldTokens)), ...
+    't', cell(size(fieldTokens)));
 for ff = 1:numel(fieldTokens)
     offset = t6.xml.fieldOffset(fieldTokens{ff});
 
@@ -128,6 +135,15 @@ for ff = 1:numel(fieldTokens)
     [fieldArgs(ff).xx fieldArgs(ff).yy fieldArgs(ff).zz] = ndgrid(x,y,z);
 end
 
+return
+
+
+function writeFunctionCurrent_Yee(fname, yeeRegion, fieldTokens, duration, fieldFunction)
+precisionString = t6.TrogdorSimulation.instance().Precision;
+fh = fopen(fname, 'w');
+
+fieldArgs = yeeCellArguments(yeeRegion, fieldTokens, duration);
+
 numT = duration(2)-duration(1)+1;
 for nn = 1:numT
     for ff = 1:numel(fieldTokens)
@@ -141,24 +157,43 @@ end
 return
 
 
-
-
-
-
-
-
-function myWriteCurrent_Bounds(fname, yeeRegion, bounds, fieldTokens, duration, fieldFunction)
-%function src = myCurrent_Bounds(yeeRegion, bounds, duration, fieldTokens,...
-%    fieldFunction)
+function writeFunctorCurrent_Yee(fname, yeeRegion, fieldTokens, duration, fieldFunctor)
 precisionString = t6.TrogdorSimulation.instance().Precision;
 fh = fopen(fname, 'w');
+
+warning('This function has not been tested.')
+
+fieldArgs = yeeCellArguments(yeeRegion, fieldTokens, duration);
+
+fieldFunction = cell(size(fieldTokens));
+for ff = 1:numel(fieldTokens)
+    fieldFunction{ff} = fieldFunctor{ff}(...
+        fieldArgs(ff).xx, fieldArgs(ff).yy, fieldArgs(ff).zz);
+end
+
+numT = duration(2)-duration(1)+1;
+for nn = 1:numT
+    for ff = 1:numel(fieldTokens)
+        fwrite(fh, fieldFunction{ff}(fieldArgs(ff).t(nn)), precisionString);
+    end
+end
+
+return
+
+
+
+
+function fieldArgs = boundsArguments(yeeRegion, bounds, fieldTokens, duration)
+
+empty = cell(size(fieldTokens));
+fieldArgs = struct('xx', empty, 'yy', empty, 'zz', empty, 't', empty, ...
+    'indicesX', empty, 'indicesY', empty, 'indicesZ', empty, ...
+    'weights', empty);
 
 dxyz = t6.simulation().Dxyz;
 dt = t6.simulation().Dt;
 
-%src = zeros([yeeRegion(4:6)-yeeRegion(1:3)+1, numel(fieldTokens), ...
-%    duration(2) - duration(1) + 1]);
-
+supportYee = cell(3,1);
 for ff = 1:numel(fieldTokens)
     offset = t6.xml.fieldOffset(fieldTokens{ff}) .* [dxyz dt];
     
@@ -201,20 +236,52 @@ for ff = 1:numel(fieldTokens)
                 % Take the specified current to be a total current and
                 % determine the appropriate density by dividing by dx.
                 evalCoords{xyz} = [bounds(xyz), bounds(xyz)];
-                fieldArgs(ff).weights{xyz} = (1 - abs(evalCoords{xyz}-currCoords{xyz})/dxyz(xyz))/dxyz(xyz);
+                fieldArgs(ff).weights{xyz} = ...
+                    (1 - abs(evalCoords{xyz}-currCoords{xyz})/dxyz(xyz)) ...
+                    / dxyz(xyz);
                 
             else % the grid is low-dimensioned.
                 evalCoords{xyz} = bounds(xyz);
                 fieldArgs(ff).weights{xyz} = 1.0/dxyz(xyz);
             end
         else
-            % Physical bounds of cells centered at current samples
-            cellLeft = max(bounds(xyz), currCoords{xyz} - dxyz(xyz));
-            cellRight = min(bounds(xyz+3), currCoords{xyz} + dxyz(xyz));
+            % Physical bounds of cells centered at current samples.
+            % This segment is the intersection of the current source extent
+            % and the segment [x0-dx, x0+dx] centered around x0 =
+            % currCoords{xyz}.
+            cellCenter = currCoords{xyz};
+            cellLeft = max(bounds(xyz), cellCenter - dxyz(xyz));
+            cellRight = min(bounds(xyz+3), cellCenter + dxyz(xyz));
             
-            % This is a midpoint rule for a boxcar smoothing.
+            % Evaluate the current at the center of the "cell".  We will,
+            % however, assume that the current is constant.
             evalCoords{xyz} = 0.5*(cellLeft + cellRight);
-            fieldArgs(ff).weights{xyz} = 0.5*(cellRight-cellLeft)/dxyz(xyz);
+            
+            % The weight function comes from the triangular weight function
+            %   w(x) = 1+x, -1 <= x <= 0
+            %        = 1-x, 0 <= x <= 1
+            % To perform the integral int_cell J(x) w(x) dx, we assume the
+            % current J(x) = J(x_center) is constant:
+            %   integral = J(x_center) * int_cell w(x) dx
+            % and then figure out the integral of the triangle function
+            % over the cell.  Do the integral piecewise in two parts:
+            
+            % Left-hand integral:
+            xl = cellLeft;
+            xr = min(cellRight, cellCenter);            
+            yl = (xl - cellCenter + dxyz(xyz))/dxyz(xyz);
+            yr = (xr - cellCenter + dxyz(xyz))/dxyz(xyz);
+            wLeft = max( (xr-xl)*0.5.*(yl + yr),  0);
+            
+            xr = cellRight;
+            xl = max(cellLeft, cellCenter);
+            yl = (cellCenter + dxyz(xyz) - xl)/dxyz(xyz);
+            yr = (cellCenter + dxyz(xyz) - xr)/dxyz(xyz);
+            wRight = max( (xr-xl)*0.5.*(yl + yr),  0);
+            
+            fieldArgs(ff).weights{xyz} = (wLeft + wRight)/dxyz(xyz);
+            
+            %fieldArgs(ff).weights{xyz} = 0.5*(cellRight-cellLeft)/dxyz(xyz);
         end
         
     end
@@ -225,6 +292,9 @@ for ff = 1:numel(fieldTokens)
     %
     % so I have to manually adjust the offset of the M field to move
     % forward one timestep.
+    
+    %fieldArgs(1).weights{1}
+    %fieldArgs(1).weights{2}
     
     actualTimeOffset = offset(4);
     if offset(4) == 0
@@ -237,25 +307,21 @@ for ff = 1:numel(fieldTokens)
     [fieldArgs(ff).xx fieldArgs(ff).yy fieldArgs(ff).zz] = ndgrid(evalCoords{:});
 end
 
-% The chunkwise approach does not make this faster.
-%frameSize = [yeeRegion(4:6)-yeeRegion(1:3)+1, numel(fieldTokens)];
-%frameBytes = prod(frameSize)*8;
-%chunkBytes = 1e4;
-%[chunkStarts, chunkEnds, chunkLengths] = t6.OutputFile.chunkTimesteps(...
-%    duration(1), duration(2), frameBytes, chunkBytes);
+return
+
+
+function writeFunctionCurrent_Bounds(fname, yeeRegion, bounds, fieldTokens, duration, fieldFunction)
+
+precisionString = t6.TrogdorSimulation.instance().Precision;
+fh = fopen(fname, 'w');
+
+fieldArgs = boundsArguments(yeeRegion, bounds, fieldTokens, duration);
 
 numT = duration(2)-duration(1)+1;
-%for cc = 1:length(chunkStarts)
+
 for nn = 1:numT
     src = zeros([yeeRegion(4:6)-yeeRegion(1:3)+1, numel(fieldTokens)]); %, chunkLengths(cc)]);
     for ff = 1:numel(fieldTokens)
-        % Chunkwise: slow.
-        %t = fieldArgs(ff).t( (chunkStarts(cc):chunkEnds(cc))-duration(1)+1);
-        %xs = repmat(fieldArgs(ff).xx, [1 1 1 length(t)]);
-        %ys = repmat(fieldArgs(ff).yy, [1 1 1 length(t)]);
-        %zs = repmat(fieldArgs(ff).zz, [1 1 1 length(t)]);
-        %ts = repmat(reshape(t, 1, 1, 1, []), [size(fieldArgs(ff).xx) 1]);
-        %rawCurrent = fieldFunction{ff}(xs, ys, zs, ts);
         
         rawCurrent = fieldFunction{ff}(...
             fieldArgs(ff).xx,fieldArgs(ff).yy,fieldArgs(ff).zz,...
@@ -276,11 +342,106 @@ for nn = 1:numT
     fwrite(fh, src(:), precisionString);
 end
 
+fclose(fh);
 
+return
+
+
+
+function writeFunctorCurrent_Bounds(fname, yeeRegion, bounds, fieldTokens, duration, fieldFunctor)
+
+precisionString = t6.TrogdorSimulation.instance().Precision;
+fh = fopen(fname, 'w');
+
+fieldArgs = boundsArguments(yeeRegion, bounds, fieldTokens, duration);
+
+fieldFunction = cell(size(fieldTokens));
+for ff = 1:numel(fieldTokens)
+    fieldFunction{ff} = fieldFunctor{ff}(...
+        fieldArgs(ff).xx, fieldArgs(ff).yy, fieldArgs(ff).zz);
+end
+
+numT = duration(2)-duration(1)+1;
+
+for nn = 1:numT
+    src = zeros([yeeRegion(4:6)-yeeRegion(1:3)+1, numel(fieldTokens)]); %, chunkLengths(cc)]);
+    for ff = 1:numel(fieldTokens)
+        
+        rawCurrent = fieldFunction{ff}(fieldArgs(ff).t(nn));
+        
+        scaledCurrent = bsxfun(@times, reshape(fieldArgs(ff).weights{1}, [], 1, 1), ...
+            bsxfun(@times, reshape(fieldArgs(ff).weights{2}, 1, [], 1), ...
+            bsxfun(@times, reshape(fieldArgs(ff).weights{3}, 1, 1, []), rawCurrent)));
+        
+        % The scaled current may not be the full size of the source region.
+        % Fill in the appropriate elements.  This amounts to finding an index 
+        % offset.
+        
+        src(fieldArgs(ff).indicesX, fieldArgs(ff).indicesY, ...
+            fieldArgs(ff).indicesZ,ff,:) = scaledCurrent;
+    end
+    
+    fwrite(fh, src(:), precisionString);
+end
 
 fclose(fh);
 
 return
+
+
+% This function is faster than the non-chunked version UNTIL the copy into
+% a subarray of src.  That stage is preposterously slow.
+function writeFunctorCurrent_Bounds_Chunked(fname, yeeRegion, bounds, fieldTokens, duration, fieldFunctor)
+
+precisionString = t6.TrogdorSimulation.instance().Precision;
+fh = fopen(fname, 'w');
+
+fieldArgs = boundsArguments(yeeRegion, bounds, fieldTokens, duration);
+
+fieldFunction = cell(size(fieldTokens));
+for ff = 1:numel(fieldTokens)
+    fieldFunction{ff} = fieldFunctor{ff}(...
+        fieldArgs(ff).xx, fieldArgs(ff).yy, fieldArgs(ff).zz);
+end
+
+numT = duration(2)-duration(1)+1;
+
+timestepSize = [yeeRegion(4:6)-yeeRegion(1:3)+1, numel(fieldTokens)];
+maxChunkSize = 1e5;
+[chunkStarts, chunkEnds, chunkLengths] = t6.OutputFile.chunkTimesteps(...
+    duration(1)+1, duration(2)+1, prod(timestepSize), maxChunkSize);
+numChunks = numel(chunkStarts);
+fprintf('Chunk size %i or %i\n', chunkLengths(1), chunkLengths(end));
+
+for cc = 1:numChunks
+    src = zeros([yeeRegion(4:6)-yeeRegion(1:3)+1, numel(fieldTokens), chunkLengths(cc)]);
+    for ff = 1:numel(fieldTokens)
+        
+        rawCurrent = fieldFunction{ff}(fieldArgs(ff).t(chunkStarts(cc):chunkEnds(cc)));
+        
+        scaledCurrent = bsxfun(@times, reshape(fieldArgs(ff).weights{1}, [], 1, 1), ...
+            bsxfun(@times, reshape(fieldArgs(ff).weights{2}, 1, [], 1), ...
+            bsxfun(@times, reshape(fieldArgs(ff).weights{3}, 1, 1, []), rawCurrent)));
+        
+        % The scaled current may not be the full size of the source region.
+        % Fill in the appropriate elements.  This amounts to finding an index 
+        % offset.
+        
+        %numel(src(fieldArgs(ff).indicesX, fieldArgs(ff).indicesY, ...
+        %    fieldArgs(ff).indicesZ, ff, :))
+        %numel(scaledCurrent)
+        
+        src(fieldArgs(ff).indicesX, fieldArgs(ff).indicesY, ...
+            fieldArgs(ff).indicesZ,ff,:) = scaledCurrent;
+    end
+    
+    fwrite(fh, src(:), precisionString);
+end
+
+fclose(fh);
+
+return
+
 
 
 

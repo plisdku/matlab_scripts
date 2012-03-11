@@ -33,7 +33,7 @@ end
 if X.InterpolateSpace
     if isempty(X.Positions)
         % fill in some natural sampling points.
-        X.Positions = naturalSamplingPositions(obj, X.Size);
+        X.Positions = myNaturalSamplingPositions(obj, X.Size);
     end
 elseif ~isempty(X.Positions)
     X.InterpolateSpace = true;
@@ -63,8 +63,29 @@ end
 
 
 
-function pos = naturalSamplingPositions(obj, numSamplesInRegions)
 
+function pos = myNaturalSamplingPositions(obj, numSamplesInRegions)
+
+pos = cell(obj.numRegions, 3);
+
+for rr = 1:obj.numRegions()
+    
+    if ~isempty(numSamplesInRegions)
+        numSamples = numSamplesInRegions(rr,:);
+    else
+        numSamples = [];
+    end
+    
+    positionsInRegion = naturalSamplingPositions(obj, obj.Regions.Bounds(rr,:), rr, ...
+        numSamples);
+    
+    for xyz = 1:3
+        pos{rr,xyz} = positionsInRegion{xyz};
+    end
+end
+
+
+%{
 pos = cell(obj.numRegions, 3);
 for rr = 1:obj.numRegions()
     if isempty(numSamplesInRegions)
@@ -73,7 +94,7 @@ for rr = 1:obj.numRegions()
     else
         numSamples = numSamplesInRegions(rr,:);
     end
-    numSamples = round(numSamples);
+    numSamples = ceil(numSamples);
     numSamples(numSamples < 1) = 1;
 
     for xyz = 1:3
@@ -85,5 +106,6 @@ for rr = 1:obj.numRegions()
         end
     end    
 end
+%}
 
 

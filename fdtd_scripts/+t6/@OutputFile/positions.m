@@ -61,7 +61,7 @@ if obj.numFields() > 1 && isempty(X.Field) && ~X.InterpolateSpace && ...
     error('More than one field  is present in this file.  Please provide a Field argument.');
 end
 
-
+%{
 function pos = naturalSamplingPositions(obj, bounds, region, numSamples)
 
 pos = cell(1,3);
@@ -74,7 +74,7 @@ if isempty(numSamples)
     numSamples = (bounds(4:6) - bounds(1:3)) ./ obj.Dxyz;
 end
 
-numSamples = round(numSamples);
+numSamples = ceil(numSamples);
 numSamples(numSamples < 1) = 1;
 
 for xyz = 1:3
@@ -84,7 +84,7 @@ for xyz = 1:3
         pos{xyz} = bounds(xyz);
     end
 end    
-
+%}
 
 
 
