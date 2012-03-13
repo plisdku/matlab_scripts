@@ -40,10 +40,12 @@ for tt = 1:afp.numT
     
     for xyz = 1:3
         fwrite(fh, srcH(xyz,tt), 'float32');
+        %norm(srcH(xyz,tt))
     end
     
     for xyz = 1:3
         fwrite(fh, srcE(xyz,tt), 'float32');
+        %norm(srcE(xyz,tt))
     end
     
 end

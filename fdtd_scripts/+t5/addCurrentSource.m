@@ -19,7 +19,7 @@ function addCurrentSource(varargin)
 %                   'kx', 'ky', 'kz'    magnetic currents
 %                   'jx', 'jy', 'jz'    electric currents
 %                   Any combination of fields may be used, but they should be
-%                   specified in order: kx before ky, magnetic before electric
+%                   specified in order: kx before ky, electric before magnetic
 %                   (required)
 %       YeeCells    The region of the grid in which to add electromagnetic
 %                   current; [x0 y0 z0 x1 y1 z1] will source all cells (x, y, z)

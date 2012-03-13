@@ -11,6 +11,7 @@ X.tauc = [];
 X.dxyz = [];
 X.dt = [];
 X.wavelengths = [600e-9 3000e-9];
+X.trogdor = 'env -u LD_LIBRARY_PATH trogdor';
 
 X = parseargs(X, varargin{:});
 
@@ -25,11 +26,8 @@ end
 
 dxyz = X.dxyz;
 dt = X.dt;
-%dxyz = [5e-9 5e-9 5e-9];
-%dt = 0.99*courant(dxyz);
 
-wavelengthRange = [600e-9 3000e-9];
-freqRange = 2*pi*3e8./wavelengthRange([2 1]);
+freqRange = 2*pi*3e8./X.wavelengths([2 1]);
 centerFreq = mean(freqRange);
 dFreq = diff(freqRange)/2;
 
@@ -115,7 +113,7 @@ trogdor_end('Directory', 'sim');
 
 %%
 
-!trogdor sim/params.xml > out.txt
+unix([X.trogdor, ' sim/params.xml > out.txt']);
 
 %%
 

@@ -53,6 +53,7 @@ for ss = 1:length(grid.CurrentSources)
     if ~isempty(src.fieldFunctor)
         elemXML.setAttribute('spaceTimeFile', fname);
         
+        
         if isempty(src.bounds)
             writeFunctorCurrent_Yee(fname, src.yeeCells, src.field, ...
                 src.duration, src.fieldFunctor);
@@ -60,6 +61,8 @@ for ss = 1:length(grid.CurrentSources)
             writeFunctorCurrent_Bounds(fname, src.yeeCells, src.bounds, src.field, ...
                 src.duration, src.fieldFunctor);
         end
+        
+        %warning('Not writing current')
         
         t6.xml.writeSourceSpec(src, 'AutoSpaceTimeFile', fname);
     end

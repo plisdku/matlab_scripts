@@ -1,6 +1,8 @@
 function isStable = testStability(zNumer, zDenom, dt, dxyz, numCells)
 %testStability  Predict whether a material model is expected to be
 % stable in FDTD
+%
+% isStable = testStability(zNumer, zDenom, dt, dxyz, numCells)
 
 isStable = true;
 
