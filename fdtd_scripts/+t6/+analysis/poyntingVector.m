@@ -40,6 +40,7 @@ end
 X.SteadyStateFrequency = [];
 X.Frequency = [];
 X.Time = [];
+X.Times = [];
 X = parseargs(X, varargin{:});
 
 
@@ -56,26 +57,27 @@ for nn = 1:6
     end
 end
 
-if X.Time
+if ~isempty(X.Time) || ~isempty(X.Times)
     % time-domain PV.
     % timeOrFreq = timesteps of E, and will be understood to be a little
     % wrong
     
-    [data, positions] = t6.readOutputFile(fileName);
+    if isempty(X.Times)
+        X.Times = file.times('Field', 1);
+    end 
+    
+    [data, positions] = t6.readOutputFile(fileName, 'Times', X.Times);
     
     if iscell(data)
         pv = cell(size(file.Regions));
-        for rr = 1:length(file.Regions)
+        for rr = 1:file.numRegions
             pv{rr} = cross(data{rr}(:,:,:,1:3,:), data{rr}(:,:,:,4:6,:), 4);
         end
     else
         pv = cross(data(:,:,:,1:3,:), data(:,:,:,4:6,:), 4);
     end
     
-    timeOrFreq = file.times();
-    if iscell(timeOrFreq)
-        timeOrFreq = timeOrFreq{1};
-    end
+    timeOrFreq = X.Times;
     
 else
     % Frequency domain!
@@ -83,8 +85,8 @@ else
     [data, timeOrFreq] = t6.analysis.spectrum(fileName, varargin{:});
     
     if iscell(data)
-        pv = cell(size(file.Regions));
-        for rr = 1:length(file.Regions)
+        pv = cell(file.numRegions, 1);
+        for rr = 1:file.numRegions
             pv{rr} = 0.5*cross(data{rr}(:,:,:,1:3,:), ...
                 conj(data{rr}(:,:,:,4:6,:)), 4);
         end
@@ -94,11 +96,19 @@ else
 end
 
 if nargout > 2
-    [posX, posY, posZ] = file.positions();
+
+    positions = cell(file.numRegions,3);
+    for rr = 1:file.numRegions
+        posXYZ = file.positions('Region', rr);
+        positions{rr,1} = posXYZ{1};
+        positions{rr,2} = posXYZ{2};
+        positions{rr,3} = posXYZ{3};
+    end
     
+    %{
     aField = 1;
     if iscell(data)
-        positions = cell(numel(file.Regions),3);
+        positions = cell(file.numRegions,3);
         
         for rr = 1:numel(file.Regions)
             positions{rr,1} = posX{rr,aField};
@@ -111,5 +121,6 @@ if nargout > 2
         positions{2} = posY{aField};
         positions{3} = posZ{aField};
     end
+    %}
 end
 

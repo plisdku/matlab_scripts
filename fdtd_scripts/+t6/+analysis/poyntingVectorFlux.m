@@ -62,6 +62,7 @@ if ~isempty(X.Time)
     [pv, timeOrFreq, positions] = t6.analysis.poyntingVector(fileName, 'Time');
     
     flux = sumFluxes(pv, positions, X.Normal);
+    
 elseif ~isempty(X.Frequency)
     [pv, timeOrFreq, positions] = t6.analysis.poyntingVector(fileName, ...
         'Frequency', X.Frequency);

@@ -14,8 +14,8 @@ if ~isempty(X.Positions)
     samplePositionsInFile = cell(obj.numRegions(), obj.numFields());
     for rr = 1:obj.numRegions
         for ff = 1:obj.numFields
-            samplePositionsInFile{rr,ff} = obj.positions('InterpolateSpace', ...
-                false);
+            samplePositionsInFile{rr,ff} = obj.positions(...
+                'InterpolateSpace', false, 'Region', rr, 'Field', ff);
         end
     end
     
@@ -31,9 +31,10 @@ if numFields == 1
     sampleTimes = [-1, obj.times()];
     n2t = @(n,f) sampleTimes(n+1);
 else
-    sampleTimes = obj.times();
+    %sampleTimes = obj.times();
     for ff = 1:numFields
-        sampleTimes{ff} = [-1, sampleTimes{ff}];
+        sampleTimes{ff} = [-1, obj.times('Field', ff)];
+        %sampleTimes{ff} = [-1, sampleTimes{ff}];
     end
     n2t = @(n,f) sampleTimes{f}(n+1);
 end
@@ -74,7 +75,7 @@ for ff = 1:numFields
     fields(ff).lastSampleInChunk = fields(ff).whichTimes(2:end)-1;
     
     if any(fields(ff).whichChunks == 0)
-        error('Not all times fall into measured duration');
+        warning('Not all times fall into measured duration');
     end
 end
 
@@ -158,6 +159,10 @@ for cc = 1:numChunks
                     fprintf(' between %2.2f and %2.2f\n', t0, t1);
                 end
             end
+            
+            % This clamps measurements outside the provided duration.
+            bins(bins < 1) = 1;
+            bins(bins > length(bufferTimes)) = length(bufferTimes);
             
             distLeft = tOutFromChunk - bufferTimes(bins);
             distRight = bufferTimes(bins+1) - tOutFromChunk;

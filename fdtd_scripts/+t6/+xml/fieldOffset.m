@@ -28,11 +28,11 @@ switch fieldString
     case {'bz', 'bzz'}
         xyzt = [0.5 0.5 0 0.5];
     case {'jx', 'jex'}
-        xyzt = [0.5 0 0 0.5];
+        xyzt = [0.5 0 0 -0.5];
     case {'jy', 'jey'}
-        xyzt = [0 0.5 0 0.5];
+        xyzt = [0 0.5 0 -0.5];
     case {'jz', 'jez'}
-        xyzt = [0 0 0.5 0.5];
+        xyzt = [0 0 0.5 -0.5];
     case {'mx', 'mhx'}
         xyzt = [0 0.5 0.5 0];
     case {'my', 'mhy'}

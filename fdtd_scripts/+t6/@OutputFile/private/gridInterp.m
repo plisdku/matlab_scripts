@@ -7,6 +7,12 @@ function B = gridInterp(varargin)
 %   are 1D arrays of coordinates at which the data in A is desired.
 
 numdim = floor(nargin/2);
+if numdim > 10
+    % The reason for this is that I wrote a cell array indicesAll
+    % consisting of ten ':' strings.  It's much faster than using repmat on
+    % cells, or any of my other strategies.
+    error('gridInterp can only handle up to 10 dimensions');
+end
 
 if nargin ~= 2*numdim + 1
     error('Wrong number of arguments');
@@ -27,7 +33,9 @@ end
 
 B = A;
 
-indicesAll = repmat({':'}, 1, numdim); % useful variable factored from loop
+% This shaves a lot of time off of calls with SMALL arrays going in.
+%indicesAll = repmat({':'}, 1, numdim); % useful variable factored from loop
+indicesAll = {':',':',':',':',':',':',':',':',':',':'};
 
 for dim = 1:numdim
 if size(A,dim) > 1
@@ -48,9 +56,10 @@ if size(A,dim) > 1
     distLeft = xOut - xIn(leftCell);
     distRight = dx - distLeft;
     
-    weightLeft = shiftdim(reshape(distRight, [], 1)/dx, -(dim-1));
+    szWeight = [1 1 1]; szWeight(dim) = length(distRight);
+    weightLeft = zeros(szWeight);
+    weightLeft(:) = distRight(:)/dx;
     weightRight = 1 - weightLeft;
-    %weightRight = shiftdim(reshape(distLeft, [], 1)/dx, -(dim-1));
     
     indicesLeft = indicesAll;
     indicesRight = indicesAll;

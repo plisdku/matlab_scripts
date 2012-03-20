@@ -1,7 +1,13 @@
 function [data, positions] = readOutputFile(fileName, varargin)
 %readOutputFile Grab all the data from the named output file
 %   alldat = readOutputFile(filename) is a shortcut for using OutputFile to
-%   read the file.  (Provided for back-compatibility with Trogdor 4 scripts.)
+%   read the file.
+%
+% Regions
+% Positions
+% Size
+% Times
+% InterpolateSpace
 
 X.Regions = 'Separate';
 X.Positions = [];

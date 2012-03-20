@@ -19,7 +19,7 @@ if ~isempty(X.Positions)
     for rr = 1:obj.numRegions
         for ff = 1:obj.numFields
             samplePositionsInFile{rr,ff} = obj.positions(...
-                'Field', ff, 'InterpolateSpace', false);
+                'Field', ff, 'InterpolateSpace', false, 'Region', rr);
         end
     end
     

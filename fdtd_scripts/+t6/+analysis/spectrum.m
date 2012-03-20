@@ -106,6 +106,7 @@ X.SteadyStateFrequency = [];
 X.Dt = [];
 X.Time = [];
 X.Regions = 'Separate';
+X.InterpolateSpace = [];
 X = parseargs(X, varargin{:});
 
 if ~isempty(X.Frequency) && ~isempty(X.SteadyStateFrequency)
@@ -261,7 +262,8 @@ if (isempty(X.Frequency) && isempty(X.SteadyStateFrequency)) || ...
     end
     
     file.open();
-    timeData = file.readFrames('NumFrames', numT, 'Regions', X.Regions);
+    timeData = file.readFrames('NumFrames', numT, 'Regions', X.Regions, ...
+        'InterpolateSpace', X.InterpolateSpace);
     file.close();
     
     if numRegions > 1
@@ -320,7 +322,8 @@ elseif ~isempty(X.SteadyStateFrequency)
     calcResid = (nargout > 2);
     
     file.open();
-    timeData = file.readFrames('NumFrames', numT, 'Regions', X.Regions);
+    timeData = file.readFrames('NumFrames', numT, 'Regions', X.Regions, ...
+        'InterpolateSpace', X.InterpolateSpace);
     file.close();
     if ~iscell(timeData)
         timeData = {timeData};
@@ -418,7 +421,7 @@ else % OutputHarmonic-type functionality
     chunkBytes = 50e6;
     frameSizes = file.Regions.Size;
     frameSizes(:,4) = numFields;
-    frameBytes = prod(frameSizes)*8;
+    frameBytes = sum(prod(frameSizes,2))*8;
     [chunkStarts, chunkEnds] = t6.OutputFile.chunkTimesteps(1, numT, frameBytes, chunkBytes);
     numChunks = numel(chunkStarts);
     
@@ -438,13 +441,14 @@ else % OutputHarmonic-type functionality
 
         if numRegions == 1;
             frameData = {file.readFrames('NumFrames', chunkLength,...
-                'Regions', X.Regions)};
-            for ff = 1:length(frameData)
-                frameData{ff} = permute(frameData{ff}, timeFirstIndices);
-            end
+                'Regions', X.Regions, 'InterpolateSpace', X.InterpolateSpace)};
         else
-            frameData = permute(file.readFrames('NumFrames', chunkLength,...
-                'Regions', X.Regions), timeFirstIndices);
+            frameData = file.readFrames('NumFrames', chunkLength,...
+                'Regions', X.Regions, 'InterpolateSpace', X.InterpolateSpace);
+        end
+        
+        for rr = 1:length(frameData)
+            frameData{rr} = permute(frameData{rr}, timeFirstIndices);
         end
 
         for rr = 1:numRegions

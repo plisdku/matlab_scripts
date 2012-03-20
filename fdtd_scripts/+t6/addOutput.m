@@ -45,6 +45,14 @@ function addOutput(filename, fields, varargin)
 %                       will have the same Period; if Period has the same
 %                       number of rows as Duration, then each Duration will
 %                       have its own Period.  (default: 1)
+%       CutoffFrequency The highest angular frequency expected to be
+%                       measured.  The sampling period of the output file
+%                       will be the largest possible integer number of
+%                       timesteps that still resolves the cutoff frequency.
+%                       Thus the sampling rate will be at least twice the
+%                       cutoff frequency according to the Nyquist sampling
+%                       theorem.  CutoffFrequency is an alternative to Period.
+%                       (default: unused)
 %       InterpolationPoint
 %                       A point between [0 0 0] and [1 1 1] at which to
 %                       sample E and H fields.  The electromagnetic fields in
@@ -66,13 +74,14 @@ X.Bounds = [];
 X.Duration = [];  % [first last]
 X.Stride = []; % scalar
 X.Period = []; % scalar
+X.CutoffFrequency = [];
 X.InterpolationPoint = []; % [x y z] from 0 to 1
 
 X = parseargs(X, varargin{:});
 
 t6.validateYeeCellsAndBounds(X);
 
-fieldTokens = mySortTokens(tokenizeFields(fields, 'd e b h'));
+fieldTokens = mySortTokens(tokenizeFields(fields, 'd e b h j m'));
 
 % If we obtained Bounds and not YeeCells, set the YeeCells appropriately
 if ~isempty(X.Bounds)
@@ -93,9 +102,21 @@ elseif size(X.Stride, 1) == 1
 elseif size(X.Stride, 1) ~= size(X.YeeCells, 1)
     error('Stride must have as many rows as YeeCells or Bounds.');
 end
+
+if ~isempty(X.Period) && ~isempty(X.CutoffFrequency)
+    error('Period and CutoffFrequency cannot both be used');
+end
+
 if isempty(X.Period)
-    X.Period = ones(size(X.Duration, 1), 1);
-elseif size(X.Period, 1) == 1
+    if ~isempty(X.CutoffFrequency)
+        X.Period = floor(0.5*2*pi./X.CutoffFrequency/t6.simulation().Dt);
+        X.Period(X.Period < 1) = 1;
+    else
+        X.Period = ones(size(X.Duration, 1), 1);
+    end
+end
+
+if size(X.Period, 1) == 1
     X.Period = repmat(X.Period, size(X.Duration, 1), 1);
 elseif size(X.Period, 1) ~= size(X.Duration, 1)
     error('Period must have as many rows as Duration.');

@@ -6,6 +6,10 @@ function lineColors(cmap)
 % lineColors(jet);
 % lineColors(hot);
 
+if ischar(cmap)
+    cmap = feval(cmap);
+end
+
 numColors = size(cmap, 1);
 
 children = findobj(get(gca, 'Children'), 'Type', 'line');
