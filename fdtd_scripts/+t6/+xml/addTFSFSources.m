@@ -1,7 +1,6 @@
 function addTFSFSources(grid, gridXML, doc, origin)
 global TROG_XML_COUNT___;
-%originTwice = [originTrogdor originTrogdor];
-precisionString = t6.TrogdorSimulation.instance().Precision;
+
 directory = t6.TrogdorSimulation.instance().directoryString;
 
 for ll = 1:length(grid.TFSFSources)
@@ -34,42 +33,103 @@ for ll = 1:length(grid.TFSFSources)
         elemXML.appendChild(durXML);
     end
     
-    %dataFileName = t6.xml.randomName('__tfsfsource_', '', 8);
     dataFileName = [directory, sprintf('__tfsfsource_%i', TROG_XML_COUNT___.tfsfTime)];
     TROG_XML_COUNT___.tfsfTime = TROG_XML_COUNT___.tfsfTime + 1;
     elemXML.setAttribute('file', dataFileName);
-    fh = fopen(dataFileName, 'w');
-    try
-        % Observe carefully: the array needs to be written in row order,
-        % so I need to transpose it.  Matlab writes 2D arrays in column order
-        % (column 1, then column 2, etc.).
-        if size(src.timeData, 1) == 1
-            timeData = repmat(src.timeData, [length(src.field), 1]);
-        else
-            timeData = src.timeData;
-        end
-        
-        count = fwrite(fh, timeData, precisionString);
-    catch
-        error('Could not write TFSF source data file.');
+    
+    if ~isempty(src.timeData)
+        myWriteTimeData(dataFileName, src.timeData, numel(src.field));
+    elseif ~isempty(src.fieldFunction)
+        myWriteFunction(dataFileName, src.fieldFunction, src.field, ...
+            src.duration) 
     end
-    fclose(fh);    
+    
     t6.xml.writeSourceSpec(src, 'AutoTimeFile', dataFileName);
-    
-    % Count up the fields and decide if this source needs a polarization vector
-    % or not.
-    fieldTokens = {};
-    remainder = src.field;
-    while ~strcmp(remainder, '')
-        [token, remainder] = strtok(remainder);
-        if ~strcmp(token, '')
-            fieldTokens = {fieldTokens{:}, token};
-        end
-    end
-    
-%    if length(fieldTokens) > size(src.timeData, 1)
-%        elemXML.setAttribute('polarization', '1 1 1');
-%    end
     
     gridXML.appendChild(elemXML);
 end
+
+end % main function
+
+
+function myWriteTimeData(dataFileName, timeData, numFields)
+precisionString = t6.TrogdorSimulation.instance().Precision;
+fh = fopen(dataFileName, 'w');
+
+try
+    if numFields > 1 && size(timeData, 1) == 1 % if it's a row vector
+        timeData = repmat(timeData, [numFields, 1]);
+    end
+    
+    count = fwrite(fh, timeData, precisionString);
+catch
+    error('Could not write TFSF source data file.');
+end
+fclose(fh);
+end % myWriteTimeData
+
+
+function tt = fieldTimes(fieldTokens, durationTimesteps)
+
+timesteps = durationTimesteps(1):durationTimesteps(2);
+
+tt = cell(numel(fieldTokens), 1);
+for ff = 1:numel(fieldTokens)
+    offset = t6.xml.fieldOffset(fieldTokens{ff});
+    
+    tt{ff} = (offset(4) + timesteps)*t6.simulation().Dt;
+end
+
+end % fieldTimes
+
+
+
+function myWriteFunction(dataFileName, fieldFunction, fieldTokens, ...
+    durationTimesteps)
+precisionString = t6.TrogdorSimulation.instance().Precision;
+fh = fopen(dataFileName, 'w');
+
+if ~iscell(fieldFunction)
+    fieldFunction = {fieldFunction};
+end
+%validateattributes(fieldFunction, {'cell'}, {}, 'myWriteFunction', 'fieldFunction');
+
+numT = durationTimesteps(2) - durationTimesteps(1) + 1;
+
+tt = fieldTimes(fieldTokens, durationTimesteps);
+
+try
+for nn = 1:numT
+    for ff = 1:numel(fieldTokens)
+        fwrite(fh, fieldFunction{ff}(tt{ff}(nn)), precisionString);
+    end
+end
+catch
+    error('Could not write TFSF source data file.');
+end
+
+fclose(fh);
+end % myWriteFunction
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

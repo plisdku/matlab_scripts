@@ -140,9 +140,9 @@ for ff = 1:numel(fieldTokens)
     yeeZ = yeeRegion(3):yeeRegion(6);
     timesteps = duration(1):duration(2);
 
-    x = t6.grid().Origin(1) + offset(1) + yeeX*t6.simulation().Dxyz(1);
-    y = t6.grid().Origin(2) + offset(2) + yeeY*t6.simulation().Dxyz(2);
-    z = t6.grid().Origin(3) + offset(3) + yeeZ*t6.simulation().Dxyz(3);
+    x = t6.currentGrid().Origin(1) + offset(1) + yeeX*t6.simulation().Dxyz(1);
+    y = t6.currentGrid().Origin(2) + offset(2) + yeeY*t6.simulation().Dxyz(2);
+    z = t6.currentGrid().Origin(3) + offset(3) + yeeZ*t6.simulation().Dxyz(3);
     t = offset(4) + timesteps*t6.simulation().Dt;
 
     [xx yy zz tt] = ndgrid(x,y,z,t);
@@ -179,15 +179,15 @@ for ff = 1:numel(fieldTokens)
     
     % Physical points in space at which the current will be provided
     currCoords = cell(3,1);
-    currCoords{1} = t6.grid().Origin(1) + offset(1) + supportYee{1}*dxyz(1);
-    currCoords{2} = t6.grid().Origin(2) + offset(2) + supportYee{2}*dxyz(2);
-    currCoords{3} = t6.grid().Origin(3) + offset(3) + supportYee{3}*dxyz(3);
+    currCoords{1} = t6.currentGrid().Origin(1) + offset(1) + supportYee{1}*dxyz(1);
+    currCoords{2} = t6.currentGrid().Origin(2) + offset(2) + supportYee{2}*dxyz(2);
+    currCoords{3} = t6.currentGrid().Origin(3) + offset(3) + supportYee{3}*dxyz(3);
     
     evalCoords = cell(3,1); % points in real space at which to evaluate function
     weights = cell(3,1); % interpolation weights
     for xyz = 1:3
         
-        if t6.grid().numCells(xyz) == 1
+        if t6.currentGrid().numCells(xyz) == 1
             if numel(supportYee{xyz}) > 1
                 error(['Current source bounds are too large in the ', ...
                     '%s direction'], char('w'+xyz));

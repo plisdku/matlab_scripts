@@ -104,6 +104,7 @@ obj.field = fieldTokens;
 obj.yeeCells = X.YeeCells;
 obj.duration = X.Duration;
 obj.timeData = X.TimeData;
+obj.fieldFunction = X.FieldFunction;
 obj.direction = X.Direction;
 
 % Validate omitted sides, kind of
