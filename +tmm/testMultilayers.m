@@ -40,6 +40,7 @@ zs = linspace(-4e-6, 4e-6, 1000);
 %% TE
 
 reflections = 0*thetas;
+transmissions = reflections;
 for nn = 1:length(thetas)
     theta1 = thetas(nn);
     theta2 = asin(n(1)*sin(theta1)/n(2));
@@ -50,6 +51,7 @@ for nn = 1:length(thetas)
     [Ex, Hy, Hz, T, R] = solveTE(boundaries, epsr, mur, omega, ...
         kParallel);
     reflections(nn) = R;
+    transmissions(nn) = T;
     checkRelativelyClose(R, fresnelR_s(n(1), n(2), theta1, theta2));
 end
 
@@ -67,6 +69,7 @@ for nn = 1:length(thetas)
     
     [Hx, Ey, Ez, T, R] = solveTM(boundaries, epsr, mur, omega, kParallel);
     reflections(nn) = R;
+    transmissions(nn) = T;
     checkRelativelyClose(R, fresnelR_p(n(1), n(2), theta1, theta2));
 end
 

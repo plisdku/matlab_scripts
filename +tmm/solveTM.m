@@ -100,11 +100,14 @@ T = abs(t)^2;
 R = abs(r)^2;
 %assert( abs( 1.0 - T - R ) < 1e-6 ); % t^2 + r^2 = 1 % not generally true
 
+%% Rescale to unit incidence
+
+H0 = H0 / H0(1);
+
 %% For mode solutions:
 
 normalizationPos = [];
 
-%if X.ForceBoundMode
 if forceBoundModes
     H0(1) = 0;
     transferLayer{end}(2,:) = 0;

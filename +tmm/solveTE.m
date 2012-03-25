@@ -101,6 +101,10 @@ T = abs(t)^2;
 R = abs(r)^2;
 %assert( abs( 1.0 - T - R ) < 1e-6 ); % t^2 + r^2 = 1 % not generally true
 
+%% Rescale to unit incidence
+
+E0 = E0 / E0(1);
+
 %% For mode solutions:
 
 %if X.ForceBoundMode
@@ -161,7 +165,6 @@ for nLayer = 1:length(boundaries)+1
         ee2eh = matrixEE2EH(omega, ks(nLayer), z, mur(nLayer));
         EH = ee2eh*En;
         Hz(ii) = -EH(1)*kParallel/omega/mur(nLayer)/mu0;
-        %Hz(ii) = EH(2)*kParallel/ks(nLayer); % WRONG
     end
     
     epsrEx(indicesEx) = epsr(nLayer);
