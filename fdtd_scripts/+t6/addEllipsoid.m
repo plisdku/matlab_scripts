@@ -11,7 +11,7 @@ function addEllipsoid(varargin)
 %                       where x0 <= x <= x1, y0 <= y <= y1, z0 <= z <= z1.
 %
 %
-grid = t6.TrogdorSimulation.instance().currentGrid();
+grid = t6.TrogdorSimulation.instance().CurrentGrid;
 
 obj = struct;
 obj.type = 'Ellipsoid';

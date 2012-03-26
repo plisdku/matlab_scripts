@@ -15,7 +15,7 @@ function setBackground(varargin)
 %   To set both permittivity and permeability, make one call to
 %   setBackground().
 
-grid = t6.TrogdorSimulation.instance().currentGrid();
+grid = t6.currentGrid();
 
 obj = struct;
 obj.type = 'Background';

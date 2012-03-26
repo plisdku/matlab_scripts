@@ -11,7 +11,7 @@ function addGridReport(filename, varargin)
 %       YeeCells    The region of the grid to report;  [x0 y0 z0 x1 y1 z1] will
 %                   save all cells (x, y, z) where x0 <= x <= x1, y0 <= y <= y1,
 %                   z0 <= z <= z1.  (default: entire grid)
-grid = t6.TrogdorSimulation.instance().currentGrid();
+grid = t6.TrogdorSimulation.instance().CurrentGrid;
 
 X.YeeCells = [];
 X = parseargs(X, varargin{:});

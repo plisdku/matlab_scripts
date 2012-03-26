@@ -5,6 +5,10 @@ function B = gridInterp(varargin)
 %   where y1 is in Y1, y2 is in Y2, etc.  Arrays X1, X2, etc. are 1D arrays
 %   of coordinates at which the data in A are given.  Arrays Y1, Y2, etc.
 %   are 1D arrays of coordinates at which the data in A is desired.
+%
+%   If Xn for some n are empty arrays, then no interpolation
+%   will be carried out in those dimensions.  This provides a way to select
+%   which dimensions to interpolate.
 
 numdim = floor(nargin/2);
 if numdim > 10
@@ -38,7 +42,7 @@ B = A;
 indicesAll = {':',':',':',':',':',':',':',':',':',':'};
 
 for dim = 1:numdim
-if size(A,dim) > 1
+if size(A,dim) > 1 && ~isempty(x{dim})
     xIn = x{dim};
     xOut = y{dim};
     

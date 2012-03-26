@@ -1,6 +1,6 @@
 function addMeshBlock(varargin)
 
-grid = t6.TrogdorSimulation.instance().currentGrid();
+grid = t6.TrogdorSimulation.instance().CurrentGrid;
 
 obj = struct;
 obj.type = 'Mesh';

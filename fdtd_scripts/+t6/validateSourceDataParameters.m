@@ -12,7 +12,7 @@ function validateSourceDataParameters(X)
 %
 % As soon as a problem is found this function will throw an error.
 % It has no return value.
-grid = t6.TrogdorSimulation.instance().currentGrid();
+grid = t6.TrogdorSimulation.instance().CurrentGrid;
 
 % Validate fields; should be a single string with some tokens in it
 fieldTokens = {};

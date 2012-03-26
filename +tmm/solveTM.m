@@ -1,19 +1,19 @@
 function [Hx, Ey, Ez, T, R, murHx, epsrEy, epsrEz, transferHH] = solveTM(...
-    boundaries, epsr, mur, omega, kParallel, varargin)
+    boundary_z, epsr, mur, omega, kParallel, varargin)
 % Usage:
-% [Hx, Ey, Ez, T, R, murHx, epsrEy, epsrEz, transferMatrix] = solveTM(boundaries, epsr,
-%   mur, omega, ky, outputPos, forceBoundModes, normalizationPos)
+% [Hx, Ey, Ez, T, R, murHx, epsrEy, epsrEz, transferMatrix] = solveTM(boundary_z, epsr,
+%   mur, omega, ky, output_z, forceBoundModes, normalizationPos)
 %
-% Hx is an array of transverse H fields measured at outputPosHx
-% Ey is an array of transverse E fields measured at outputPosEy
-% Ez is an array of normal E fields measured at outputPosEz
+% Hx is an array of transverse H fields measured at output_zHx
+% Ey is an array of transverse E fields measured at output_zEy
+% Ez is an array of normal E fields measured at output_zEz
 % T is the transmitted power from 0 to 1
 % R is the reflected power from 0 to 1
-% murHx is an array of mur values measured at outputPosHx
-% epsrEy is an array of epsr values measured at outputPosEy
-% epsrEz is an array of epsr values measured at outputPosEz
+% murHx is an array of mur values measured at output_zHx
+% epsrEy is an array of epsr values measured at output_zEy
+% epsrEz is an array of epsr values measured at output_zEz
 % 
-% boundaries is an array of positions where E and H are continuous [meters]
+% boundary_z is an array of z positions where E and H are continuous [meters]
 % 
 % ky is the k vector parallel to the boundary. [1/meters]
 % 
@@ -23,7 +23,7 @@ function [Hx, Ey, Ez, T, R, murHx, epsrEy, epsrEz, transferHH] = solveTM(...
 % mur is an array of relative permeabilities, one per layer, including the
 % media before and after the multilayer [unitless]
 % 
-% outputPos is a vector of positions to evaluate the fields at.  It may
+% output_z is a vector of z positions to evaluate the fields at.  It may
 % also be a cell array with three vectors of positions, one each for Hx, Ey
 % and Ez. (optional) [meters]
 %
@@ -35,21 +35,21 @@ function [Hx, Ey, Ez, T, R, murHx, epsrEy, epsrEz, transferHH] = solveTM(...
 
 import tmm.*;
 
-outputPos = [];
-outputPosHx = [];
-outputPosEy = [];
-outputPosEz = [];
+output_z = [];
+output_zHx = [];
+output_zEy = [];
+output_zEz = [];
 
 if numel(varargin) > 0
-    outputPos = varargin{1};
-    if iscell(outputPos)
-        outputPosHx = reshape(outputPos{1}, 1, []);
-        outputPosEy = reshape(outputPos{2}, 1, []);
-        outputPosEz = reshape(outputPos{3}, 1, []);
+    output_z = varargin{1};
+    if iscell(output_z)
+        output_zHx = reshape(output_z{1}, 1, []);
+        output_zEy = reshape(output_z{2}, 1, []);
+        output_zEz = reshape(output_z{3}, 1, []);
     else
-        outputPosHx = reshape(outputPos, 1, []);
-        outputPosEy = reshape(outputPos, 1, []);
-        outputPosEz = reshape(outputPos, 1, []);
+        output_zHx = reshape(output_z, 1, []);
+        output_zEy = reshape(output_z, 1, []);
+        output_zEz = reshape(output_z, 1, []);
     end
 end
 
@@ -71,12 +71,12 @@ ks(imag(ks) < 0) = -ks(imag(ks) < 0); % decay goes the right way now
 % and vice-versa
 
 % H(n+1) = forwardMatrix{n}*H(n)
-forwardMatrix = cell(length(boundaries), 1);
+forwardMatrix = cell(length(boundary_z), 1);
 
-for nLayer = 1:length(boundaries)
+for nLayer = 1:length(boundary_z)
     forwardMatrix{nLayer} = ...
-        matrixHE2HH(omega, ks(nLayer+1), boundaries(nLayer), epsr(nLayer+1))* ...
-        matrixHH2HE(omega, ks(nLayer), boundaries(nLayer), epsr(nLayer));
+        matrixHE2HH(omega, ks(nLayer+1), boundary_z(nLayer), epsr(nLayer+1))* ...
+        matrixHH2HE(omega, ks(nLayer), boundary_z(nLayer), epsr(nLayer));
 end
 
 %% Get incoming and reflected fields consistent with unit transmission
@@ -85,7 +85,7 @@ end
 transferHH = eye(2);
 
 % H_N = transferLayer{N} * H_first
-transferLayer = cell(length(boundaries)+1, 1); % for intermediate layers
+transferLayer = cell(length(boundary_z)+1, 1); % for intermediate layers
 
 transferLayer{1} = transferHH;
 for nLayer = 1:length(forwardMatrix)
@@ -112,15 +112,15 @@ if forceBoundModes
     H0(1) = 0;
     transferLayer{end}(2,:) = 0;
     
-    normalizationPos = linspace(boundaries(1) - 3*2*pi/abs(ks(1)), ...
-        boundaries(end) + 3*2*pi/abs(ks(end)), 10000);
+    normalizationPos = linspace(boundary_z(1) - 3*2*pi/abs(ks(1)), ...
+        boundary_z(end) + 3*2*pi/abs(ks(end)), 10000);
 end
 
 %% Get the forward and backward E in each layer (use transferLayer)
 
-Hx = 0*outputPosHx;
-Ey = 0*outputPosEy;
-Ez = 0*outputPosEz;
+Hx = 0*output_zHx;
+Ey = 0*output_zEy;
+Ez = 0*output_zEz;
 murHx = Hx;
 epsrEy = Ey;
 epsrEz = Ez;
@@ -128,27 +128,27 @@ epsrEz = Ez;
 Ez_normalization = 0*normalizationPos;
 Hx_normalization = 0*normalizationPos;
 
-intervals = [-inf, boundaries(:)', inf];
-for nLayer = 1:length(boundaries)+1
+intervals = [-inf, boundary_z(:)', inf];
+for nLayer = 1:length(boundary_z)+1
     
     indicesHx = [];
     indicesEy = [];
     indicesEz = [];
     indicesNormalization = [];
     
-    if ~isempty(outputPosHx)
-        indicesHx = find( outputPosHx > intervals(nLayer) & ...
-            outputPosHx <= intervals(nLayer+1));
+    if ~isempty(output_zHx)
+        indicesHx = find( output_zHx > intervals(nLayer) & ...
+            output_zHx <= intervals(nLayer+1));
     end
     
-    if ~isempty(outputPosEy)
-        indicesEy = find(outputPosEy > intervals(nLayer) & ...
-         outputPosEy <= intervals(nLayer+1));
+    if ~isempty(output_zEy)
+        indicesEy = find(output_zEy > intervals(nLayer) & ...
+         output_zEy <= intervals(nLayer+1));
     end
     
-    if ~isempty(outputPosEz)
-        indicesEz = find(outputPosEz > intervals(nLayer) & ...
-         outputPosEz <= intervals(nLayer+1));
+    if ~isempty(output_zEz)
+        indicesEz = find(output_zEz > intervals(nLayer) & ...
+         output_zEz <= intervals(nLayer+1));
     end
     
     if ~isempty(normalizationPos)
@@ -159,21 +159,21 @@ for nLayer = 1:length(boundaries)+1
     Hn = transferLayer{nLayer}*H0;
     
     for ii = indicesHx
-        z = outputPosHx(ii);
+        z = output_zHx(ii);
         hh2he = matrixHH2HE(omega, ks(nLayer), z, epsr(nLayer));
         HE = hh2he*Hn;
         Hx(ii) = HE(1);
     end
     
     for ii = indicesEy
-        z = outputPosEy(ii);
+        z = output_zEy(ii);
         hh2he = matrixHH2HE(omega, ks(nLayer), z, epsr(nLayer));
         HE = hh2he*Hn;
         Ey(ii) = HE(2);
     end
     
     for ii = indicesEz
-        z = outputPosEz(ii);
+        z = output_zEz(ii);
         hh2he = matrixHH2HE(omega, ks(nLayer), z, epsr(nLayer));
         HE = hh2he*Hn;
         Ez(ii) = HE(1)*kParallel/omega/epsr(nLayer)/eps0;

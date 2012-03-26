@@ -67,7 +67,7 @@ function addOutput(filename, fields, varargin)
 
 import t6.*
 
-grid = t6.TrogdorSimulation.instance().currentGrid();
+grid = t6.TrogdorSimulation.instance().CurrentGrid;
 
 X.YeeCells = []; % [x y z x y z]
 X.Bounds = [];

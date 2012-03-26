@@ -62,7 +62,7 @@ function addCurrentSource(varargin)
 
 import t6.*
 
-grid = t6.TrogdorSimulation.instance().currentGrid();
+grid = t6.TrogdorSimulation.instance().CurrentGrid;
 
 X.Field = '';
 X.YeeCells = [];

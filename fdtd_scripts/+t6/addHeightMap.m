@@ -28,7 +28,7 @@ function addHeightMap(materialName, yeeBounds, image, imageRow, imageCol, ...
 %   Named parameters:
 %       FillStyle   either 'PECStyle' or 'PMCStyle' (default: 'PECStyle')
 %
-grid = t6.TrogdorSimulation.instance().currentGrid();
+grid = t6.TrogdorSimulation.instance().CurrentGrid;
 
 if ~t6.validateRect(yeeBounds)
     error('Invalid rectangle.');

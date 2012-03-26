@@ -1,19 +1,19 @@
 function [Ex, Hy, Hz, T, R, epsrEx, murHy, murHz, transferEE] = solveTE(...
-    boundaries, epsr, mur, omega, kParallel, varargin)
+    boundary_z, epsr, mur, omega, kParallel, varargin)
 % Usage:
-% [Ex, Hy, Hz, T, R, epsrEx, murHy, murHz, transferMatrix] = solveTE(boundaries, epsr, mur,
-%   omega, ky, outputPos, forceBoundModes)
+% [Ex, Hy, Hz, T, R, epsrEx, murHy, murHz, transferMatrix] = solveTE(boundary_z, epsr, mur,
+%   omega, ky, output_z, forceBoundModes)
 %
-% Ex is an array of transverse E fields measured at outputPosEx
-% Hy is an array of transverse H fields measured at outputPosHy
-% Hz is an array of normal H fields measured at outputPosHz
+% Ex is an array of transverse E fields measured at output_zEx
+% Hy is an array of transverse H fields measured at output_zHy
+% Hz is an array of normal H fields measured at output_zHz
 % T is the transmitted power from 0 to 1
 % R is the reflected power from 0 to 1
-% epsrEx is an array of epsr values measured at outputPosEx
-% murHy is an array of mur values measured at outputPosHy
-% murHz is an array of mur values measured at outputPosHz
+% epsrEx is an array of epsr values measured at output_zEx
+% murHy is an array of mur values measured at output_zHy
+% murHz is an array of mur values measured at output_zHz
 % 
-% boundaries is an array of positions where E and H are continuous [meters]
+% boundary_z is an array of z positions where E and H are continuous [meters]
 % 
 % ky is the k vector parallel to the boundary. [1/meters]
 %
@@ -23,7 +23,7 @@ function [Ex, Hy, Hz, T, R, epsrEx, murHy, murHz, transferEE] = solveTE(...
 % mur is an array of relative permeabilities, one per layer, including the
 % media before and after the multilayer [unitless]
 % 
-% outputPos is a vector of positions to evaluate the fields at.  It may
+% output_z is a vector of z positions to evaluate the fields at.  It may
 % also be a cell array with three vectors of positions, one each for Ex, Hy
 % and Hz. (optional) [meters]
 %
@@ -33,21 +33,21 @@ function [Ex, Hy, Hz, T, R, epsrEx, murHy, murHz, transferEE] = solveTE(...
 
 import tmm.*;
 
-outputPos = [];
-outputPosEx = [];
-outputPosHy = [];
-outputPosHz = [];
+output_z = [];
+output_zEx = [];
+output_zHy = [];
+output_zHz = [];
 
 if numel(varargin) > 0
-    outputPos = varargin{1};
-    if iscell(outputPos)
-        outputPosEx = outputPos{1};
-        outputPosHy = outputPos{2};
-        outputPosHz = outputPos{3};
+    output_z = varargin{1};
+    if iscell(output_z)
+        output_zEx = output_z{1};
+        output_zHy = output_z{2};
+        output_zHz = output_z{3};
     else
-        outputPosEx = outputPos;
-        outputPosHy = outputPos;
-        outputPosHz = outputPos;
+        output_zEx = output_z;
+        output_zHy = output_z;
+        output_zHz = output_z;
     end
 end
 
@@ -70,12 +70,12 @@ ks(imag(ks) < 0) = -ks(imag(ks) < 0); % decay goes the right way now
 % and vice-versa
 
 % E(n+1) = forwardMatrix{n}*E(n)
-forwardMatrix = cell(length(boundaries), 1);
+forwardMatrix = cell(length(boundary_z), 1);
 
-for nLayer = 1:length(boundaries)
+for nLayer = 1:length(boundary_z)
     forwardMatrix{nLayer} = ...
-        matrixEH2EE(omega, ks(nLayer+1), boundaries(nLayer), mur(nLayer+1)) * ...
-        matrixEE2EH(omega, ks(nLayer), boundaries(nLayer), mur(nLayer));
+        matrixEH2EE(omega, ks(nLayer+1), boundary_z(nLayer), mur(nLayer+1)) * ...
+        matrixEE2EH(omega, ks(nLayer), boundary_z(nLayer), mur(nLayer));
 end
 
 %% Get incoming and reflected fields consistent with unit transmission
@@ -84,7 +84,7 @@ end
 transferEE = eye(2);
 
 % E_N = transferLayer{N} * E_first
-transferLayer = cell(length(boundaries)+1, 1); % for intermediate layers
+transferLayer = cell(length(boundary_z)+1, 1); % for intermediate layers
 
 transferLayer{1} = transferEE;
 for nLayer = 1:length(forwardMatrix)
@@ -115,53 +115,53 @@ end
 
 %% Get the forward and backward E in each layer (use transferLayer)
 
-Ex = 0*outputPosEx;
-Hy = 0*outputPosHy;
-Hz = 0*outputPosHz;
+Ex = 0*output_zEx;
+Hy = 0*output_zHy;
+Hz = 0*output_zHz;
 epsrEx = Ex;
 murHy = Hy;
 murHz = Hz;
 
-intervals = [-inf, boundaries(:)', inf];
-for nLayer = 1:length(boundaries)+1
+intervals = [-inf, boundary_z(:)', inf];
+for nLayer = 1:length(boundary_z)+1
     
     indicesEx = [];
     indicesHy = [];
     indicesHz = [];
     
-    if ~isempty(outputPosEx)
-        indicesEx = find( outputPosEx > intervals(nLayer) & ...
-            outputPosEx <= intervals(nLayer+1));
+    if ~isempty(output_zEx)
+        indicesEx = find( output_zEx > intervals(nLayer) & ...
+            output_zEx <= intervals(nLayer+1));
     end
     
-    if ~isempty(outputPosHy)
-        indicesHy = find(outputPosHy > intervals(nLayer) & ...
-         outputPosHy <= intervals(nLayer+1));
+    if ~isempty(output_zHy)
+        indicesHy = find(output_zHy > intervals(nLayer) & ...
+         output_zHy <= intervals(nLayer+1));
     end
     
-    if ~isempty(outputPosHz)
-        indicesHz = find(outputPosHz > intervals(nLayer) & ...
-         outputPosHz <= intervals(nLayer+1));
+    if ~isempty(output_zHz)
+        indicesHz = find(output_zHz > intervals(nLayer) & ...
+         output_zHz <= intervals(nLayer+1));
     end
     
     En = transferLayer{nLayer}*E0/E0(1);
     
     for ii = indicesEx
-        z = outputPosEx(ii);
+        z = output_zEx(ii);
         ee2eh = matrixEE2EH(omega, ks(nLayer), z, mur(nLayer));
         EH = ee2eh*En;
         Ex(ii) = EH(1);
     end
     
     for ii = indicesHy
-        z = outputPosHy(ii);
+        z = output_zHy(ii);
         ee2eh = matrixEE2EH(omega, ks(nLayer), z, mur(nLayer));
         EH = ee2eh*En;
         Hy(ii) = EH(2);
     end
     
     for ii = indicesHz
-        z = outputPosHz(ii);
+        z = output_zHz(ii);
         ee2eh = matrixEE2EH(omega, ks(nLayer), z, mur(nLayer));
         EH = ee2eh*En;
         Hz(ii) = -EH(1)*kParallel/omega/mur(nLayer)/mu0;

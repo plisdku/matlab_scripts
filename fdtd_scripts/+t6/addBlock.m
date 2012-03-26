@@ -11,7 +11,7 @@ function addBlock(varargin)
 %
 %   Named parameters:
 %       FillStyle       'PECStyle' or 'PMCStyle' (default: 'PECStyle')
-grid = t6.TrogdorSimulation.instance().currentGrid();
+grid = t6.TrogdorSimulation.instance().CurrentGrid;
 
 obj = struct;
 obj.type = 'Block';

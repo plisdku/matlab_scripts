@@ -4,7 +4,7 @@ function addMesh(varargin)
 % boundary of the PML.  This will distort the geometry of structures which
 % do not intersect the PML at right angles.
 
-grid = t6.TrogdorSimulation.instance().currentGrid();
+grid = t6.TrogdorSimulation.instance().CurrentGrid;
 
 obj = struct;
 obj.type = 'Mesh';

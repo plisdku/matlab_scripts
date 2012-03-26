@@ -48,7 +48,7 @@ function addCustomTFSFSource(varargin)
 %   Source data into the box [0 0 0 100 100 100] but omit the correction on the
 %   +Z and -Y faces.
 
-grid = t6.TrogdorSimulation.instance().currentGrid();
+grid = t6.TrogdorSimulation.instance().CurrentGrid;
 
 % note that there is no X.MaskFile because it will ALWAYS be requested along
 % with a TimeFile.  Likewise there is no Field because all E and H fields

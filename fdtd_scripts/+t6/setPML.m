@@ -37,7 +37,7 @@ function setPML(varargin)
 %        
 
 sim = t6.TrogdorSimulation.instance();
-grid = t6.TrogdorSimulation.instance().currentGrid();
+grid = t6.TrogdorSimulation.instance().CurrentGrid;
 
 X.Depth = [];
 X.Kappa = '';

@@ -1,6 +1,6 @@
 function freeDirections(varargin)
 
-grid = t6.TrogdorSimulation.instance().currentGrid();
+grid = t6.TrogdorSimulation.instance().CurrentGrid;
 
 X.YeeBounds = [0 0 0 0 0 0];
 X.Directions = [0 0 0];

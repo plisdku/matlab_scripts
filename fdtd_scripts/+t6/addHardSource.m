@@ -55,7 +55,7 @@ function addHardSource(varargin)
 %   Specify soft source in cells (50, 50, 50) and (60, 60, 60), nonzero for
 %   timesteps 0:10 and 100:110, where ex varies sinusoidally and hx varies
 %   as a decaying exponential.
-grid = t6.TrogdorSimulation.instance().currentGrid();
+grid = t6.TrogdorSimulation.instance().CurrentGrid;
 
 X.Field = '';
 X.YeeCells = [];
