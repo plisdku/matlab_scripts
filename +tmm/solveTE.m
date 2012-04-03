@@ -12,13 +12,17 @@ function [Ex, Hy, Hz, T, R, epsrEx, murHy, murHz, transferEE] = solveTE(...
 % epsrEx is an array of epsr values measured at output_zEx
 % murHy is an array of mur values measured at output_zHy
 % murHz is an array of mur values measured at output_zHz
+% transferMatrix is the 2x2 transfer matrix mapping left- and
+%   right-propagating E amplitudes on the left side of the stack to left- and
+%   right-propagating E amplitudes on the right side of the stack
 % 
 % boundary_z is an array of z positions where E and H are continuous [meters]
 % 
 % ky is the k vector parallel to the boundary. [1/meters]
 %
 % epsr is an array of relative permittivities, one per layer, including the
-% media before and after the multilayer [unitless]
+% media before and after the multilayer.  Positive imaginary permittivity 
+% connotes loss.  [unitless]
 % 
 % mur is an array of relative permeabilities, one per layer, including the
 % media before and after the multilayer [unitless]
@@ -30,6 +34,10 @@ function [Ex, Hy, Hz, T, R, epsrEx, murHy, murHz, transferEE] = solveTE(...
 % forceBoundModes can be true or false (false by default).  If true, the
 % transfer matrices and field amplitudes will be adjusted so no inbound
 % waves are present. (optional)
+%
+% A forward-propagating wave is represented as exp(1i*(k*k - w*t)).  This
+% negative frequency convention implies that lossy materials must have
+% positive imaginary permittivities.
 
 import tmm.*;
 
