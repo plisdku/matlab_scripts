@@ -115,10 +115,14 @@ E0 = E0 / E0(1);
 
 %% For mode solutions:
 
-%if X.ForceBoundMode
+normalizationPos = [];
+
 if forceBoundModes
     E0(1) = 0;
     transferLayer{end}(2,:) = 0;
+    
+    normalizationPos = linspace(boundary_z(1) - 3*2*pi/abs(ks(1)), ...
+        boundary_z(end) + 3*2*pi/abs(ks(end)), 10000);
 end
 
 %% Get the forward and backward E in each layer (use transferLayer)
@@ -136,6 +140,7 @@ for nLayer = 1:length(boundary_z)+1
     indicesEx = [];
     indicesHy = [];
     indicesHz = [];
+    indicesNormalization = [];
     
     if ~isempty(output_zEx)
         indicesEx = find( output_zEx > intervals(nLayer) & ...
@@ -152,7 +157,12 @@ for nLayer = 1:length(boundary_z)+1
          output_zHz <= intervals(nLayer+1));
     end
     
-    En = transferLayer{nLayer}*E0/E0(1);
+    if ~isempty(normalizationPos)
+        indicesNormalization = find(normalizationPos > intervals(nLayer) & ...
+            normalizationPos <= intervals(nLayer+1));
+    end
+    
+    En = transferLayer{nLayer}*E0;
     
     for ii = indicesEx
         z = output_zEx(ii);
@@ -175,9 +185,24 @@ for nLayer = 1:length(boundary_z)+1
         Hz(ii) = -EH(1)*kParallel/omega/mur(nLayer)/mu0;
     end
     
+    for ii = indicesNormalization
+        z = normalizationPos(ii);
+        ee2eh = matrixEE2EH(omega, ks(nLayer), z, mur(nLayer));
+        EH = ee2eh*En;
+        Ex_normalization(ii) = EH(1);
+        Hz_normalization(ii) = -EH(1)*kParallel/omega/mur(nLayer)/mu0;
+    end
+    
     epsrEx(indicesEx) = epsr(nLayer);
     murHy(indicesHy) = mur(nLayer);
     murHz(indicesHz) = mur(nLayer);
 end
 
 
+if ~isempty(normalizationPos)
+    modeEnergy = trapz(normalizationPos, -Hz_normalization.*Ex_normalization);
+
+    Ex = Ex / sqrt(modeEnergy);
+    Hy = Hy / sqrt(modeEnergy);
+    Hz = Hz / sqrt(modeEnergy);
+end
