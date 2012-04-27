@@ -1,4 +1,5 @@
 % OutputFile
+% This is my output file
 
 classdef OutputFile < handle
     properties (Hidden)

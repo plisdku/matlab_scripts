@@ -23,20 +23,13 @@ function addPoyntingSurface(fileName, varargin)
 %       Bounds          The region of the simulation to save, in real units;
 %                       [x0 y0 z0 x1 y1 z1] will determine the Yee cell rect
 %                       [m0 n0 p0 m1 n1 p1] to save, suitably for the grid
-%                       resolution.
-%                       (YeeCells or Bounds required)
+%                       resolution. (required)
 %       Duration        The range of timesteps on which to save data; [t0 t1]
 %                       will save all timesteps t such that t0 <= t <= t1.
 %                       Multiple-row arrays will cause Trogdor to save multiple
 %                       ranges of timesteps; to save only timesteps 100 and 144,
 %                       use addOutput('Duration', [100 100; 144 144]).
 %                       (default: all timesteps)
-%       Stride          Spatial sampling period.  Set to [2 2 2] to save every
-%                       second cell in X, Y and Z (cutting file size by 8).  If
-%                       there are multiple rows in YeeCells, the same Stride
-%                       will be used for every region; if Stride has the same
-%                       number of rows as YeeCells, then each region will have
-%                       its own spatial sampling period.  (default: [1 1 1])
 %       CutoffFrequency The highest angular frequency expected to be
 %                       measured.  The sampling period of the output file
 %                       will be the largest possible integer number of
@@ -59,7 +52,6 @@ function addPoyntingSurface(fileName, varargin)
 
 X.Bounds = [];
 X.Duration = [];
-X.Stride = [1 1 1];
 X.Period = [];
 X.CutoffFrequency = [];
 X.Sides = [1 1 1 1 1 1];
@@ -68,4 +60,4 @@ X = parseargs(X, varargin{:});
 t6.addSurfaceOutput(fileName, 'ex ey ez hx hy hz', ...
     'Bounds', X.Bounds, 'Duration', X.Duration, ...
     'Period', X.Period, 'CutoffFrequency', X.CutoffFrequency, ...
-    'Stride', X.Stride, 'Sides', X.Sides);
+    'Sides', X.Sides);

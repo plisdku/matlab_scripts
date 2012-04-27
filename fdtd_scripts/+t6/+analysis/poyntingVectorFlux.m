@@ -1,4 +1,4 @@
-function [flux, timeOrFreq] = poyntingVectorFlux(fileName, varargin)
+function [flux, timeOrFreq, faceFluxes] = poyntingVectorFlux(fileName, varargin)
 %poyntingVectorFlux Calculate the flux of the Poynting vector
 %   [flux, freq] = poyntingVectorFlux('poynting') will return the
 %   frequency-dependent complex Poynting vector flux through a 2D surface
@@ -16,6 +16,9 @@ function [flux, timeOrFreq] = poyntingVectorFlux(fileName, varargin)
 %
 %   [flux, freq] = poyntingVectorFlux(filename, 'SteadyStateFrequency')
 %   uses spectrum() to obtain the E and H fields in steady state.
+%
+%   [flux, timeOrFreq, faceFluxes] = poyntingVectorFlux( . . . ) provides
+%   the flux through each face of the output volume separately.
 %
 %   Additional parameters:
 %       Normal          Normal vector to use for flux integral, e.g. [1 0 0]
@@ -60,28 +63,22 @@ X = parseargs(X, varargin{:});
 
 if ~isempty(X.Time)
     [pv, timeOrFreq, positions] = t6.analysis.poyntingVector(fileName, 'Time');
-    
-    flux = sumFluxes(pv, positions, X.Normal);
-    
 elseif ~isempty(X.Frequency)
     [pv, timeOrFreq, positions] = t6.analysis.poyntingVector(fileName, ...
         'Frequency', X.Frequency);
-    
-    flux = sumFluxes(pv, positions, X.Normal);
-    
 elseif ~isempty(X.SteadyStateFrequency)
     [pv, timeOrFreq, positions] = t6.analysis.poyntingVector(fileName, ...
         'SteadyStateFrequency', X.SteadyStateFrequency);
-    
-    flux = sumFluxes(pv, positions, X.Normal);
 else
     [pv, timeOrFreq, positions] = t6.analysis.poyntingVector(fileName);
-    
-    flux = sumFluxes(pv, positions, X.Normal);
+end
+
+[flux, faceFluxes] = sumFluxes(pv, positions, X.Normal);
+
 end
 
 
-function flux = sumFluxes(pv, positions, normal)
+function [flux, fluxes] = sumFluxes(pv, positions, normal)
 
 if iscell(pv)
     if ~isempty(normal)
@@ -92,16 +89,14 @@ if iscell(pv)
     
     for rr = 1:numRegions
         normal = inferNormal(positions, rr);
-        fluxes{rr} = fluxIntegral(pv{rr}, positions(rr,:), normal);
+        fluxes(rr) = fluxIntegral(pv{rr}, positions(rr,:), normal);
     end
-    
-    flux = fluxes{1};
-    for rr = 2:numRegions
-        flux = flux + fluxes{rr};
-    end
-    
 else
-    flux = fluxIntegral(pv, positions{:}, normal);
+    fluxes = fluxIntegral(pv, positions, normal);
+end
+
+flux = sum(fluxes);
+
 end
 
 

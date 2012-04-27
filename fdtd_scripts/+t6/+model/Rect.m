@@ -5,7 +5,7 @@ classdef Rect < t6.model.Node
 %
 % r = Rect(@(p) [0 0 0 1 1 1], 'Permittivity', 'Air');
 %
-% The bounding box should be a column vector.  (WHY IS THIS?)
+% The bounding box should be a column vector.
 % 
     properties
         func = @(params) [0 0 0 1 1 1]';

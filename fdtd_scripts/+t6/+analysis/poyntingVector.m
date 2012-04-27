@@ -105,22 +105,5 @@ if nargout > 2
         positions{rr,3} = posXYZ{3};
     end
     
-    %{
-    aField = 1;
-    if iscell(data)
-        positions = cell(file.numRegions,3);
-        
-        for rr = 1:numel(file.Regions)
-            positions{rr,1} = posX{rr,aField};
-            positions{rr,2} = posY{rr,aField};
-            positions{rr,3} = posZ{rr,aField};
-        end
-        
-    else
-        positions{1} = posX{aField};
-        positions{2} = posY{aField};
-        positions{3} = posZ{aField};
-    end
-    %}
 end
 
