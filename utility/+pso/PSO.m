@@ -110,7 +110,8 @@ end
 
 % declaration of global variables
 
-global NDIM nFUN_EVALS
+% pch 12.05.10: no more evil global variables.
+%global NDIM nFUN_EVALS
 
 % set EXITFLAG to default value
 
@@ -119,6 +120,7 @@ EXITFLAG = -2;
 % determine number of variables to be optimized
 
 NDIM = length(X0);
+ndim0 = NDIM;
 
 % seed the random number generator
 
@@ -204,6 +206,9 @@ tic
 
 for i = 1:OPTIONS.MAX_ITER,
     
+    if NDIM ~= ndim0
+        error('what?');
+    end
     % if a termination criterium was met, the value of EXITFLAG should have changed
     % from its default value of -2 to -1, 0, 1 or 2
     
@@ -216,9 +221,13 @@ for i = 1:OPTIONS.MAX_ITER,
     % (each column of FITNESS corresponds to the FITNESS values of the particles in one iteration)
     
     for j = 1:OPTIONS.SWARM_SIZE,
-        FITNESS(j,i) = CALCULATE_COST(FUN,SWARM(j,:,i),LB,UB,varargin{:});
+        FITNESS(j,i) = CALCULATE_COST(FUN,SWARM(j,:,i),LB,UB,NDIM,varargin{:});
+        nFUN_EVALS = nFUN_EVALS + 1;
     end
     
+    if NDIM ~= ndim0
+        error('what?');
+    end
     % identify particle's location at which the best FITNESS has been achieved (PBEST)
     
     for j = 1:OPTIONS.SWARM_SIZE,
@@ -226,16 +235,28 @@ for i = 1:OPTIONS.MAX_ITER,
         PBEST(j,:,i) = SWARM(j,:,INDEX_PBEST(j,i));
     end
     
+    if NDIM ~= ndim0
+        error('what?');
+    end
     % identify the particle from the SWARM at which the best FITNESS has been achieved so far (GBEST)
         
     [GBEST_FITNESS(i),index_gbest] = min(reshape(FITNESS,numel(FITNESS),1));
     [INDEX_GBEST_PARTICLE(i),INDEX_GBEST_ITERATION(i)] = ind2sub(size(FITNESS),index_gbest);
     GBEST(i,:) = SWARM(INDEX_GBEST_PARTICLE(i),:,INDEX_GBEST_ITERATION(i));
         
+    if NDIM ~= ndim0
+        error('what?');
+    end
     % update the VELOCITIES
     
-    VELOCITIES(:,:,i+1) = OPTIONS.ConstrictionFactor.*(VELOCITIES(:,:,i) + OPTIONS.COGNITIVE_ACC.*rand(OPTIONS.SWARM_SIZE,NDIM).*(PBEST(:,:,i)-SWARM(:,:,i)) + OPTIONS.SOCIAL_ACC.*rand(OPTIONS.SWARM_SIZE,NDIM).*(repmat(GBEST(i,:),[OPTIONS.SWARM_SIZE 1 1],1)-SWARM(:,:,i)));
+    VELOCITIES(:,:,i+1) = OPTIONS.ConstrictionFactor.*( ...
+        VELOCITIES(:,:,i) + ...
+        OPTIONS.COGNITIVE_ACC.*rand(OPTIONS.SWARM_SIZE,NDIM).*(PBEST(:,:,i)-SWARM(:,:,i)) + ...
+        OPTIONS.SOCIAL_ACC.*rand(OPTIONS.SWARM_SIZE,NDIM).*(repmat(GBEST(i,:),[OPTIONS.SWARM_SIZE 1 1],1)-SWARM(:,:,i)));
     
+    if NDIM ~= ndim0
+        error('what?');
+    end
     % update particle positions
     
     SWARM(:,:,i+1) = SWARM(:,:,i)+VELOCITIES(:,:,i+1);
@@ -246,7 +267,15 @@ for i = 1:OPTIONS.MAX_ITER,
     %    acts like a wall or mirror) (selfmade solution)
     
     for j = 1:OPTIONS.SWARM_SIZE,
+        
+    if NDIM ~= ndim0
+        error('what?');
+    end
         for k = 1:NDIM,
+            
+    if NDIM ~= ndim0
+        error('what?');
+    end
             % check upper boundary
             if length(UB) == 1,
                 if SWARM(j,k,i+1) > UB,
@@ -280,6 +309,10 @@ for i = 1:OPTIONS.MAX_ITER,
     
     % give user feedback on screen if requested
     
+    if NDIM ~= ndim0
+        error('what?');
+    end
+    
     if strcmp(OPTIONS.DISPLAY,'iter'),
         if nITERATIONS == 1,
             disp(' Nr Iter  Nr Fun Eval    Current best function    Current worst function       Best function');
@@ -290,11 +323,14 @@ for i = 1:OPTIONS.MAX_ITER,
     end
     
     % end the optimization if one of the stopping criteria is met
-    %% 1. difference between best and worst function evaluation in simplex is smaller than TOLFUN 
-    %% 2. maximum difference between the coordinates of the vertices in simplex is less than TOLX
-    %% 3. no convergence,but maximum number of iterations has been reached
-    %% 4. no convergence,but maximum time has been reached
+    % 1. difference between best and worst function evaluation in simplex is smaller than TOLFUN 
+    % 2. maximum difference between the coordinates of the vertices in simplex is less than TOLX
+    % 3. no convergence,but maximum number of iterations has been reached
+    % 4. no convergence,but maximum time has been reached
     
+    if NDIM ~= ndim0
+        error('what?');
+    end
     if abs(max(FITNESS(:,i))-min(FITNESS(:,i))) < OPTIONS.TOLFUN,
         if strcmp(OPTIONS.DISPLAY,'iter'),
             disp('Change in the objective function value less than the specified tolerance (TOLFUN).')
@@ -303,6 +339,9 @@ for i = 1:OPTIONS.MAX_ITER,
         break;
     end
     
+    if NDIM ~= ndim0
+        error('what?');
+    end
     if max(max(abs(diff(SWARM(:,:,i),1,1)))) < OPTIONS.TOLX,
         if strcmp(OPTIONS.DISPLAY,'iter'),
             disp('Change in X less than the specified tolerance (TOLX).')
@@ -311,6 +350,9 @@ for i = 1:OPTIONS.MAX_ITER,
         break;
     end
     
+    if NDIM ~= ndim0
+        error('what?');
+    end
     if (i >= OPTIONS.MAX_ITER*NDIM) || (i*OPTIONS.SWARM_SIZE >= OPTIONS.MAX_FUN_EVALS*NDIM*(NDIM+1)),
         if strcmp(OPTIONS.DISPLAY,'iter'),
             disp('Maximum number of function evaluations or iterations reached.');
@@ -319,12 +361,18 @@ for i = 1:OPTIONS.MAX_ITER,
         break;
     end
     
+    if NDIM ~= ndim0
+        error('what?');
+    end
     if toc/60 > OPTIONS.MAX_TIME,
         if strcmp(OPTIONS.DISPLAY,'iter'),
             disp('Exceeded maximum time.');
         end
         EXITFLAG = -1;
         break;
+    end
+    if NDIM ~= ndim0
+        error('what?');
     end
 
 end
@@ -362,12 +410,13 @@ return
 % COST FUNCTION EVALUATION
 % ------------------------
 
-function [YTRY] = CALCULATE_COST(FUN,PTRY,LB,UB,varargin)
+function [YTRY nEvals] = CALCULATE_COST(FUN,PTRY,LB,UB,NDIM,varargin)
 
-global NDIM nFUN_EVALS
+%global NDIM nFUN_EVALS
 
 % add one to number of function evaluations
-nFUN_EVALS = nFUN_EVALS + 1;
+% pch 12.05.10: no more globals
+%nFUN_EVALS = nFUN_EVALS + 1;
 
 for i = 1:NDIM,
     % check lower bounds
@@ -375,6 +424,7 @@ for i = 1:NDIM,
         YTRY = 1e12+(LB(i)-PTRY(i))*1e6;
         return
     end
+    
     % check upper bounds
     if PTRY(i) > UB(i),
         YTRY = 1e12+(PTRY(i)-UB(i))*1e6;
@@ -385,5 +435,6 @@ end
 % calculate cost associated with PTRY
 %YTRY = feval(FUN,PTRY,varargin{:});
 YTRY = FUN(PTRY, varargin{:}); % PCH jan 2012
+
 
 return
