@@ -1,4 +1,4 @@
-function [epsinf, omegap, gamma] = fitDrude(epsilon, lambdas, varargin)
+function [epsinf, omegap, gamma, errNorm] = fitDrude(epsilon, lambdas, varargin)
 % [epsinf, omegap, gamma] = fitDrude(permittivity, lambdas) will find
 % parameters for a Drude-model material that best approximate the tabulated
 % data given.  These parameters will not be ideal for FDTD because they do
@@ -22,7 +22,7 @@ realImag = @(x) [realWeight*real(x); imagWeight*imag(x)];
 % I have found that to getting a decent initial guess is essential.  The
 % first guess is a systematic search over a wide range of possible epsinf,
 % plasmon frequency and gamma.
-epsinfs = linspace(1, 20, 10);
+epsinfs = linspace(-20, 20, 10);
 wps = linspace(1e14, 1e16, 10);
 gammas = linspace(1e14, 1e16, 10);
 
@@ -58,9 +58,23 @@ errEps1 = @(epsWpGamma, lambdas) ...
 cplxErr1 = @(epsWpGamma) realImag(errEps1(epsWpGamma.*[1 1e15 1e15], lambdas));
 
 opt = optimset('Display', 'off');
-[guessParams, resnorm, residual] = lsqnonlin(cplxErr1, guess0, [], [], opt);
+
+useMatlab = 1;
+if useMatlab
+    [guessParams, resnorm, residual] = lsqnonlin(cplxErr1, guess0, [], [], opt);
+else
+    lb = [-100 0 0];
+    ub = [100 1e8 1e8];
+    %lb = [epsinfs(1) wps(1) gammas(1)] .* [1 1e-15 1e-15];
+    %ub = [epsinfs(end) wps(end) gammas(end)] .* [1 1e-15 1e-15];
+    absErr = @(epsWpGamma) norm(cplxErr1(epsWpGamma));
+    guessParams = pso.PSO(absErr, guess0, lb, ub);
+end
+
+errNorm = norm(cplxErr1(guessParams));
 
 guessParams = guessParams.*[1, 1e15, 1e15];
+
 
 epsinf = guessParams(1);
 omegap = guessParams(2);

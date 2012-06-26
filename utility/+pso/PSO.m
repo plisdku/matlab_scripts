@@ -225,6 +225,8 @@ for i = 1:OPTIONS.MAX_ITER,
         nFUN_EVALS = nFUN_EVALS + 1;
     end
     
+    %fprintf('Here!\n');
+    
     if NDIM ~= ndim0
         error('what?');
     end
@@ -271,11 +273,11 @@ for i = 1:OPTIONS.MAX_ITER,
     if NDIM ~= ndim0
         error('what?');
     end
-        for k = 1:NDIM,
-            
-    if NDIM ~= ndim0
-        error('what?');
-    end
+    
+    for k = 1:NDIM,
+        if NDIM ~= ndim0
+            error('what?');
+        end
             % check upper boundary
             if length(UB) == 1,
                 if SWARM(j,k,i+1) > UB,

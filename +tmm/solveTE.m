@@ -134,6 +134,8 @@ epsrEx = Ex;
 murHy = Hy;
 murHz = Hz;
 
+layerEnergy = [];
+
 intervals = [-inf, boundary_z(:)', inf];
 for nLayer = 1:length(boundary_z)+1
     
@@ -196,13 +198,56 @@ for nLayer = 1:length(boundary_z)+1
     epsrEx(indicesEx) = epsr(nLayer);
     murHy(indicesHy) = mur(nLayer);
     murHz(indicesHz) = mur(nLayer);
+    
+    %{
+    if forceBoundModes
+        %Hn = matrixEE2HH_TE(omega, ks(nLayer), mur(nLayer)) * En;
+        Hn = -En * kParallel/omega/mur(nLayer)/mu0;
+        
+        z = normalizationPos(indicesNormalization);
+        figure(20); clf
+        hLayer = Hn(1)*exp(1i*ks(nLayer)*z) + Hn(2)*exp(-1i*ks(nLayer)*z);
+        title('H')
+        plot(z, real(hLayer), z, imag(hLayer))
+        figure(21); clf
+        eLayer = En(1)*exp(1i*ks(nLayer)*z) + En(2)*exp(-1i*ks(nLayer)*z);
+        plot(z, real(eLayer), z, imag(eLayer));
+        title('E')
+        
+        fprintf('En    %2.4g    %2.4g\n', En(1), En(2));
+        fprintf('Hn    %2.4g    %2.4g\n', Hn(1), Hn(2));
+        
+        l1 = intervals(nLayer);
+        l2 = intervals(nLayer+1);
+        
+        if nLayer == 1 % first layer: only include outward waves
+            layerEnergy(nLayer) = 1/(2i*ks(nLayer)) * En(2)*Hn(2) * ( ...
+                exp(-2i*ks(nLayer)*l2));
+        elseif nLayer == length(boundary_z)+1
+            layerEnergy(nLayer) = 1/(2i*ks(nLayer)) * En(1)*Hn(1) * ( ...
+                -exp(2i*ks(nLayer)*l1));
+        else
+            term(1) = (l2-l1)*(En(1)*Hn(2) + En(2)*Hn(1));
+            term(2) = 1/(2i*ks(nLayer)) * En(1)*Hn(1)*( ...
+                exp(2i*ks(nLayer)*l2) - exp(2i*ks(nLayer)*l1));
+            term(3) = 1/(2i*ks(nLayer)) * En(2)*Hn(2)*( ...
+                exp(-2i*ks(nLayer)*l2) - exp(-2i*ks(nLayer)*l1));
+            layerEnergy(nLayer) = sum(term);
+        end
+    end
+    %}
 end
+
+%%
 
 
 if ~isempty(normalizationPos)
     modeEnergy = trapz(normalizationPos, -Hz_normalization.*Ex_normalization);
 
-    Ex = Ex / sqrt(modeEnergy);
-    Hy = Hy / sqrt(modeEnergy);
-    Hz = Hz / sqrt(modeEnergy);
+    Ex = Ex / abs(sqrt(modeEnergy));
+    Hy = Hy / abs(sqrt(modeEnergy));
+    Hz = Hz / abs(sqrt(modeEnergy));
 end
+
+%fprintf('Mode energy %2.4g     Integrated %2.4g\n', modeEnergy, sum(layerEnergy));
+%keyboard

@@ -65,7 +65,18 @@ fclose(fid_in);
 fclose(fid_out);
 
 [pathstr, nom, extension, vers] = fileparts(theFile.SpecFileName);
-success = copyfile(theFile.SpecFileName, [nom, '.rev.txt']);
+
+if isempty(pathstr)
+    copyToPath = [nom, '.rev.txt'];
+else
+    copyToPath = [pathstr, filesep, nom, '.rev.txt'];
+end
+
+success = copyfile(theFile.SpecFileName, copyToPath);
+
+if ~success
+    error('Could not write spec file');
+end
 
 %%
 

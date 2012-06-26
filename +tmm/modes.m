@@ -149,6 +149,14 @@ fits.centers = centers(soln.pFinal);
 fits.gammas = gammas(soln.pFinal);
 
 
+%% Cull the fits
+% Discard all the crappy modes
+
+keepThese = fits.amplitudes > 1e-5 * max(abs(fits.amplitudes));
+fits.amplitudes = fits.amplitudes(keepThese);
+fits.centers = fits.centers(keepThese);
+fits.gammas = fits.gammas(keepThese);
+
 %figure(1)
 %clf
 %plot(nEff, yy, '-', ...

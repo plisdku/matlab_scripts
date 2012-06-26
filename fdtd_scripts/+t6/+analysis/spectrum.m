@@ -107,6 +107,7 @@ X.Dt = [];
 X.Time = [];
 X.Regions = 'Separate';
 X.InterpolateSpace = [];
+X.Positions = [];
 X = parseargs(X, varargin{:});
 
 if ~isempty(X.Frequency) && ~isempty(X.SteadyStateFrequency)
@@ -263,7 +264,7 @@ if (isempty(X.Frequency) && isempty(X.SteadyStateFrequency)) || ...
     
     file.open();
     timeData = file.readFrames('NumFrames', numT, 'Regions', X.Regions, ...
-        'InterpolateSpace', X.InterpolateSpace);
+        'InterpolateSpace', X.InterpolateSpace, 'Positions', X.Positions);
     file.close();
     
     if numRegions > 1
@@ -323,7 +324,7 @@ elseif ~isempty(X.SteadyStateFrequency)
     
     file.open();
     timeData = file.readFrames('NumFrames', numT, 'Regions', X.Regions, ...
-        'InterpolateSpace', X.InterpolateSpace);
+        'InterpolateSpace', X.InterpolateSpace, 'Positions', X.Positions);
     file.close();
     if ~iscell(timeData)
         timeData = {timeData};
@@ -441,10 +442,12 @@ else % OutputHarmonic-type functionality
 
         if numRegions == 1;
             frameData = {file.readFrames('NumFrames', chunkLength,...
-                'Regions', X.Regions, 'InterpolateSpace', X.InterpolateSpace)};
+                'Regions', X.Regions, 'InterpolateSpace', X.InterpolateSpace), ...
+                'Positions', X.Positions};
         else
             frameData = file.readFrames('NumFrames', chunkLength,...
-                'Regions', X.Regions, 'InterpolateSpace', X.InterpolateSpace);
+                'Regions', X.Regions, 'InterpolateSpace', X.InterpolateSpace, ...
+                'Positions', X.Positions);
         end
         
         for rr = 1:length(frameData)

@@ -55,6 +55,10 @@ else
     obj.vertexFreeDirections = X.FreeDirections;
 end
 
+%patch('Vertices', obj.vertices, 'Faces', obj.faces+1, 'FaceColor', 'g', ...
+%    'FaceAlpha', 0.3);
+%pause(0.01);
+
 grid.Assembly = {grid.Assembly{:}, obj};
 
 

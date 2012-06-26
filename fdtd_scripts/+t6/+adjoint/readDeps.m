@@ -1,7 +1,11 @@
-function [cc, movableVertices] = readDeps()
+function [cc, movableVertices] = readDeps(fname)
+
+if nargin < 1
+    fname = 'Depsilon';
+end
 
 %fclose all
-fid = fopen('Depsilon', 'r');
+fid = fopen(fname, 'r');
 if fid == -1
     error('Cannot open Depsilon');
 end

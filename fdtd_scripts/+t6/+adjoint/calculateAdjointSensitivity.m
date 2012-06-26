@@ -9,7 +9,7 @@ adjFileNames = {'boundary_adjoint_exx', 'boundary_adjoint_eyy', ...
 adjRevFileNames = {'boundary_adjoint_exx.rev', 'boundary_adjoint_eyy.rev',...
     'boundary_adjoint_ezz.rev'};
 
-[coeffs, verts] = readDeps();
+[coeffs, verts] = readDeps('out/Depsilon');
 
 bigJacobian = node.jacobian(parameters);
 vertices = node.vertices(parameters);
@@ -19,9 +19,9 @@ vertJacobian = sparse(size(vertices, 1), 1);
 
 for fieldXYZ = 1:3
 
-fwdDE = OutputFile(fwdFileNames{fieldXYZ});
-adjoint.reverseFile(adjFileNames{fieldXYZ});
-adjDE = OutputFile(adjRevFileNames{fieldXYZ});
+fwdDE = OutputFile(['out/', fwdFileNames{fieldXYZ}]);
+adjoint.reverseFile(['out/', adjFileNames{fieldXYZ}]);
+adjDE = OutputFile(['out/', adjRevFileNames{fieldXYZ}]);
 
 assert(fwdDE.numFramesAvailable() == adjDE.numFramesAvailable());
 numT = fwdDE.numFramesAvailable();
@@ -70,8 +70,8 @@ while tBeginChunk <= numT
     
     fwdBuffer(:,:,1:loadFwdFrames) = fwdDE.readFrames(...
         'NumFrames', loadFwdFrames, 'Regions', 'Together');
-    fwdEBuffer = squeeze(fwdBuffer(:,1,:));
-    fwdDBuffer = squeeze(fwdBuffer(:,2,:));
+    fwdEBuffer = squish(fwdBuffer(:,1,:), 2); % squeeze out the {E,D} dimension
+    fwdDBuffer = squish(fwdBuffer(:,2,:), 2);
     
     %fprintf('Fwd: load %i to %i\n', tFwdFirst, tFwdLast);
     
@@ -104,8 +104,21 @@ while tBeginChunk <= numT
             fwdD = fwdDBuffer(indexD, (tFwd(1):tFwd(2))-tFwd(1)+1);
             
             dotProdDE = -sum(coeffD.*sum(adjE.*fwdD, 2));
+            absDotDE = sum(abs(coeffD).*sum(abs(adjE).*abs(fwdD), 2));
             
             sumSensitivity = sumSensitivity + dotProdDE;
+            
+            %{
+            if norm(adjE(:)) ~= 0
+                figure(1); clf
+                plot(adjE); hold on; plot(fwdD)
+                title(sprintf('E-E %s along %s, v%i', char('w'+fieldXYZ), char('w'+freeDir), movableVert));
+                fprintf('Dot DE = %2.4g, abs dot %2.4f\n', dotProdDE, absDotDE);
+                fprintf('\tcoeffD = %2.4f\n', coeffD);
+                pause
+            end
+            %}
+            
         end
         
         lagsProvided = length(coeffs{movableVert,freeDir}.tensor{fieldXYZ, fieldXYZ}.EH);
@@ -122,8 +135,20 @@ while tBeginChunk <= numT
             fwdE = fwdEBuffer(indexE, (tFwd(1):tFwd(2))-tFwd(1)+1);
             
             dotProdEE = sum(coeffE.*sum(adjE.*fwdE, 2));
+            absDotEE = sum(abs(coeffE).*sum(abs(adjE).*abs(fwdE), 2));
             
             sumSensitivity = sumSensitivity + dotProdEE;
+            
+            %{
+            if norm(adjE(:)) ~= 0
+                figure(2); clf
+                plot(adjE); hold on; plot(fwdE)
+                title(sprintf('E-E %s along %s, v%i', char('w'+fieldXYZ), char('w'+freeDir), movableVert));
+                fprintf('Dot EE = %2.4g, abs dot %2.4f\n', dotProdEE, absDotEE);
+                fprintf('\tcoeffE = %2.4f\n', coeffE);
+                pause
+            end
+            %}
         end
         
         vertJacobian(freeDir + 3*(movableVert-1), 1) = ...

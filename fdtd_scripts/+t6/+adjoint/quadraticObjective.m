@@ -52,6 +52,8 @@ for ff = 1:numFields
         currDat = multTensor(currDat, X.FilterX{ff}, 1);
     end
     if ~isempty(X.FilterY) && ~isempty(X.FilterY{ff})
+        figure(11)
+        plot(real(X.FilterY{ff}))
         currDat = multTensor(currDat, X.FilterY{ff}, 2);
     end
     if ~isempty(X.FilterZ) && ~isempty(X.FilterZ{ff})
