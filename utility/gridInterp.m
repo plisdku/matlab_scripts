@@ -30,8 +30,10 @@ y = varargin(numdim+2:end);
 %D = A;
 
 for nn = 1:numdim
+    if ~isempty(x{nn})
     if size(A,nn) ~= length(x{nn})
         error('Length of X%i must equal size(A,%i)', nn, nn');
+    end
     end
 end
 
