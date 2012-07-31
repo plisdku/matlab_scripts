@@ -5,6 +5,7 @@ function addOutput(filename, fields, varargin)
 %       named 'electricFields' on every timestep.
 %   
 %   Usage: addOutput(filename, fields, named parameters)
+%          addOutput(a, b, c)
 %   
 %   Valid fields:
 %       'ex', 'ey', 'ez'        electric fields

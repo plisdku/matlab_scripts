@@ -3,6 +3,15 @@ function addMesh(varargin)
 % Vertices which touch or reach into the PML will be extended to the outer
 % boundary of the PML.  This will distort the geometry of structures which
 % do not intersect the PML at right angles.
+%
+% Example:
+%
+% newMaterial('Air', 'Numerator', 1, 'Denominator', 1);
+% r = t6.model.Rect(@(p) [0 0 0 1 1 1], 'Permittivity', 'Air');
+% 
+% [finish this later]
+% 
+% 
 
 grid = t6.TrogdorSimulation.instance().CurrentGrid;
 

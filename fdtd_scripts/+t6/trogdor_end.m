@@ -7,8 +7,9 @@ function trogdor_end(varargin)
 %   trogdor_end('XML', paramFileName) permits customization of the
 %   parameter file name.
 %
-%   trogdor_end('Directory', 'dat') will put all the auxiliary files into
-%   the directory dat.
+%   trogdor_end('Directory', 'dat', 'OutputDirectory', 'outputs') will put all
+%   the auxiliary files into the directory "dat" and all the field outputs
+%   into the directory "outputs".
 
 import com.mathworks.xml.XMLUtils.*;
 

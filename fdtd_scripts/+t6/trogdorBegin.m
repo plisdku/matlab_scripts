@@ -1,13 +1,15 @@
 function trogdorBegin(varargin)
 %trogdorBegin Begin Trogdor simulation description
 %   trogdorBegin('Bounds', [0 0 0 100 100 100], 'NumCells', [20 20 20], 
-%       'Duration', 100, 'Courant', 0.99) declares a simulation where each
-%       Yee cell has size [5 5 5] and the physical duration of the
-%       simulation is at least 100 (in simulation units).  The Courant
-%       parameter adjusts the timestep based on the spatial step.
+%       'Duration', 100, 'Courant', 0.99, 'PML', [10 10 10 10 10 10]) declares a
+%       simulation where each Yee cell has size [5 5 5] and the physical
+%       duration of the simulation is at least 100 (in simulation units), with
+%       ten cells of PML on all six sides.  The Courant parameter adjusts the
+%       timestep based on the spatial step.
 
 X.Bounds = [0 0 0 0 0 0];
 X.NumCells = [1 1 1];
+X.MaxCellSize = [Inf Inf Inf];
 X.Duration = 1;
 X.Courant = 0.99;
 X.PML = [0 0 0 0 0 0];
@@ -15,6 +17,12 @@ X.PML = [0 0 0 0 0 0];
 X = parseargs(X, varargin{:});
 
 validateArguments(X);
+
+minNumCells = ceil((X.Bounds(4:6) - X.Bounds(1:3)) ./ X.MaxCellSize);
+X.NumCells = max(X.NumCells, minNumCells);
+
+assert(~any(isnan(X.NumCells)));
+assert(~any(isinf(X.NumCells)));
 
 dxyz = (X.Bounds(4:6) - X.Bounds(1:3)) ./ X.NumCells;
 dxyz(dxyz == 0) = 1;

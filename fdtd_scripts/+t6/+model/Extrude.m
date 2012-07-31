@@ -49,6 +49,13 @@ classdef Extrude < t6.model.Node
                 X.Z = [];
                 X = parseargs(X, varargin{:});
                 
+                if ~isa(X.Vertices, 'function_handle')
+                    error('Vertices must be a function handle');
+                end
+                if ~isa(X.Z, 'function_handle');
+                    error('Z must be a function handle');
+                end
+                
                 obj.permittivity = X.Permittivity;
                 obj.permeability = X.Permeability;
                 obj.zFunc = X.Z;
