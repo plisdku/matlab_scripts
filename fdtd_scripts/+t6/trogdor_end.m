@@ -14,8 +14,8 @@ function trogdor_end(varargin)
 import com.mathworks.xml.XMLUtils.*;
 
 X.XML = 'params.xml';
-X.Directory = '';
-X.OutputDirectory = '';
+X.Directory = 'sim';
+X.OutputDirectory = 'output';
 X = parseargs(X, varargin{:});
 
 if ~isstr(X.XML); error('Invalid filename'); end
