@@ -51,7 +51,7 @@ classdef Cylinder < t6.model.Node
             c = obj.centerFunc(params);
             boundingBox = obj.bounds(params);
             
-            vertexTable = zeros(2*obj.numSides,1);
+            vertexTable = zeros(2*obj.numSides,3);
             
             for vv = 1:obj.numSides
                 theta = 2*pi*vv/obj.numSides;
