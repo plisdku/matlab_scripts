@@ -9,7 +9,7 @@ adjFileNames = {'boundary_adjoint_exx', 'boundary_adjoint_eyy', ...
 adjRevFileNames = {'boundary_adjoint_exx.rev', 'boundary_adjoint_eyy.rev',...
     'boundary_adjoint_ezz.rev'};
 
-[coeffs, verts] = readDeps('out/Depsilon');
+[coeffs, verts] = readDeps('output/Depsilon');
 
 bigJacobian = node.jacobian(parameters);
 vertices = node.vertices(parameters);
@@ -19,9 +19,9 @@ vertJacobian = sparse(size(vertices, 1), 1);
 
 for fieldXYZ = 1:3
 
-fwdDE = OutputFile(['out/', fwdFileNames{fieldXYZ}]);
-adjoint.reverseFile(['out/', adjFileNames{fieldXYZ}]);
-adjDE = OutputFile(['out/', adjRevFileNames{fieldXYZ}]);
+fwdDE = OutputFile(['output/', fwdFileNames{fieldXYZ}]);
+adjoint.reverseFile(['output/', adjFileNames{fieldXYZ}]);
+adjDE = OutputFile(['output/', adjRevFileNames{fieldXYZ}]);
 
 assert(fwdDE.numFramesAvailable() == adjDE.numFramesAvailable());
 numT = fwdDE.numFramesAvailable();

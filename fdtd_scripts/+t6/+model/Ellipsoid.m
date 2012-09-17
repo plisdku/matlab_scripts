@@ -135,8 +135,8 @@ classdef Ellipsoid < t6.model.Node
             % Bottom tris
             bottomFaces = [];
             bottomFaces(1:numBotTris, 1) = vBot;
-            bottomFaces(1:numBotTris, 2) = vSide(obj.numThetas-1, 1:obj.numPhis);
-            bottomFaces(1:numBotTris, 3) = vSide(obj.numThetas-1, 1 + (1:obj.numPhis));
+            bottomFaces(1:numBotTris, 2) = vSide(obj.numThetas-1, 1 + (1:obj.numPhis));
+            bottomFaces(1:numBotTris, 3) = vSide(obj.numThetas-1, 1:obj.numPhis);
             
             faces = [topFaces; sideFaces; bottomFaces];
             

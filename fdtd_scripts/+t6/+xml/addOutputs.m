@@ -1,6 +1,6 @@
 function addOutputs(grid, gridXML, doc, origin)
 
-directory = t6.TrogdorSimulation.instance().outputDirectoryString;
+%directory = t6.TrogdorSimulation.instance().outputDirectoryString;
 
 for oo = 1:length(grid.Outputs)
     output = grid.Outputs{oo};
@@ -11,7 +11,8 @@ for oo = 1:length(grid.Outputs)
         elemXML.setAttribute('interpolate', ...
             sprintf('%2.2f ', output.interpolationPoint));
     end
-    elemXML.setAttribute('file', [directory, output.filename]);
+    %elemXML.setAttribute('file', [directory, output.filename]);
+    elemXML.setAttribute('file', output.filename);
     
     % durations and regions.
     for dd = 1:size(output.duration, 1)

@@ -93,7 +93,7 @@ if ~isempty(X.Numerator) && ~isempty(X.Denominator)
     % Matlab's bilinear() function in to Trogdor as material coefficients.
     % bilinear() produces a polynomial in z, but Trogdor takes a polynomial
     % in 1/z.  If the numerator and denominator are the same order, then
-    % the coefficients for the z and 1/z rational functionst are in fact the
+    % the coefficients for the z and 1/z rational functions are in fact the
     % same.
     if numel(X.Numerator) ~= numel(X.Denominator)
         error(['Presently we require the numerator and denominator to have '...
