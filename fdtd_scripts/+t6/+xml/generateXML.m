@@ -1,7 +1,11 @@
-function documentNode = generateXML(sim, designParameters)
+function documentNode = generateXML(sim, designParameters, mode)
 
 if nargin < 2
     designParameters = [];
+end
+
+if nargin < 3
+    mode = 'forward';
 end
 
 % The automatically-generated source files are numbered sequentially.
@@ -30,7 +34,7 @@ root.setAttribute('numT', num2str(sim.NumT));
 
 t6.xml.addMaterials(doc, sim);
 
-t6.xml.addGrids(doc, sim, designParameters);
+t6.xml.addGrids(doc, sim, designParameters, mode);
 
 documentNode = doc;
 

@@ -1,7 +1,11 @@
-function addCustomTFSFSources(sim, grid, gridXML, doc)
+function addCustomTFSFSources(sim, grid, gridXML, doc, mode)
 
 for ll = 1:length(grid.CustomTFSFSources)
     src = grid.CustomTFSFSources{ll};
+    
+    if ~isempty(src.mode) && ~strcmpi(src.mode, mode)
+        continue;
+    end
     
     elemXML = doc.createElement('CustomTFSFSource');
     elemXML.setAttribute('yeeCells', ...

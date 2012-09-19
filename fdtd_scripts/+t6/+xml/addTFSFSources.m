@@ -1,10 +1,14 @@
-function addTFSFSources(sim, grid, gridXML, doc)
+function addTFSFSources(sim, grid, gridXML, doc, mode)
 global TROG_XML_COUNT___;
 
 directory = sim.directoryString;
 
 for ll = 1:length(grid.TFSFSources)
     src = grid.TFSFSources{ll};
+    
+    if ~isempty(src.mode) && ~strcmpi(src.mode, mode)
+        continue;
+    end
     
     elemXML = doc.createElement('TFSFSource');
     

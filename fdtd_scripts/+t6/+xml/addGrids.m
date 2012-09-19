@@ -1,4 +1,4 @@
-function addGrids(doc, sim, designParameters)
+function addGrids(doc, sim, designParameters, mode)
 root = doc.getDocumentElement;
 
 for gg = 1:length(sim.Grids)
@@ -22,11 +22,11 @@ for gg = 1:length(sim.Grids)
     %gridXML.setAttribute('origin', sprintf('%i ', originTrogdor));
     
     t6.xml.addAssembly(sim, grid, gridXML, doc, grid.Origin, designParameters);
-    t6.xml.addOutputs(sim, grid, gridXML, doc);
-    t6.xml.addTFSFSources(sim, grid, gridXML, doc);
-    t6.xml.addCustomTFSFSources(sim, grid, gridXML, doc);
-    t6.xml.addHardSources(sim, grid, gridXML, doc);
-    t6.xml.addCurrentSources(sim, grid, gridXML, doc);
+    t6.xml.addOutputs(sim, grid, gridXML, doc, mode);
+    t6.xml.addTFSFSources(sim, grid, gridXML, doc, mode);
+    t6.xml.addCustomTFSFSources(sim, grid, gridXML, doc, mode);
+    t6.xml.addHardSources(sim, grid, gridXML, doc, mode);
+    t6.xml.addCurrentSources(sim, grid, gridXML, doc, mode);
     t6.xml.addPMLParams(sim, grid, gridXML, doc);
     
     root.appendChild(gridXML);

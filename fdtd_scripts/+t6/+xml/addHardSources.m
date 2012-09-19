@@ -1,4 +1,4 @@
-function addHardSources(sim, grid, gridXML, doc)
+function addHardSources(sim, grid, gridXML, doc, mode)
 global TROG_XML_COUNT___;
 
 precisionString = sim.Precision;
@@ -6,6 +6,10 @@ directory = sim.directoryString;
 
 for ss = 1:length(grid.HardSources)
     src = grid.HardSources{ss};
+    
+    if ~isempty(src.mode) && ~strcmpi(src.mode, mode)
+        continue;
+    end
     
     elemXML = doc.createElement('HardSource');
     fieldstr = '';
