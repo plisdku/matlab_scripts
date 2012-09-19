@@ -1,5 +1,8 @@
-function documentNode = generateXML(simulationHandle)
-sim = simulationHandle; % shorthand
+function documentNode = generateXML(sim, designParameters)
+
+if nargin < 2
+    designParameters = [];
+end
 
 % The automatically-generated source files are numbered sequentially.
 % This counts them.
@@ -27,7 +30,7 @@ root.setAttribute('numT', num2str(sim.NumT));
 
 t6.xml.addMaterials(doc, sim);
 
-t6.xml.addGrids(doc, sim);
+t6.xml.addGrids(doc, sim, designParameters);
 
 documentNode = doc;
 

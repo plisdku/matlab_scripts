@@ -22,7 +22,7 @@ end
 %end
 
 if length(X.Duration) == 0
-    X.Duration = [0, t6.TrogdorSimulation.instance().NumT-1];
+    X.Duration = [0, t6.simulation().NumT-1];
 elseif size(X.Duration, 2) ~= 2
     error('Duration must have two columns (first and last timestep).');
 end

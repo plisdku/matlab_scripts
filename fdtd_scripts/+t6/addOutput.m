@@ -68,7 +68,7 @@ function addOutput(filename, fields, varargin)
 
 import t6.*
 
-grid = t6.TrogdorSimulation.instance().CurrentGrid;
+sim = simulation();
 
 X.YeeCells = []; % [x y z x y z]
 X.Bounds = [];
@@ -80,17 +80,17 @@ X.InterpolationPoint = []; % [x y z] from 0 to 1
 
 X = parseargs(X, varargin{:});
 
-t6.validateYeeCellsAndBounds(X);
+validateYeeCellsAndBounds(X);
 
 fieldTokens = mySortTokens(tokenizeFields(fields, 'd e b h j m'));
 
 % If we obtained Bounds and not YeeCells, set the YeeCells appropriately
 if ~isempty(X.Bounds)
-    X.YeeCells = boundsToYee(X.Bounds, fieldTokens);
+    X.YeeCells = sim.boundsToYee(X.Bounds, fieldTokens);
 end
 
 if isempty(X.Duration)
-    X.Duration = [0, t6.TrogdorSimulation.instance().NumT-1];
+    X.Duration = [0, sim.NumT-1];
 elseif size(X.Duration, 2) ~= 2
     error('Duration must have two columns (first and last timestep).');
 end
@@ -110,7 +110,7 @@ end
 
 if isempty(X.Period)
     if ~isempty(X.CutoffFrequency)
-        X.Period = floor(0.5*2*pi./X.CutoffFrequency/t6.simulation().Dt);
+        X.Period = floor(0.5*2*pi./X.CutoffFrequency/sim.Dt);
         X.Period(X.Period < 1) = 1;
     else
         X.Period = ones(size(X.Duration, 1), 1);
@@ -146,7 +146,7 @@ if ~isempty(X.InterpolationPoint)
     obj.interpolationPoint = X.InterpolationPoint;
 end
 
-grid.Outputs = {grid.Outputs{:}, obj};
+sim.CurrentGrid.Outputs{end+1} = obj;
 
 end
 

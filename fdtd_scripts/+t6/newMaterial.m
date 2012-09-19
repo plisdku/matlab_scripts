@@ -28,7 +28,9 @@ function [zNumerator, zDenominator] = newMaterial(name, varargin)
 %   epsr = epsinf - wp^2/(-s^2 + s*gamma)
 %
 
-sim = t6.TrogdorSimulation.instance();
+import t6.*
+
+sim = simulation();
 
 X.Numerator = [];
 X.Denominator = [];
@@ -50,7 +52,7 @@ validateInput(X);
 if ~isempty(X.Numerator)
     
     if numel(X.Numerator) > 1
-        dt = sim.Dt();
+        dt = sim.Dt;
         [zNumerator, zDenominator] = bilinear(X.Numerator, X.Denominator, 1/dt);
     else
         zNumerator = X.Numerator;
@@ -64,14 +66,14 @@ else
     zDenominator = X.ZDenominator;
 end
 
-if ~t6.testStability(zNumerator, zDenominator, sim.Dt, sim.Dxyz, sim.NumCells)
+if ~testStability(zNumerator, zDenominator, sim.Dt, sim.Dxyz, sim.NumCells)
     warning('Material %s appears to be unstable as a permittivity', name);
 end
 
 material = struct('name', name, 'numerator', zNumerator, ...
     'denominator', zDenominator);
 
-sim.Materials = {sim.Materials{:}, material};
+sim.Materials{end+1} = material;
 
 
 function validateInput(X)

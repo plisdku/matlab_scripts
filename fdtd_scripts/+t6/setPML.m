@@ -36,8 +36,10 @@ function setPML(varargin)
 %       eps0    permittivity of free space
 %        
 
-sim = t6.TrogdorSimulation.instance();
-grid = t6.TrogdorSimulation.instance().CurrentGrid;
+import t6.*
+
+sim = simulation();
+grid = sim.CurrentGrid;
 
 X.Depth = [];
 X.Kappa = '';

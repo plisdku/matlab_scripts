@@ -44,7 +44,6 @@ X.Period = [];
 X.CutoffFrequency = [];
 X = parseargs(X, varargin{:});
 
-
 t6.addOutput(fileName, 'ex ey ez hx hy hz', ...
     'Bounds', X.Bounds, 'Duration', X.Duration, ...
     'Period', X.Period, 'CutoffFrequency', X.CutoffFrequency);

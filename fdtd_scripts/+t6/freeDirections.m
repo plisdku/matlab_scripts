@@ -1,15 +1,16 @@
 function freeDirections(varargin)
 
-grid = t6.TrogdorSimulation.instance().CurrentGrid;
+import t6.*
+sim = simulation();
+grid = sim.CurrentGrid;
 
 X.YeeBounds = [0 0 0 0 0 0];
 X.Directions = [0 0 0];
 X = parseargs(X, varargin{:});
 
-if ~t6.validateRect(X.YeeBounds)
+if ~validateRect(X.YeeBounds)
     error('Invalid rectangle.');
 end
-
 
 for nn = 1:length(grid.Assembly)
 if strcmp(grid.Assembly{nn}.type, 'Mesh')

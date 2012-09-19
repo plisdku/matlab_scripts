@@ -39,7 +39,7 @@ end
 % Last things:
 %   store the extent of source grids in links
 
-sim = t6.TrogdorSimulation.instance;
+sim = t6.simulation();
 sim.Directory = X.Directory;
 sim.OutputDirectory = X.OutputDirectory;
 

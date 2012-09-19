@@ -45,6 +45,10 @@ classdef TrogdorSimulation < handle
                 str = [obj.OutputDirectory, filesep()];
             end
         end
+        
+        yeeCells = boundsToYee(obj, bounds, fieldTokens); 
+        y = yeeCells(obj, bounds);
+        v = extendIntoPML(obj, verts);
     end
     
     methods (Access = private)

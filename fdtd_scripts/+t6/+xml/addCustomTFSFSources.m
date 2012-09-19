@@ -1,6 +1,4 @@
-function addCustomTFSFSources(grid, gridXML, doc, origin)
-
-%originTwice = [originTrogdor originTrogdor];
+function addCustomTFSFSources(sim, grid, gridXML, doc)
 
 for ll = 1:length(grid.CustomTFSFSources)
     src = grid.CustomTFSFSources{ll};
@@ -25,7 +23,7 @@ for ll = 1:length(grid.CustomTFSFSources)
         elemXML.appendChild(durXML);
     end
     
-    t6.xml.writeSourceSpec(src);
+    t6.xml.writeSourceSpec(sim, src);
     
     gridXML.appendChild(elemXML);
 end

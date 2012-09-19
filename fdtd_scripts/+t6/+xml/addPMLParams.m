@@ -1,4 +1,4 @@
-function addPMLParams(grid, gridXML, doc)
+function addPMLParams(sim, grid, gridXML, doc)
 
 %{
     allDirectionsDefault["sigma"] =

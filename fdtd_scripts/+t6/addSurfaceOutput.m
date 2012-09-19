@@ -51,6 +51,9 @@ function addSurfaceOutput(fileName, fields, varargin)
 %                       X, low Y, high Y, low Z, high Z.
 %                       (default: [1 1 1 1 1 1])
 
+import t6.*
+sim = simulation();
+
 X.Bounds = [];
 X.YeeCells = [];
 X.Duration = [];
@@ -61,13 +64,13 @@ X.InterpolationPoint = [];
 X.Sides = [1 1 1 1 1 1];
 X = parseargs(X, varargin{:});
 
-t6.validateYeeCellsAndBounds(X);
+validateYeeCellsAndBounds(X);
 
 fieldTokens = mySortTokens(t6.tokenizeFields(fields, 'd e b h'));
 
 % If we obtained Bounds and not YeeCells, set the YeeCells appropriately
 %if ~isempty(X.Bounds)
-%    X.YeeCells = boundsToYee(X.Bounds, fieldTokens);
+%    X.YeeCells = boundsToYee(X.Bounds, fieldTokens, dxyz);
 %end
 
 bounds = [];
@@ -82,7 +85,7 @@ if isempty(bounds)
     warning('Poynting surface omits all six sides!');
 end
 
-t6.addOutput(fileName, fields, ...
+addOutput(fileName, fields, ...
     'Bounds', bounds, 'Duration', X.Duration, ...
     'Period', X.Period, 'CutoffFrequency', X.CutoffFrequency);
 

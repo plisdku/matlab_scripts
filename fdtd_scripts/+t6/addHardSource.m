@@ -55,7 +55,10 @@ function addHardSource(varargin)
 %   Specify soft source in cells (50, 50, 50) and (60, 60, 60), nonzero for
 %   timesteps 0:10 and 100:110, where ex varies sinusoidally and hx varies
 %   as a decaying exponential.
-grid = t6.TrogdorSimulation.instance().CurrentGrid;
+
+import t6.*
+
+sim = simulation();
 
 X.Field = '';
 X.YeeCells = [];
@@ -66,20 +69,20 @@ X.TimeData = [];
 X.SpaceTimeData = [];
 X = parseargs(X, varargin{:});
 
-t6.validateSourceDataParameters(X); % will call error() for problems
-t6.validateYeeCellsAndBounds(X);
+validateSourceDataParameters(X); % will call error() for problems
+validateYeeCellsAndBounds(X);
 
 % Now I need to validate the Field: it must be ex, ey, ez, hx, hy, hz stuff.
 fieldTokens = tokenizeFields(X.Field, 'e h');
 
 % If we obtained Bounds and not YeeCells, set the YeeCells appropriately
 if ~isempty(X.Bounds)
-    X.YeeCells = boundsToYee(X.Bounds, fieldTokens);
+    X.YeeCells = sim.boundsToYee(X.Bounds, fieldTokens);
 end
 
 % Validate duration
 if length(X.Duration) == 0
-    X.Duration = [0, t6.TrogdorSimulation.instance().NumT-1];
+    X.Duration = [0, sim.NumT-1];
 elseif size(X.Duration, 2) ~= 2
     error('Duration must have two columns (first and last timestep).');
 end
@@ -113,7 +116,6 @@ if length(X.SpaceTimeData) ~= 0
     end
 end
 
-
 obj = struct;
 obj.type = 'HardSource';
 obj.field = fieldTokens;
@@ -123,4 +125,4 @@ obj.timeData = X.TimeData; % validated
 obj.maskData = X.MaskData; % validated
 obj.spaceTimeData = X.SpaceTimeData;
 
-grid.HardSources = {grid.HardSources{:}, obj};
+sim.CurrentGrid.HardSources{end+1} = obj;

@@ -7,6 +7,8 @@ function trogdorBegin(varargin)
 %       ten cells of PML on all six sides.  The Courant parameter adjusts the
 %       timestep based on the spatial step.
 
+import t6.*;
+
 X.Bounds = [0 0 0 0 0 0];
 X.NumCells = [1 1 1];
 X.MaxCellSize = [Inf Inf Inf];

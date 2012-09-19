@@ -46,7 +46,7 @@ function addAxisOrientedPlaneWave(varargin)
 
 import t6.*
 
-grid = t6.TrogdorSimulation.instance().CurrentGrid;
+sim = simulation();
 
 X.Field = '';
 X.YeeCells = [];
@@ -58,18 +58,18 @@ X.TimeData = [];
 X.OmitSide = [];
 X = parseargs(X, varargin{:});
 
-t6.validateYeeCellsAndBounds(X);
+validateYeeCellsAndBounds(X);
 
 % Validate fields; should be a single string with some tokens in it
 fieldTokens = tokenizeFields(X.Field, 'e h');
 
 % If we obtained Bounds and not YeeCells, set the YeeCells appropriately
 if ~isempty(X.Bounds)
-    X.YeeCells = boundsToYee(X.Bounds, fieldTokens);
+    X.YeeCells = sim.boundsToYee(X.Bounds, fieldTokens);
 end
 
 if length(X.Duration) == 0
-    X.Duration = [0, t6.TrogdorSimulation.instance().NumT-1];
+    X.Duration = [0, sim.NumT-1];
 elseif size(X.Duration, 2) ~= 2
     error('Duration must have two columns (first and last timestep).');
 end
@@ -116,5 +116,4 @@ else
     obj.omitSides = X.OmitSide;
 end
 
-
-grid.TFSFSources = {grid.TFSFSources{:}, obj};
+sim.CurrentGrid.TFSFSources{end+1} = obj;

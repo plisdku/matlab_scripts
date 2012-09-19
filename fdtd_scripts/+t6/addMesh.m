@@ -1,4 +1,4 @@
-function addMesh(varargin)
+function addMesh(mesh)
 % Store the vertices and faces of a mesh in the simulation data structure.
 % Vertices which touch or reach into the PML will be extended to the outer
 % boundary of the PML.  This will distort the geometry of structures which
@@ -13,11 +13,32 @@ function addMesh(varargin)
 % 
 % 
 
-grid = t6.TrogdorSimulation.instance().CurrentGrid;
+import t6.*
 
-obj = struct;
-obj.type = 'Mesh';
+sim = simulation();
 
+if iscell(mesh)
+    if numel(mesh) > 1
+        error('Please add one mesh at a time');
+    end
+    
+    mesh = mesh{1}; % now it's not a cell array!  :-D
+end
+
+if isa(mesh, 't6.model.Mesh')
+    if ~isempty(sim.CurrentGrid.ParameterizedMeshes)
+        error('Mixing meshes and parameterized meshes');
+    end
+    sim.CurrentGrid.Meshes{end+1} = mesh;
+elseif isa(mesh, 't6.model.Node')
+    if ~isempty(sim.CurrentGrid.Meshes)
+        error('Mixing meshes and parameterized meshes');
+    end
+    sim.CurrentGrid.ParameterizedMeshes{end+1} = mesh;
+end
+
+
+%{
 if nargin == 1
     if iscell(varargin{1})
         if numel(varargin{1}) > 1
@@ -42,6 +63,9 @@ else
     X = parseargs(X, varargin{:});
 end
 
+obj = struct;
+obj.type = 'Mesh';
+
 if ~isempty(X.Permittivity)
     obj.permittivity = X.Permittivity;
 end
@@ -52,10 +76,6 @@ end
 
 obj.vertices = extendIntoPML(X.Vertices);
 
-%obj.vertices = bsxfun(@minus, X.Vertices, grid.Origin);
-%obj.vertices(1,:) = obj.vertices(1,:);
-%obj.vertices(2,:) = obj.vertices(2,:);
-%obj.vertices(3,:) = obj.vertices(3,:);
 obj.faces = X.Faces-1;
 
 if isempty(X.FreeDirections)
@@ -68,11 +88,16 @@ end
 %    'FaceAlpha', 0.3);
 %pause(0.01);
 
-grid.Assembly = {grid.Assembly{:}, obj};
+sim.CurrentGrid.Assembly{end+1} = obj;
+
+%}
 
 
 
+%{
 function v = extendIntoPML(vertices)
+
+sim = t6.simulation();
 
 if size(vertices, 2) ~= 3
     error('Vertex array must be Nx3');
@@ -80,7 +105,6 @@ end
 
 v = vertices;
 
-sim = t6.simulation();
 outerBounds = sim.OuterBounds;
 innerBounds = sim.NonPMLBounds;
 
@@ -93,7 +117,7 @@ if innerBounds(xyz) ~= innerBounds(xyz+3)
     v(iCeil,xyz) = outerBounds(xyz+3);
 end
 end
-
+%}
 
 
 

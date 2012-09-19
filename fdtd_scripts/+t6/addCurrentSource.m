@@ -62,7 +62,7 @@ function addCurrentSource(varargin)
 
 import t6.*
 
-grid = t6.TrogdorSimulation.instance().CurrentGrid;
+sim = simulation();
 
 X.Field = '';
 X.YeeCells = [];
@@ -75,20 +75,20 @@ X.SpaceTimeData = [];
 %X.SpaceTimeFile = [];
 X = parseargs(X, varargin{:});
 
-t6.validateDataRequestParameters(X);
-t6.validateYeeCellsAndBounds(X);
+validateDataRequestParameters(X);
+validateYeeCellsAndBounds(X);
 
 % Validate fields; should be a single string with some tokens in it
 fieldTokens = tokenizeFields(X.Field, 'j m je mh');
 
 % If we obtained Bounds and not YeeCells, set the YeeCells appropriately
 if ~isempty(X.Bounds)
-    X.YeeCells = boundsToYee(X.Bounds, fieldTokens);
+    X.YeeCells = sim.boundsToYee(X.Bounds, fieldTokens);
 end
 
 % Validate duration
 if isempty(X.Duration)
-    X.Duration = [0, t6.TrogdorSimulation.instance().NumT-1];
+    X.Duration = [0, sim.NumT-1];
 elseif size(X.Duration, 2) ~= 2
     error('Duration must have two columns (first and last timestep).');
 end
@@ -119,7 +119,6 @@ obj.spaceTimeData = X.SpaceTimeData;
 
 %obj.spaceTimeFile = X.SpaceTimeFile;
 
-grid.CurrentSources = {grid.CurrentSources{:}, obj};
-
+sim.CurrentGrid.CurrentSources{end+1} = obj;
 
 

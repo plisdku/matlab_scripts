@@ -1,12 +1,10 @@
-function writeSourceSpec(source, varargin)
-sim = t6.TrogdorSimulation.instance; % to get dxyz, dt, etc.
+function writeSourceSpec(sim, source, varargin)
 
 X.AutoMaskFile = '';
 X.AutoTimeFile = '';
 X.AutoSpaceTimeFile = '';
 X = parseargs(X, varargin{:});
 
-precisionString = t6.TrogdorSimulation.instance().Precision;
 
 % The purpose of the spec file is mostly to provide the DIMENSIONS of data.
 % This will be equivalent to source.yeeCells for space-varying data, but will
@@ -15,7 +13,7 @@ precisionString = t6.TrogdorSimulation.instance().Precision;
 if isfield(source, 'timeData')
     fh = fopen([X.AutoTimeFile, '.txt'], 'wt');
     fprintf(fh, 'trogdor5data\n');
-    fprintf(fh, 'precision %s\n', precisionString);
+    fprintf(fh, 'precision %s\n', sim.Precision);
     fprintf(fh, 'date %s\n', date());
     fprintf(fh, 'dxyz [%g, %g, %g]\n', ...
         sim.Dxyz(1), sim.Dxyz(2), sim.Dxyz(3));
@@ -33,7 +31,7 @@ if isfield(source, 'timeData')
     end
     
     for ff = 1:length(fieldList)
-        offset = t6.xml.fieldOffset(fieldList{ff});
+        offset = t6.fieldOffset(fieldList{ff});
         fprintf(fh, 'field %s [%g, %g, %g] %g\n', fieldList{ff}, offset);
     end
     
@@ -49,7 +47,7 @@ end
 if isfield(source, 'spaceTimeData')
     fh = fopen([X.AutoSpaceTimeFile, '.txt'], 'wt');
     fprintf(fh, 'trogdor5data\n');
-    fprintf(fh, 'precision %s\n', precisionString);
+    fprintf(fh, 'precision %s\n', sim.Precision);
     fprintf(fh, 'date %s\n', date());
     fprintf(fh, 'dxyz [%g, %g, %g]\n', ...
         sim.Dxyz(1), sim.Dxyz(2), sim.Dxyz(3));
@@ -67,7 +65,7 @@ if isfield(source, 'spaceTimeData')
     end
     
     for ff = 1:length(fieldList)
-        offset = t6.xml.fieldOffset(fieldList{ff});
+        offset = t6.fieldOffset(fieldList{ff});
         fprintf(fh, 'field %s [%g, %g, %g] %g\n', fieldList{ff}, offset);
     end
     
@@ -86,7 +84,7 @@ end
 if isfield(source, 'maskData')
     fh = fopen([X.AutoMaskFile, '.txt'], 'wt');
     fprintf(fh, 'trogdor5data\n');
-    fprintf(fh, 'precision %s\n', precisionString);
+    fprintf(fh, 'precision %s\n', sim.Precision);
     fprintf(fh, 'date %s\n', date());
     fprintf(fh, 'dxyz [%g, %g, %g]\n', ...
         sim.Dxyz(1), sim.Dxyz(2), sim.Dxyz(3));
@@ -104,7 +102,7 @@ if isfield(source, 'maskData')
     end
     
     for ff = 1:length(fieldList)
-        offset = t6.xml.fieldOffset(fieldList{ff});
+        offset = t6.fieldOffset(fieldList{ff});
         fprintf(fh, 'field %s [%g, %g, %g] %g\n', fieldList{ff}, offset);
     end
     
@@ -120,7 +118,7 @@ end
 if isfield(source, 'spaceTimeData')
     fh = fopen([X.AutoSpaceTimeFile, '.txt'], 'wt');
     fprintf(fh, 'trogdor5data\n');
-    fprintf(fh, 'precision %s\n', precisionString);
+    fprintf(fh, 'precision %s\n', sim.Precision);
     fprintf(fh, 'date %s\n', date());
     fprintf(fh, 'dxyz [%g, %g, %g]\n', ...
         sim.Dxyz(1), sim.Dxyz(2), sim.Dxyz(3));
@@ -138,7 +136,7 @@ if isfield(source, 'spaceTimeData')
     end
     
     for ff = 1:length(fieldList)
-        offset = t6.xml.fieldOffset(fieldList{ff});
+        offset = t6.fieldOffset(fieldList{ff});
         fprintf(fh, 'field %s [%g, %g, %g] %g\n', fieldList{ff}, offset);
     end
     

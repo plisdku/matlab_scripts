@@ -1,6 +1,6 @@
-function addOutputs(grid, gridXML, doc, origin)
+function addOutputs(sim, grid, gridXML, doc)
 
-%directory = t6.TrogdorSimulation.instance().outputDirectoryString;
+%directory = sim.outputDirectoryString;
 
 for oo = 1:length(grid.Outputs)
     output = grid.Outputs{oo};

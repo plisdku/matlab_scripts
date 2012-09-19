@@ -48,7 +48,10 @@ function addCustomTFSFSource(varargin)
 %   Source data into the box [0 0 0 100 100 100] but omit the correction on the
 %   +Z and -Y faces.
 
-grid = t6.TrogdorSimulation.instance().CurrentGrid;
+%grid = t6.TrogdorSimulation.instance().CurrentGrid;
+
+import t6.*
+sim = simulation();
 
 % note that there is no X.MaskFile because it will ALWAYS be requested along
 % with a TimeFile.  Likewise there is no Field because all E and H fields
@@ -60,15 +63,15 @@ X.OmitSide = [];
 X.Symmetries = [0 0 0];
 X = parseargs(X, varargin{:});
 
-t6.validateYeeCellsAndBounds(X);
+validateYeeCellsAndBounds(X);
 
 % If we obtained Bounds and not YeeCells, set the YeeCells appropriately
 if ~isempty(X.Bounds)
-    X.YeeCells = boundsToYee(X.Bounds, {'ex', 'ey', 'ez', 'hx', 'hy', 'hz'});
+    X.YeeCells = sim.boundsToYee(X.Bounds, {'ex', 'ey', 'ez', 'hx', 'hy', 'hz'});
 end
 
 if isempty(X.Duration)
-    X.Duration = [0, t6.TrogdorSimulation.instance().NumT-1];
+    X.Duration = [0, sim.NumT-1];
 elseif size(X.Duration, 2) ~= 2
     error('Duration must have two columns (first and last timestep).');
 end
@@ -98,4 +101,4 @@ if ~isempty(X.OmitSide)
     end
 end
 
-grid.CustomTFSFSources = {grid.CustomTFSFSources{:}, obj};
+sim.CurrentGrid.CustomTFSFSources{end+1} = obj;

@@ -1,7 +1,7 @@
-function addCurrentSources(grid, gridXML, doc, origin)
+function addCurrentSources(sim, grid, gridXML, doc)
 global TROG_XML_COUNT___;
 
-directory = t6.TrogdorSimulation.instance().directoryString;
+directory = sim.directoryString;
 
 for ss = 1:length(grid.CurrentSources)
     src = grid.CurrentSources{ss};
@@ -20,18 +20,18 @@ for ss = 1:length(grid.CurrentSources)
     if ~isempty(src.timeData)
         elemXML.setAttribute('timeFile', fname);
         
-        myWriteTimeFile(src.timeData);
+        myWriteTimeFile(fname, src.timeData, sim.Precision);
         
-        t6.xml.writeSourceSpec(src, 'AutoTimeFile', fname);
+        t6.xml.writeSourceSpec(sim, src, 'AutoTimeFile', fname);
     end
     
     % Space-time data
     if ~isempty(src.spaceTimeData)
         elemXML.setAttribute('spaceTimeFile', fname);
         
-        myWriteSpaceTimeData(fname, src.spaceTimeData);
+        myWriteSpaceTimeData(fname, src.spaceTimeData, sim.Precision);
         
-        t6.xml.writeSourceSpec(src, 'AutoSpaceTimeFile', fname);
+        t6.xml.writeSourceSpec(sim, src, 'AutoSpaceTimeFile', fname);
     end
     
     % Field function
@@ -40,13 +40,13 @@ for ss = 1:length(grid.CurrentSources)
         
         if isempty(src.bounds)
             writeFunctionCurrent_Yee(fname, src.yeeCells, src.field, ...
-                src.duration, src.fieldFunction);
+                src.duration, src.fieldFunction, sim.Precision);
         else
-            writeFunctionCurrent_Bounds(fname, src.yeeCells, src.bounds, src.field, ...
-                src.duration, src.fieldFunction);
+            writeFunctionCurrent_Bounds(sim, fname, src.yeeCells, src.bounds, src.field, ...
+                src.duration, src.fieldFunction, sim.Precision);
         end
         
-        t6.xml.writeSourceSpec(src, 'AutoSpaceTimeFile', fname);
+        t6.xml.writeSourceSpec(sim, src, 'AutoSpaceTimeFile', fname);
     end
     
     % Field functor
@@ -56,15 +56,15 @@ for ss = 1:length(grid.CurrentSources)
         
         if isempty(src.bounds)
             writeFunctorCurrent_Yee(fname, src.yeeCells, src.field, ...
-                src.duration, src.fieldFunctor);
+                src.duration, src.fieldFunctor, sim.Precision);
         else
             writeFunctorCurrent_Bounds(fname, src.yeeCells, src.bounds, src.field, ...
-                src.duration, src.fieldFunctor);
+                src.duration, src.fieldFunctor, sim.Precision);
         end
         
         %warning('Not writing current')
         
-        t6.xml.writeSourceSpec(src, 'AutoSpaceTimeFile', fname);
+        t6.xml.writeSourceSpec(sim, src, 'AutoSpaceTimeFile', fname);
     end
     
     if isfield(src, 'spaceTimeFile')
@@ -90,8 +90,8 @@ for ss = 1:length(grid.CurrentSources)
 end
 
 
-function myWriteTimeFile(fname, timeData)
-precisionString = t6.TrogdorSimulation.instance().Precision;
+function myWriteTimeFile(fname, timeData, precisionString)
+
 fh = fopen(fname, 'w');
 try
     count = fwrite(fh, timeData, precisionString);
@@ -103,8 +103,7 @@ fclose(fh);
 return
 
 
-function myWriteSpaceTimeData(fname, spaceTimeData)
-precisionString = t6.TrogdorSimulation.instance().Precision;
+function myWriteSpaceTimeData(fname, spaceTimeData, precisionString)
 fh = fopen(fname, 'w');
 try
     count = fwrite(fh, spaceTimeData, precisionString);
@@ -118,22 +117,24 @@ return
 
 function fieldArgs = yeeCellArguments(yeeRegion, fieldTokens, duration)
 
+grid = sim.CurrentGrid;
+
 fieldArgs = struct('x', cell(size(fieldTokens)), ...
     'y', cell(size(fieldTokens)), ...
     'z', cell(size(fieldTokens)), ...
     't', cell(size(fieldTokens)));
 for ff = 1:numel(fieldTokens)
-    offset = t6.xml.fieldOffset(fieldTokens{ff});
+    offset = t6.fieldOffset(fieldTokens{ff});
 
     yeeX = yeeRegion(1):yeeRegion(4);
     yeeY = yeeRegion(2):yeeRegion(5);
     yeeZ = yeeRegion(3):yeeRegion(6);
     timesteps = duration(1):duration(2);
 
-    fieldArgs(ff).x = t6.currentGrid().Origin(1) + (offset(1) + yeeX)*t6.simulation().Dxyz(1);
-    fieldArgs(ff).y = t6.currentGrid().Origin(2) + (offset(2) + yeeY)*t6.simulation().Dxyz(2);
-    fieldArgs(ff).z = t6.currentGrid().Origin(3) + (offset(3) + yeeZ)*t6.simulation().Dxyz(3);
-    fieldArgs(ff).t = (offset(4) + timesteps)*t6.simulation().Dt;
+    fieldArgs(ff).x = grid.Origin(1) + (offset(1) + yeeX)*sim.Dxyz(1);
+    fieldArgs(ff).y = grid.Origin(2) + (offset(2) + yeeY)*sim.Dxyz(2);
+    fieldArgs(ff).z = grid.Origin(3) + (offset(3) + yeeZ)*sim.Dxyz(3);
+    fieldArgs(ff).t = (offset(4) + timesteps)*sim.Dt;
     
     [fieldArgs(ff).xx fieldArgs(ff).yy fieldArgs(ff).zz] = ndgrid(x,y,z);
 end
@@ -141,8 +142,8 @@ end
 return
 
 
-function writeFunctionCurrent_Yee(fname, yeeRegion, fieldTokens, duration, fieldFunction)
-precisionString = t6.TrogdorSimulation.instance().Precision;
+function writeFunctionCurrent_Yee(fname, yeeRegion, fieldTokens, duration, fieldFunction, precisionString)
+
 fh = fopen(fname, 'w');
 
 fieldArgs = yeeCellArguments(yeeRegion, fieldTokens, duration);
@@ -160,8 +161,8 @@ end
 return
 
 
-function writeFunctorCurrent_Yee(fname, yeeRegion, fieldTokens, duration, fieldFunctor)
-precisionString = t6.TrogdorSimulation.instance().Precision;
+function writeFunctorCurrent_Yee(fname, yeeRegion, fieldTokens, duration, fieldFunctor, precisionString)
+
 fh = fopen(fname, 'w');
 
 warning('This function has not been tested.')
@@ -186,21 +187,21 @@ return
 
 
 
-function fieldArgs = boundsArguments(yeeRegion, bounds, fieldTokens, duration)
+function fieldArgs = boundsArguments(sim, yeeRegion, bounds, fieldTokens, duration)
 
 empty = cell(size(fieldTokens));
 fieldArgs = struct('xx', empty, 'yy', empty, 'zz', empty, 't', empty, ...
     'indicesX', empty, 'indicesY', empty, 'indicesZ', empty, ...
     'weights', empty);
 
-dxyz = t6.simulation().Dxyz;
-dt = t6.simulation().Dt;
+dxyz = sim.Dxyz;
+dt = sim.Dt;
 
 supportYee = cell(3,1);
 for ff = 1:numel(fieldTokens)
-    offset = t6.xml.fieldOffset(fieldTokens{ff}) .* [dxyz dt];
+    offset = t6.fieldOffset(fieldTokens{ff}) .* [dxyz dt];
     
-    support = t6.boundsToYee(bounds(1,:), fieldTokens{ff});
+    support = sim.boundsToYee(bounds(1,:), fieldTokens{ff});
     
     % Yee cells over which field ff is nonzero.  This is a subset of
     % yeeRegion.
@@ -215,15 +216,15 @@ for ff = 1:numel(fieldTokens)
     
     % Physical points in space at which the current will be provided
     currCoords = cell(3,1);
-    currCoords{1} = t6.currentGrid().Origin(1) + offset(1) + supportYee{1}*dxyz(1);
-    currCoords{2} = t6.currentGrid().Origin(2) + offset(2) + supportYee{2}*dxyz(2);
-    currCoords{3} = t6.currentGrid().Origin(3) + offset(3) + supportYee{3}*dxyz(3);
+    currCoords{1} = sim.CurrentGrid.Origin(1) + offset(1) + supportYee{1}*dxyz(1);
+    currCoords{2} = sim.CurrentGrid.Origin(2) + offset(2) + supportYee{2}*dxyz(2);
+    currCoords{3} = sim.CurrentGrid.Origin(3) + offset(3) + supportYee{3}*dxyz(3);
     
     evalCoords = cell(3,1); % points in real space at which to evaluate function
     fieldArgs(ff).weights = cell(3,1); % interpolation weights
     for xyz = 1:3
         
-        if t6.currentGrid().numCells(xyz) == 1
+        if sim.CurrentGrid.numCells(xyz) == 1
             if numel(supportYee{xyz}) > 1
                 error(['Current source bounds are too large in the ', ...
                     '%s direction'], char('w'+xyz));
@@ -305,7 +306,7 @@ for ff = 1:numel(fieldTokens)
     end
     
     timesteps = duration(1):duration(2);
-    fieldArgs(ff).t = actualTimeOffset + timesteps*t6.simulation().Dt;
+    fieldArgs(ff).t = actualTimeOffset + timesteps*dt;
     
     [fieldArgs(ff).xx fieldArgs(ff).yy fieldArgs(ff).zz] = ndgrid(evalCoords{:});
 end
@@ -313,12 +314,11 @@ end
 return
 
 
-function writeFunctionCurrent_Bounds(fname, yeeRegion, bounds, fieldTokens, duration, fieldFunction)
+function writeFunctionCurrent_Bounds(sim, fname, yeeRegion, bounds, fieldTokens, duration, fieldFunction, precisionString)
 
-precisionString = t6.TrogdorSimulation.instance().Precision;
 fh = fopen(fname, 'w');
 
-fieldArgs = boundsArguments(yeeRegion, bounds, fieldTokens, duration);
+fieldArgs = boundsArguments(sim, yeeRegion, bounds, fieldTokens, duration);
 
 numT = duration(2)-duration(1)+1;
 
@@ -351,9 +351,8 @@ return
 
 
 
-function writeFunctorCurrent_Bounds(fname, yeeRegion, bounds, fieldTokens, duration, fieldFunctor)
+function writeFunctorCurrent_Bounds(fname, yeeRegion, bounds, fieldTokens, duration, fieldFunctor, precisionString)
 
-precisionString = t6.TrogdorSimulation.instance().Precision;
 fh = fopen(fname, 'w');
 
 fieldArgs = boundsArguments(yeeRegion, bounds, fieldTokens, duration);
@@ -394,12 +393,11 @@ return
 
 % This function is faster than the non-chunked version UNTIL the copy into
 % a subarray of src.  That stage is preposterously slow.
-function writeFunctorCurrent_Bounds_Chunked(fname, yeeRegion, bounds, fieldTokens, duration, fieldFunctor)
+function writeFunctorCurrent_Bounds_Chunked(sim, fname, yeeRegion, bounds, fieldTokens, duration, fieldFunctor, precisionString)
 
-precisionString = t6.TrogdorSimulation.instance().Precision;
 fh = fopen(fname, 'w');
 
-fieldArgs = boundsArguments(yeeRegion, bounds, fieldTokens, duration);
+fieldArgs = boundsArguments(sim, yeeRegion, bounds, fieldTokens, duration);
 
 fieldFunction = cell(size(fieldTokens));
 for ff = 1:numel(fieldTokens)

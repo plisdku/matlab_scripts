@@ -1,7 +1,7 @@
-function addTFSFSources(grid, gridXML, doc, origin)
+function addTFSFSources(sim, grid, gridXML, doc)
 global TROG_XML_COUNT___;
 
-directory = t6.TrogdorSimulation.instance().directoryString;
+directory = sim.directoryString;
 
 for ll = 1:length(grid.TFSFSources)
     src = grid.TFSFSources{ll};
@@ -38,13 +38,13 @@ for ll = 1:length(grid.TFSFSources)
     elemXML.setAttribute('file', dataFileName);
     
     if ~isempty(src.timeData)
-        myWriteTimeData(dataFileName, src.timeData, numel(src.field));
+        myWriteTimeData(sim, dataFileName, src.timeData, numel(src.field));
     elseif ~isempty(src.fieldFunction)
-        myWriteFunction(dataFileName, src.fieldFunction, src.field, ...
+        myWriteFunction(sim, dataFileName, src.fieldFunction, src.field, ...
             src.duration) 
     end
     
-    t6.xml.writeSourceSpec(src, 'AutoTimeFile', dataFileName);
+    t6.xml.writeSourceSpec(sim, src, 'AutoTimeFile', dataFileName);
     
     gridXML.appendChild(elemXML);
 end
@@ -52,8 +52,8 @@ end
 end % main function
 
 
-function myWriteTimeData(dataFileName, timeData, numFields)
-precisionString = t6.TrogdorSimulation.instance().Precision;
+function myWriteTimeData(sim, dataFileName, timeData, numFields)
+
 fh = fopen(dataFileName, 'w');
 
 try
@@ -61,7 +61,7 @@ try
         timeData = repmat(timeData, [numFields, 1]);
     end
     
-    count = fwrite(fh, timeData, precisionString);
+    count = fwrite(fh, timeData, sim.Precision);
 catch
     error('Could not write TFSF source data file.');
 end
@@ -75,18 +75,18 @@ timesteps = durationTimesteps(1):durationTimesteps(2);
 
 tt = cell(numel(fieldTokens), 1);
 for ff = 1:numel(fieldTokens)
-    offset = t6.xml.fieldOffset(fieldTokens{ff});
+    offset = t6.fieldOffset(fieldTokens{ff});
     
-    tt{ff} = (offset(4) + timesteps)*t6.simulation().Dt;
+    tt{ff} = (offset(4) + timesteps)*sim.Dt;
 end
 
 end % fieldTimes
 
 
 
-function myWriteFunction(dataFileName, fieldFunction, fieldTokens, ...
+function myWriteFunction(sim, dataFileName, fieldFunction, fieldTokens, ...
     durationTimesteps)
-precisionString = t6.TrogdorSimulation.instance().Precision;
+
 fh = fopen(dataFileName, 'w');
 
 if ~iscell(fieldFunction)
@@ -101,7 +101,7 @@ tt = fieldTimes(fieldTokens, durationTimesteps);
 try
 for nn = 1:numT
     for ff = 1:numel(fieldTokens)
-        fwrite(fh, fieldFunction{ff}(tt{ff}(nn)), precisionString);
+        fwrite(fh, fieldFunction{ff}(tt{ff}(nn)), sim.Precision);
     end
 end
 catch

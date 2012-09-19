@@ -1,8 +1,8 @@
-function addHardSources(grid, gridXML, doc, origin)
+function addHardSources(sim, grid, gridXML, doc)
 global TROG_XML_COUNT___;
-%originTwice = [originTrogdor originTrogdor];
-precisionString = t6.TrogdorSimulation.instance().Precision;
-directory = t6.TrogdorSimulation.instance().directoryString;
+
+precisionString = sim.Precision;
+directory = sim.directoryString;
 
 for ss = 1:length(grid.HardSources)
     src = grid.HardSources{ss};
@@ -35,7 +35,7 @@ for ss = 1:length(grid.HardSources)
             error('Could not write TFSF source data file.');
         end
         fclose(fh);
-        t6.xml.writeSourceSpec(src, 'AutoTimeFile', fname);
+        t6.xml.writeSourceSpec(sim, src, 'AutoTimeFile', fname);
     end
     
     if length(src.maskData) ~= 0
@@ -61,7 +61,7 @@ for ss = 1:length(grid.HardSources)
             error('Could not write hard source mask data file.');
         end
         fclose(fh);
-        t6.xml.writeSourceSpec(src, 'AutoMaskFile', fname);
+        t6.xml.writeSourceSpec(sim, src, 'AutoMaskFile', fname);
     end
     
     if length(src.spaceTimeData) ~= 0
@@ -95,7 +95,7 @@ for ss = 1:length(grid.HardSources)
             error('Could not write hard source space-time data file.');
         end
         fclose(fh);
-        t6.xml.writeSourceSpec(src, 'AutoSpaceTimeFile', fname);
+        t6.xml.writeSourceSpec(sim, src, 'AutoSpaceTimeFile', fname);
     end
     
     % durations and regions.

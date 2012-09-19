@@ -1,7 +1,6 @@
-function addMaterials(documentNode, simHandle)
-doc = documentNode;
+function addMaterials(doc, sim)
+
 root = doc.getDocumentElement;
-sim = simHandle;
 
 for mm = 1:length(sim.Materials)
     matXML = doc.createElement('Material');

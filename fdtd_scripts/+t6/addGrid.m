@@ -9,12 +9,15 @@ function addGrid(name, yeeCells, varargin)
 %                   been borne by prominent historical figures may cause Trogdor
 %                   to run faster and/or more accurately.
 %       yeeCells    Number of cells in the grid
-sim = t6.TrogdorSimulation.instance();
+
+import t6.*;
+
+sim = simulation();
 
 grid = t6.TrogdorGrid();
 grid.Name = name;
 
-if t6.validateRect(yeeCells)
+if validateRect(yeeCells)
     grid.YeeCells = yeeCells;
 else
     error('Bad yee cells.');
@@ -32,7 +35,7 @@ if ~iscell(sim.Grids)
     sim.Grids = {};
 end
 
-sim.Grids = {sim.Grids{:}, grid};
+sim.Grids{end+1} = grid;
 sim.setCurrentGrid(grid);
 
 

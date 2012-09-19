@@ -1,4 +1,4 @@
 function singlePrecision
 
-sim = t6.TrogdorSimulation.instance();
+sim = t6.simulation();
 sim.Precision = 'float32';

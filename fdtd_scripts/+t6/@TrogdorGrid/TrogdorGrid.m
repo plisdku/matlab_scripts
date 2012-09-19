@@ -2,7 +2,9 @@ classdef TrogdorGrid < handle
     
     properties
         Name = '';
-        Assembly = {}; % cell array of various assembly structs
+        Meshes = {};
+        ParameterizedMeshes = {};
+        Background = [];
         PML = [0 0 0 0 0 0];
         PMLParams = struct('alpha', '', 'kappa', '', 'sigma', '');
         
@@ -28,6 +30,5 @@ classdef TrogdorGrid < handle
                 nc = nc(varargin{1});
             end
         end
-        %yeeCells = extent(obj);
     end
 end

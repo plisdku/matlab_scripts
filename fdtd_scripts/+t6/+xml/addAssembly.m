@@ -1,57 +1,76 @@
-function addAssembly(assembly, gridXML, documentNode, origin)
+function addAssembly(sim, grid, gridXML, documentNode, origin, designParameters)
 global TROG_XML_COUNT___;
 doc = documentNode;
 
-digits = 14;
-
 assemblyXML = doc.createElement('Assembly');
 
-for aa = 1:length(assembly)
+for aa = 1:length(grid.Meshes)
     
-    switch assembly{aa}.type
-        case 'Mesh'
-            elemXML = doc.createElement('Mesh');
-            
-            if isfield(assembly{aa}, 'permittivity')
-                elemXML.setAttribute('permittivity', ...
-                    assembly{aa}.permittivity);
-            end
-            if isfield(assembly{aa}, 'permeability')
-                elemXML.setAttribute('permeability',...
-                    assembly{aa}.permeability);
-            end
-            
-            for vv = 1:length(assembly{aa}.vertices)
-                vertXML = doc.createElement('Vertex');
-                vertXML.setAttribute('position', ...
-                    num2str(assembly{aa}.vertices(vv,:) - origin, digits));
-                vertXML.setAttribute('freeDirections', ...
-                    num2str(assembly{aa}.vertexFreeDirections(vv,:)));
-                elemXML.appendChild(vertXML);
-            end
-            
-            for ff = 1:length(assembly{aa}.faces)
-                faceXML = doc.createElement('Face');
-                faceXML.setAttribute('vertices', ...
-                    num2str(assembly{aa}.faces(ff,:), digits));
-                elemXML.appendChild(faceXML);
-            end
-            
-            assemblyXML.appendChild(elemXML);
-        
-        case 'Background'
-            elemXML = doc.createElement('Background');
-            if isfield(assembly{aa}, 'permittivity')
-                elemXML.setAttribute('permittivity', ...
-                    assembly{aa}.permittivity);
-            end
-            if isfield(assembly{aa}, 'permeability')
-                elemXML.setAttribute('permeability', ...
-                    assembly{aa}.permeability);
-            end
-            assemblyXML.appendChild(elemXML);
-            
-    end % switch assembly instruction type
-end % foreach assembly instruction
+    mesh = grid.Meshes{aa};
+    
+    vertices = sim.extendIntoPML(mesh.patchVertices);
+    faces = mesh.faces-1;
+    freeDirections = mesh.freeDirections();
+    if isempty(freeDirections)
+        freeDirections = zeros(size(vertices));
+    end
+    
+    elemXML = meshXML(doc, origin, mesh.permittivity, mesh.permeability, ...
+        vertices, faces, freeDirections);
+    
+    assemblyXML.appendChild(elemXML);
+end
+
+% Background!
+
+if ~isempty(grid.Background)
+    elemXML = doc.createElement('Background');
+    if isfield(grid.Background, 'permittivity')
+        elemXML.setAttribute('permittivity', ...
+            grid.Background.permittivity);
+    end
+    if isfield(grid.Background, 'permeability')
+        elemXML.setAttribute('permeability', ...
+            grid.Background.permeability);
+    end
+    assemblyXML.appendChild(elemXML);    
+end
+
+
+
 
 gridXML.appendChild(assemblyXML);
+
+
+
+
+
+
+%function elemXML = meshXML(doc, mesh)
+function elemXML = meshXML(doc, origin, permittivity, permeability, vertices,...
+    faces, freeDirections)
+
+digits = 14;
+
+elemXML = doc.createElement('Mesh');
+
+if ~isempty(permittivity)
+    elemXML.setAttribute('permittivity', permittivity);
+end
+
+if ~isempty(permeability)
+    elemXML.setAttribute('permeability', permeability);
+end
+
+for vv = 1:length(vertices)
+    vertXML = doc.createElement('Vertex');
+    vertXML.setAttribute('position', num2str(vertices(vv,:) - origin, digits));
+    vertXML.setAttribute('freeDirections', num2str(freeDirections(vv,:)));
+    elemXML.appendChild(vertXML);
+end
+
+for ff = 1:length(faces)
+    faceXML = doc.createElement('Face');
+    faceXML.setAttribute('vertices', num2str(faces(ff,:), digits));
+    elemXML.appendChild(faceXML);
+end

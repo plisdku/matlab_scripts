@@ -15,7 +15,9 @@ function setBackground(varargin)
 %   To set both permittivity and permeability, make one call to
 %   setBackground().
 
-grid = t6.currentGrid();
+import t6.*
+
+sim = simulation();
 
 obj = struct;
 obj.type = 'Background';
@@ -32,4 +34,8 @@ if ~isempty(X.Permeability)
     obj.permeability = X.Permeability;
 end
 
-grid.Assembly = {grid.Assembly{:}, obj};
+if ~isempty(sim.CurrentGrid.Background)
+    warning('Overwriting background material');
+end
+
+sim.CurrentGrid.Background = obj;
