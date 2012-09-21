@@ -1,11 +1,12 @@
-function addOutput(filename, fields, varargin)
-%addOutput Add an electromagnetic field or current output to the simulation
-%   addOutput('electricFields', 'ex ey ez', 'Bounds', [0 0 0 100 100 100])
-%       will instruct Trogdor to save the ex, ey and ez fields in a file
-%       named 'electricFields' on every timestep.
+function addMeasurement(varargin)
+%addMeasurement Add a measurement to optimize
+%   addMeasurement('Fields', 'ex ey ez', 'Bounds', [0 0 0 100 100 100], ...
+%       'Function', f)
+%       will prepare Trogdor to calculate the function f and its derivative
+%       df/dFields from a forward FDTD simulation, and to generate a current
+%       source for adjoint simulations.
 %   
-%   Usage: addOutput(filename, fields, named parameters)
-%          addOutput(a, b, c)
+%   Usage: addMeasurement(named parameters)
 %   
 %   Valid fields:
 %       'ex', 'ey', 'ez'        electric fields
@@ -17,6 +18,7 @@ function addOutput(filename, fields, varargin)
 %   The order of fields in the file will always be D, E, B, H.
 %
 %   Named parameters:
+%       Fields          Which electromagnetic fields to save
 %       YeeCells        The region of the grid to save; [x0 y0 z0 x1 y1 z1] will
 %                       save all cells (x, y, z) satisfying x0 <= x <= x1,
 %                       y0 <= y <= y1, z0 <= z <= z1.  Multiple-row arrays will
@@ -27,6 +29,7 @@ function addOutput(filename, fields, varargin)
 %                       [m0 n0 p0 m1 n1 p1] to save, suitably for the grid
 %                       resolution.
 %                       (YeeCells or Bounds required)
+%       Function        The merit function
 %       Duration        The range of timesteps on which to save data; [t0 t1]
 %                       will save all timesteps t such that t0 <= t <= t1.
 %                       Multiple-row arrays will cause Trogdor to save multiple
@@ -70,8 +73,10 @@ import t6.*
 
 sim = simulation();
 
+X.Fields = '';
 X.YeeCells = []; % [x y z x y z]
 X.Bounds = [];
+X.Function = [];
 X.Duration = [];  % [first last]
 X.Stride = []; % scalar
 X.Period = []; % scalar
@@ -83,7 +88,7 @@ X = parseargs(X, varargin{:});
 
 validateYeeCellsAndBounds(X);
 
-fieldTokens = mySortTokens(tokenizeFields(fields, 'd e b h j m'));
+fieldTokens = mySortTokens(tokenizeFields(X.Fields, 'd e b h j m'));
 
 % If we obtained Bounds and not YeeCells, set the YeeCells appropriately
 if ~isempty(X.Bounds)
@@ -141,8 +146,9 @@ end
 
 obj = struct;
 obj.type = 'Output';
-obj.fields = fields;
-obj.filename = filename;
+obj.fields = X.Fields;
+obj.function = X.Function;
+obj.filename = 'measurement';
 obj.yeeCells = X.YeeCells; % validated
 obj.bounds = X.Bounds; % validated
 obj.duration = X.Duration; % validated
@@ -154,7 +160,11 @@ if ~isempty(X.InterpolationPoint)
     obj.interpolationPoint = X.InterpolationPoint;
 end
 
-sim.CurrentGrid.Outputs{end+1} = obj;
+if ~isempty(sim.CurrentGrid.Measurement)
+    warning('Overwriting measurement');
+end
+
+sim.CurrentGrid.Measurement = obj;
 
 end
 

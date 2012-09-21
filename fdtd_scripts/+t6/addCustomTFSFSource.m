@@ -61,6 +61,7 @@ X.Duration = [];
 X.SpaceTimeFile = [];
 X.OmitSide = [];
 X.Symmetries = [0 0 0];
+X.Mode = '';
 X = parseargs(X, varargin{:});
 
 validateYeeCellsAndBounds(X);
@@ -84,6 +85,13 @@ if any(X.Symmetries ~= 0 & X.Symmetries ~= 1)
     error('Symmetries must be a 3-vector of 1s or 0s.');
 end
 
+if ~isempty(X.Mode)
+    if ~strcmpi(X.Mode, 'forward') && ~strcmpi(X.Mode, 'adjoint')
+        error('Mode must be forward or adjoint if given');
+    end
+end
+
+
 obj = struct;
 obj.type = 'TFSFSource';
 obj.yeeCells = X.YeeCells;
@@ -91,6 +99,7 @@ obj.duration = X.Duration;
 obj.spaceTimeFile = X.SpaceTimeFile;
 obj.symmetries = X.Symmetries;
 obj.omitSides = {};
+obj.mode = X.Mode;
 
 % Validate omitted sides, kind of
 if ~isempty(X.OmitSide)

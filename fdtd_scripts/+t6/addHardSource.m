@@ -67,6 +67,7 @@ X.Duration = [];
 X.FieldFunction = [];
 X.TimeData = [];
 X.SpaceTimeData = [];
+X.Mode = '';
 X = parseargs(X, varargin{:});
 
 validateSourceDataParameters(X); % will call error() for problems
@@ -116,6 +117,12 @@ if length(X.SpaceTimeData) ~= 0
     end
 end
 
+if ~isempty(X.Mode)
+    if ~strcmpi(X.Mode, 'forward') && ~strcmpi(X.Mode, 'adjoint')
+        error('Mode must be forward or adjoint if given');
+    end
+end
+
 obj = struct;
 obj.type = 'HardSource';
 obj.field = fieldTokens;
@@ -124,5 +131,6 @@ obj.duration = X.Duration; % validated
 obj.timeData = X.TimeData; % validated
 obj.maskData = X.MaskData; % validated
 obj.spaceTimeData = X.SpaceTimeData;
+obj.mode = X.Mode;
 
 sim.CurrentGrid.HardSources{end+1} = obj;

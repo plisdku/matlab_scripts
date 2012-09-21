@@ -72,6 +72,7 @@ X.FieldFunction = [];
 X.FieldFunctor = [];
 X.TimeData = [];
 X.SpaceTimeData = [];
+X.Mode = '';
 %X.SpaceTimeFile = [];
 X = parseargs(X, varargin{:});
 
@@ -106,6 +107,13 @@ if ~isempty(X.FieldFunctor)
     end
 end
 
+if ~isempty(X.Mode)
+    if ~strcmpi(X.Mode, 'forward') && ~strcmpi(X.Mode, 'adjoint')
+        error('Mode must be forward or adjoint if given');
+    end
+end
+
+
 obj = struct;
 obj.type = 'CurrentSource';
 obj.field = fieldTokens;
@@ -116,6 +124,7 @@ obj.fieldFunction = X.FieldFunction;
 obj.fieldFunctor = X.FieldFunctor;
 obj.timeData = X.TimeData;
 obj.spaceTimeData = X.SpaceTimeData;
+obj.mode = X.Mode;
 
 %obj.spaceTimeFile = X.SpaceTimeFile;
 

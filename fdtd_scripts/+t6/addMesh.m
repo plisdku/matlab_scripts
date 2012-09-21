@@ -26,15 +26,21 @@ if iscell(mesh)
 end
 
 if isa(mesh, 't6.model.Mesh')
-    if ~isempty(sim.CurrentGrid.ParameterizedMeshes)
+
+    %if ~isempty(sim.CurrentGrid.ParameterizedMeshes)
+    if ~isempty(sim.CurrentGrid.NodeGroup.children)
         error('Mixing meshes and parameterized meshes');
     end
     sim.CurrentGrid.Meshes{end+1} = mesh;
+    
 elseif isa(mesh, 't6.model.Node')
+
     if ~isempty(sim.CurrentGrid.Meshes)
         error('Mixing meshes and parameterized meshes');
     end
-    sim.CurrentGrid.ParameterizedMeshes{end+1} = mesh;
+    sim.CurrentGrid.NodeGroup.children{end+1} = mesh;
+    %sim.CurrentGrid.ParameterizedMeshes{end+1} = mesh;
+    
 end
 
 

@@ -2,12 +2,13 @@ classdef TrogdorGrid < handle
     
     properties
         Name = '';
-        Meshes = {};
-        ParameterizedMeshes = {};
+        Meshes = [];
+        NodeGroup = t6.model.Group;
         Background = [];
         PML = [0 0 0 0 0 0];
         PMLParams = struct('alpha', '', 'kappa', '', 'sigma', '');
         
+        Measurement = {};
         Outputs = {};
         HardSources = {};
         SoftSources = {};
@@ -15,8 +16,6 @@ classdef TrogdorGrid < handle
         TFSFSources = {};
         CustomTFSFSources = {};
         Links = {};
-        ModelReports = {};
-        GridReports = {};
         YeeCells = [0 0 0 0 0 0]; % one cell
         Origin = [0 0 0];
     end

@@ -56,6 +56,7 @@ X.Direction = [];
 X.FieldFunction = [];
 X.TimeData = [];
 X.OmitSide = [];
+X.Mode = '';
 X = parseargs(X, varargin{:});
 
 validateYeeCellsAndBounds(X);
@@ -98,6 +99,12 @@ if abs(X.Direction(1)) ~= 1 && abs(X.Direction(2)) ~= 1 && ...
     error('Direction must be an axis-oriented unit vector.');
 end
 
+if ~isempty(X.Mode)
+    if ~strcmpi(X.Mode, 'forward') && ~strcmpi(X.Mode, 'adjoint')
+        error('Mode must be forward or adjoint if given');
+    end
+end
+
 obj = struct;
 obj.type = 'TFSFSource';
 obj.field = fieldTokens;
@@ -106,6 +113,7 @@ obj.duration = X.Duration;
 obj.timeData = X.TimeData;
 obj.fieldFunction = X.FieldFunction;
 obj.direction = X.Direction;
+obj.mode = X.Mode;
 
 % Validate omitted sides, kind of
 if isempty(X.OmitSide)
