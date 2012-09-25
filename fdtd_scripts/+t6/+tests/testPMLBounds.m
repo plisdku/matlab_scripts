@@ -18,6 +18,8 @@ assert(all(expectedNumCells == sim.NumCells));
 %currentGrid = grid();
 
 trogdor_end('XML', 'testParams.xml')
+
+%%
 delete('testParams.xml');
 
 fprintf('Test PML bounds: PASSED\n');

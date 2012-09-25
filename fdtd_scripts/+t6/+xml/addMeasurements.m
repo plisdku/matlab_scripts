@@ -9,6 +9,10 @@ import t6.*
     
 meas = sim.Grid.Measurement;
 
+if isempty(meas)
+    return
+end
+
 if strcmpi(mode, 'forward')
     
     output = meas;

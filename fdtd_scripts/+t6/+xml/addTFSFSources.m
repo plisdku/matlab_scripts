@@ -3,6 +3,8 @@ global TROG_XML_COUNT___;
 
 directory = sim.directoryString;
 
+dt = sim.Dt;
+
 for ll = 1:length(sim.Grid.TFSFSources)
     src = sim.Grid.TFSFSources{ll};
     
@@ -45,7 +47,7 @@ for ll = 1:length(sim.Grid.TFSFSources)
         myWriteTimeData(sim, dataFileName, src.timeData, numel(src.field));
     elseif ~isempty(src.fieldFunction)
         myWriteFunction(sim, dataFileName, src.fieldFunction, src.field, ...
-            src.duration) 
+            src.duration, dt) 
     end
     
     t6.xml.writeSourceSpec(sim, src, 'AutoTimeFile', dataFileName);
@@ -73,7 +75,7 @@ fclose(fh);
 end % myWriteTimeData
 
 
-function tt = fieldTimes(fieldTokens, durationTimesteps)
+function tt = fieldTimes(fieldTokens, durationTimesteps, dt)
 
 timesteps = durationTimesteps(1):durationTimesteps(2);
 
@@ -81,7 +83,7 @@ tt = cell(numel(fieldTokens), 1);
 for ff = 1:numel(fieldTokens)
     offset = t6.fieldOffset(fieldTokens{ff});
     
-    tt{ff} = (offset(4) + timesteps)*sim.Dt;
+    tt{ff} = (offset(4) + timesteps)*dt;
 end
 
 end % fieldTimes
@@ -89,7 +91,7 @@ end % fieldTimes
 
 
 function myWriteFunction(sim, dataFileName, fieldFunction, fieldTokens, ...
-    durationTimesteps)
+    durationTimesteps, dt)
 
 fh = fopen(dataFileName, 'w');
 
@@ -100,7 +102,7 @@ end
 
 numT = durationTimesteps(2) - durationTimesteps(1) + 1;
 
-tt = fieldTimes(fieldTokens, durationTimesteps);
+tt = fieldTimes(fieldTokens, durationTimesteps, dt);
 
 try
 for nn = 1:numT

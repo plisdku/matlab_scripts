@@ -46,6 +46,6 @@ sim.OutputDirectory = X.OutputDirectory;
 doc = t6.xml.generateXML(sim);
 xmlwrite([sim().directoryString, X.XML], doc);
 
-delete sim;
+delete(sim);
 
 %t6.TrogdorSimulation.clear();
