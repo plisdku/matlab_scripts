@@ -110,4 +110,4 @@ if ~isempty(X.OmitSide)
     end
 end
 
-sim.CurrentGrid.CustomTFSFSources{end+1} = obj;
+sim.Grid.CustomTFSFSources{end+1} = obj;

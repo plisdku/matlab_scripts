@@ -154,7 +154,7 @@ if ~isempty(X.InterpolationPoint)
     obj.interpolationPoint = X.InterpolationPoint;
 end
 
-sim.CurrentGrid.Outputs{end+1} = obj;
+sim.Grid.Outputs{end+1} = obj;
 
 end
 

@@ -34,8 +34,8 @@ if ~isempty(X.Permeability)
     obj.permeability = X.Permeability;
 end
 
-if ~isempty(sim.CurrentGrid.Background)
+if ~isempty(sim.Grid.Background)
     warning('Overwriting background material');
 end
 
-sim.CurrentGrid.Background = obj;
+sim.Grid.Background = obj;

@@ -124,4 +124,4 @@ else
     obj.omitSides = X.OmitSide;
 end
 
-sim.CurrentGrid.TFSFSources{end+1} = obj;
+sim.Grid.TFSFSources{end+1} = obj;

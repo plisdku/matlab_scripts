@@ -44,7 +44,7 @@ if ~isempty(X.Model)
 end
 
 
-matlColors = {'g', 'k', 'g', 'y', 'g', 'k', 'y'};
+matlColors = {'g', 'b', 'g', 'y', 'g', 'b', 'y'};
 %if (numel(theMesh.permittivity) > 1)
     
     for pp = X.Materials

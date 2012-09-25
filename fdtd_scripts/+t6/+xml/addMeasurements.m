@@ -1,4 +1,4 @@
-function addMeasurements(sim, grid, gridXML, doc, mode)
+function addMeasurements(sim, gridXML, doc, mode)
 
 import t6.*
 
@@ -7,13 +7,13 @@ import t6.*
 %for oo = 1:length(grid.Measurements)
     %meas = grid.Measurements{oo};
     
-meas = grid.Measurement;
+meas = sim.Grid.Measurement;
 
 if strcmpi(mode, 'forward')
     
     output = meas;
     output.type = 'Output';
-    xml.addOutput(output, sim, grid, gridXML, doc);
+    xml.addOutput(output, sim, gridXML, doc);
     
 elseif strcmpi(mode, 'adjoint')
     
@@ -42,7 +42,7 @@ elseif strcmpi(mode, 'adjoint')
         'mode', 'adjoint');
     src.field = fieldTokens; % we have to do it separately because MATLAB SUCKS
     
-    xml.addCurrentSource(src, sim, grid, gridXML, doc);
+    xml.addCurrentSource(src, sim, gridXML, doc);
     
 else
     error('Mode must be forward or adjoint');

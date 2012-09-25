@@ -1,4 +1,4 @@
-function addOutput(output, sim, grid, gridXML, doc)
+function addOutput(output, sim, gridXML, doc)
 
 %directory = sim.outputDirectoryString;
 

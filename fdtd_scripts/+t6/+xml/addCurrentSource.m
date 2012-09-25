@@ -1,4 +1,4 @@
-function addCurrentSource(src, sim, grid, gridXML, doc)
+function addCurrentSource(src, sim, gridXML, doc)
 global TROG_XML_COUNT___;
 
 directory = sim.directoryString;
@@ -114,7 +114,7 @@ return
 
 function fieldArgs = yeeCellArguments(yeeRegion, fieldTokens, duration)
 
-grid = sim.CurrentGrid;
+%grid = sim.CurrentGrid;
 
 fieldArgs = struct('x', cell(size(fieldTokens)), ...
     'y', cell(size(fieldTokens)), ...
@@ -128,9 +128,9 @@ for ff = 1:numel(fieldTokens)
     yeeZ = yeeRegion(3):yeeRegion(6);
     timesteps = duration(1):duration(2);
 
-    fieldArgs(ff).x = grid.Origin(1) + (offset(1) + yeeX)*sim.Dxyz(1);
-    fieldArgs(ff).y = grid.Origin(2) + (offset(2) + yeeY)*sim.Dxyz(2);
-    fieldArgs(ff).z = grid.Origin(3) + (offset(3) + yeeZ)*sim.Dxyz(3);
+    fieldArgs(ff).x = sim.Grid.Origin(1) + (offset(1) + yeeX)*sim.Dxyz(1);
+    fieldArgs(ff).y = sim.Grid.Origin(2) + (offset(2) + yeeY)*sim.Dxyz(2);
+    fieldArgs(ff).z = sim.Grid.Origin(3) + (offset(3) + yeeZ)*sim.Dxyz(3);
     fieldArgs(ff).t = (offset(4) + timesteps)*sim.Dt;
     
     [fieldArgs(ff).xx fieldArgs(ff).yy fieldArgs(ff).zz] = ndgrid(x,y,z);
@@ -213,15 +213,15 @@ for ff = 1:numel(fieldTokens)
     
     % Physical points in space at which the current will be provided
     currCoords = cell(3,1);
-    currCoords{1} = sim.CurrentGrid.Origin(1) + offset(1) + supportYee{1}*dxyz(1);
-    currCoords{2} = sim.CurrentGrid.Origin(2) + offset(2) + supportYee{2}*dxyz(2);
-    currCoords{3} = sim.CurrentGrid.Origin(3) + offset(3) + supportYee{3}*dxyz(3);
+    currCoords{1} = sim.Grid.Origin(1) + offset(1) + supportYee{1}*dxyz(1);
+    currCoords{2} = sim.Grid.Origin(2) + offset(2) + supportYee{2}*dxyz(2);
+    currCoords{3} = sim.Grid.Origin(3) + offset(3) + supportYee{3}*dxyz(3);
     
     evalCoords = cell(3,1); % points in real space at which to evaluate function
     fieldArgs(ff).weights = cell(3,1); % interpolation weights
     for xyz = 1:3
         
-        if sim.CurrentGrid.numCells(xyz) == 1
+        if sim.Grid.numCells(xyz) == 1
             if numel(supportYee{xyz}) > 1
                 error(['Current source bounds are too large in the ', ...
                     '%s direction'], char('w'+xyz));

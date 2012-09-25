@@ -8,6 +8,8 @@ classdef Group < t6.model.Node
         function obj = Group(varargin)
             if nargin > 0
                 obj.children = varargin;
+            else
+                obj.children = {};
             end
         end
         
@@ -32,3 +34,5 @@ classdef Group < t6.model.Node
         
     end
 end
+
+

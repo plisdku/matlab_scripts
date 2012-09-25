@@ -1,10 +1,10 @@
-function addTFSFSources(sim, grid, gridXML, doc, mode)
+function addTFSFSources(sim, gridXML, doc, mode)
 global TROG_XML_COUNT___;
 
 directory = sim.directoryString;
 
-for ll = 1:length(grid.TFSFSources)
-    src = grid.TFSFSources{ll};
+for ll = 1:length(sim.Grid.TFSFSources)
+    src = sim.Grid.TFSFSources{ll};
     
     if ~isempty(src.mode) && ~strcmpi(src.mode, mode)
         continue;

@@ -133,4 +133,4 @@ obj.maskData = X.MaskData; % validated
 obj.spaceTimeData = X.SpaceTimeData;
 obj.mode = X.Mode;
 
-sim.CurrentGrid.HardSources{end+1} = obj;
+sim.Grid.HardSources{end+1} = obj;

@@ -160,11 +160,11 @@ if ~isempty(X.InterpolationPoint)
     obj.interpolationPoint = X.InterpolationPoint;
 end
 
-if ~isempty(sim.CurrentGrid.Measurement)
+if ~isempty(sim.Grid.Measurement)
     warning('Overwriting measurement');
 end
 
-sim.CurrentGrid.Measurement = obj;
+sim.Grid.Measurement = obj;
 
 end
 

@@ -43,29 +43,9 @@ sim = t6.simulation();
 sim.Directory = X.Directory;
 sim.OutputDirectory = X.OutputDirectory;
 
-if numel(sim.Grids) > 1
-    error('Trogdor 6 does not support multiple grids');
-end
-
-for gg = 1:length(sim.Grids)
-    grid = sim.Grids{gg};
-    
-    for ll = 1:length(grid.Links)
-        sourceGridIndex = t6.indexOf(grid.Links{ll}.sourceGrid, sim.Grids);
-        if sourceGridIndex == -1
-            error('Unknown source grid %s', grid.Links{ll}.sourceGrid);
-        end
-        % compare this calculation of the origin in the source grid with the
-        % calculation of the origin in xml.addGrids.m.
-        srcNonPMLYeeCells = sim.Grids{sourceGridIndex}.extent;
-        srcPML = sim.Grids{sourceGridIndex}.PML;
-        srcTrogdorOrigin = -(srcNonPMLYeeCells(1:3) - srcPML(1:3));
-        
-        grid.Links{ll}.sourceTrogdorOrigin = srcTrogdorOrigin;
-    end
-end
-
 doc = t6.xml.generateXML(sim);
 xmlwrite([sim().directoryString, X.XML], doc);
 
-t6.TrogdorSimulation.clear();
+delete sim;
+
+%t6.TrogdorSimulation.clear();

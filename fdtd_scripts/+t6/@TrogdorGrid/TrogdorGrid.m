@@ -1,4 +1,4 @@
-classdef TrogdorGrid < handle
+classdef TrogdorGrid % < handle
     
     properties
         Name = '';
@@ -21,6 +21,10 @@ classdef TrogdorGrid < handle
     end
     
     methods
+        function obj = TrogdorGrid
+            obj.NodeGroup = t6.model.Group();
+        end
+        
         function nc = numCells(obj, varargin)
             if numel(varargin) == 0
                 nc = obj.YeeCells([4:6]) - obj.YeeCells([1:3]) + 1;

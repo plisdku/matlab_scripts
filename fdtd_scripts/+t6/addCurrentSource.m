@@ -128,6 +128,6 @@ obj.mode = X.Mode;
 
 %obj.spaceTimeFile = X.SpaceTimeFile;
 
-sim.CurrentGrid.CurrentSources{end+1} = obj;
+sim.Grid.CurrentSources{end+1} = obj;
 
 

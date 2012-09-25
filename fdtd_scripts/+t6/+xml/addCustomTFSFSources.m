@@ -1,7 +1,7 @@
-function addCustomTFSFSources(sim, grid, gridXML, doc, mode)
+function addCustomTFSFSources(sim, gridXML, doc, mode)
 
-for ll = 1:length(grid.CustomTFSFSources)
-    src = grid.CustomTFSFSources{ll};
+for ll = 1:length(sim.Grid.CustomTFSFSources)
+    src = sim.Grid.CustomTFSFSources{ll};
     
     if ~isempty(src.mode) && ~strcmpi(src.mode, mode)
         continue;

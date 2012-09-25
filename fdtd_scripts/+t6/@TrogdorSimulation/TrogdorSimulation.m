@@ -2,8 +2,9 @@ classdef TrogdorSimulation < handle
     
     properties
         Materials = {};
-        Grids = {}
-        CurrentGrid % handle to, well, the current grid
+        Grid = t6.TrogdorGrid;
+        %Grids = {}
+        %CurrentGrid % handle to, well, the current grid
         Dxyz = 0
         Dt = 0
         NumT = 0
@@ -16,7 +17,13 @@ classdef TrogdorSimulation < handle
     end
     
     methods
+        function obj = TrogdorSimulation()
+            obj.Grid = t6.TrogdorGrid;
+        end
+    %{
         function grid = currentGrid(obj)
+            
+            
             if ~isa(obj.CurrentGrid, 't6.TrogdorGrid')
                 error('Please call addGrid to create a new grid.');
             end
@@ -29,7 +36,7 @@ classdef TrogdorSimulation < handle
             end
             obj.CurrentGrid = grid;
         end
-        
+    %}
         function str = directoryString(obj)
             if isempty(obj.Directory)
                 str = '';
@@ -51,14 +58,18 @@ classdef TrogdorSimulation < handle
         v = extendIntoPML(obj, verts);
     end
     
-    methods (Access = private)
-        function obj = TrogdorSimulation(Dxyz, Dt, NumT)
-        end
-    end 
+    %methods (Access = private)
+    %    function obj = TrogdorSimulation(Dxyz, Dt, NumT)
+    %    end
+    %end 
     
     methods (Static)
+        %{
         function clear()
             global TROGDOR_SIMULATION
+            %if exist('TROGDOR_SIMULATION', 'var')
+            %    delete(TROGDOR_SIMULATION);
+            %end
             TROGDOR_SIMULATION = t6.TrogdorSimulation();
         end
         
@@ -69,7 +80,7 @@ classdef TrogdorSimulation < handle
             end
             obj = TROGDOR_SIMULATION;
         end
-        
-        write(fileName);
+        %}
+        %write(fileName);
     end
 end

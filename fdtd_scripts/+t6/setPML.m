@@ -39,7 +39,7 @@ function setPML(varargin)
 import t6.*
 
 sim = simulation();
-grid = sim.CurrentGrid;
+%grid = sim.CurrentGrid;
 
 X.Depth = [];
 X.Kappa = '';
@@ -52,7 +52,7 @@ if length(X.Depth) ~= 0
         error('PML depth must be a length-six array of integers.');
     end
     
-    grid.PML = X.Depth;
+    sim.Grid.PML = X.Depth;
 end
 
 if any(X.Depth < 0)
@@ -64,13 +64,13 @@ if ~isempty(X.Depth)
 end
 
 if length(X.Kappa) ~= 0
-    grid.PMLParams.kappa = X.Kappa;
+    sim.Grid.PMLParams.kappa = X.Kappa;
 end
 
 if length(X.Sigma) ~= 0
-    grid.PMLParams.sigma = X.Sigma;
+    sim.Grid.PMLParams.sigma = X.Sigma;
 end
 
 if length(X.Alpha) ~= 0
-    grid.PMLParams.alpha = X.Alpha;
+    sim.Grid.PMLParams.alpha = X.Alpha;
 end

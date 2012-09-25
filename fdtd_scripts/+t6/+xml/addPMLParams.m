@@ -1,4 +1,4 @@
-function addPMLParams(sim, grid, gridXML, doc)
+function addPMLParams(sim, gridXML, doc)
 
 %{
     allDirectionsDefault["sigma"] =
@@ -9,7 +9,7 @@ function addPMLParams(sim, grid, gridXML, doc)
         "1 + (5-1)*(d^3)";
 %}
 
-params = grid.PMLParams;
+params = sim.Grid.PMLParams;
 
 if ~isempty(params.alpha) || ~isempty(params.sigma) || ...
     ~isempty(params.kappa)

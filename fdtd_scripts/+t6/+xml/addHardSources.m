@@ -1,11 +1,11 @@
-function addHardSources(sim, grid, gridXML, doc, mode)
+function addHardSources(sim, gridXML, doc, mode)
 global TROG_XML_COUNT___;
 
 precisionString = sim.Precision;
 directory = sim.directoryString;
 
-for ss = 1:length(grid.HardSources)
-    src = grid.HardSources{ss};
+for ss = 1:length(sim.Grid.HardSources)
+    src = sim.Grid.HardSources{ss};
     
     if ~isempty(src.mode) && ~strcmpi(src.mode, mode)
         continue;

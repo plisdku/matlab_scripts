@@ -1,12 +1,12 @@
-function addAssembly(sim, grid, gridXML, documentNode, origin, designParameters)
+function addAssembly(sim, gridXML, documentNode, origin, designParameters)
 global TROG_XML_COUNT___;
 doc = documentNode;
 
 assemblyXML = doc.createElement('Assembly');
 
-for aa = 1:length(grid.Meshes)
+for aa = 1:length(sim.Grid.Meshes)
     
-    mesh = grid.Meshes{aa};
+    mesh = sim.Grid.Meshes{aa};
     
     vertices = sim.extendIntoPML(mesh.patchVertices);
     faces = mesh.faces-1;
@@ -23,15 +23,15 @@ end
 
 % Background!
 
-if ~isempty(grid.Background)
+if ~isempty(sim.Grid.Background)
     elemXML = doc.createElement('Background');
-    if isfield(grid.Background, 'permittivity')
+    if isfield(sim.Grid.Background, 'permittivity')
         elemXML.setAttribute('permittivity', ...
-            grid.Background.permittivity);
+            sim.Grid.Background.permittivity);
     end
-    if isfield(grid.Background, 'permeability')
+    if isfield(sim.Grid.Background, 'permeability')
         elemXML.setAttribute('permeability', ...
-            grid.Background.permeability);
+            sim.Grid.Background.permeability);
     end
     assemblyXML.appendChild(elemXML);    
 end
