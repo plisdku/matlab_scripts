@@ -47,7 +47,7 @@ numTimesteps = ceil(X.Duration / dt);
 % Determine the actual outer bounds of the simulation
 
 global TROGDOR_SIMULATION;
-TROGDOR_SIMULATION = t6.TrogdorSimulation;
+TROGDOR_SIMULATION = t6.TrogdorSimulation();
 sim = TROGDOR_SIMULATION;
 
 sim.Dxyz = dxyz;
