@@ -55,7 +55,7 @@ if ~isempty(src.fieldFunctor)
         writeFunctorCurrent_Yee(fname, src.yeeCells, src.field, ...
             src.duration, src.fieldFunctor, sim.Precision);
     else
-        writeFunctorCurrent_Bounds(fname, src.yeeCells, src.bounds, src.field, ...
+        writeFunctorCurrent_Bounds(sim, fname, src.yeeCells, src.bounds, src.field, ...
             src.duration, src.fieldFunctor, sim.Precision);
     end
     
@@ -348,11 +348,12 @@ return
 
 
 
-function writeFunctorCurrent_Bounds(fname, yeeRegion, bounds, fieldTokens, duration, fieldFunctor, precisionString)
+function writeFunctorCurrent_Bounds(sim, fname, yeeRegion, bounds, ...
+    fieldTokens, duration, fieldFunctor, precisionString)
 
 fh = fopen(fname, 'w');
 
-fieldArgs = boundsArguments(yeeRegion, bounds, fieldTokens, duration);
+fieldArgs = boundsArguments(sim, yeeRegion, bounds, fieldTokens, duration);
 
 fieldFunction = cell(size(fieldTokens));
 for ff = 1:numel(fieldTokens)
@@ -380,6 +381,7 @@ for nn = 1:numT
             fieldArgs(ff).indicesZ,ff,:) = scaledCurrent;
     end
     
+    %fprintf('%i of %i\n', nn, numT);
     fwrite(fh, src(:), precisionString);
 end
 

@@ -22,15 +22,15 @@ if ~isstr(X.XML); error('Invalid filename'); end
 if ~isstr(X.Directory); error('Invalid directory name'); end
 if ~isstr(X.OutputDirectory); error('Invalid output directory name'); end
 
-if ~isempty(X.Directory) && ~exist(X.Directory, 'dir')
-    try mkdir(X.Directory)
+if ~isempty(X.Directory) && ~exist([pwd filesep X.Directory], 'dir')
+    try mkdir([pwd filesep X.Directory])
     catch exception
         error('Could not create helper directory!');
     end
 end
 
-if ~isempty(X.OutputDirectory) && ~exist(X.OutputDirectory, 'dir')
-    try mkdir(X.OutputDirectory)
+if ~isempty(X.OutputDirectory) && ~exist([pwd filesep X.OutputDirectory], 'dir')
+    try mkdir([pwd filesep X.OutputDirectory])
     catch exception
         error('Could not create output directory!');
     end

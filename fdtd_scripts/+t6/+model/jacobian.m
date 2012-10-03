@@ -1,4 +1,8 @@
 function jj = jacobian(func, parameters, varargin)
+%
+% jj = jacobian(func, parameters)
+% jj = jacobian(func, parameters, deltas)
+%
 
 if nargin > 2
     deltas = varargin{1};
