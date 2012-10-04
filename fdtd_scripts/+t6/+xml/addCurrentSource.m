@@ -13,61 +13,6 @@ for ff = 1:length(src.field)
 end
 elemXML.setAttribute('fields', fieldstr);
 
-% Time data
-if ~isempty(src.timeData)
-    elemXML.setAttribute('timeFile', fname);
-    
-    myWriteTimeFile(fname, src.timeData, sim.Precision);
-    
-    t6.xml.writeSourceSpec(sim, src, 'AutoTimeFile', fname);
-end
-
-% Space-time data
-if ~isempty(src.spaceTimeData)
-    elemXML.setAttribute('spaceTimeFile', fname);
-    
-    myWriteSpaceTimeData(fname, src.spaceTimeData, sim.Precision);
-    
-    t6.xml.writeSourceSpec(sim, src, 'AutoSpaceTimeFile', fname);
-end
-
-% Field function
-if ~isempty(src.fieldFunction)
-    elemXML.setAttribute('spaceTimeFile', fname);
-    
-    if isempty(src.bounds)
-        writeFunctionCurrent_Yee(fname, src.yeeCells, src.field, ...
-            src.duration, src.fieldFunction, sim.Precision);
-    else
-        writeFunctionCurrent_Bounds(sim, fname, src.yeeCells, src.bounds, src.field, ...
-            src.duration, src.fieldFunction, sim.Precision);
-    end
-    
-    t6.xml.writeSourceSpec(sim, src, 'AutoSpaceTimeFile', fname);
-end
-
-% Field functor
-if ~isempty(src.fieldFunctor)
-    elemXML.setAttribute('spaceTimeFile', fname);
-    
-    
-    if isempty(src.bounds)
-        writeFunctorCurrent_Yee(fname, src.yeeCells, src.field, ...
-            src.duration, src.fieldFunctor, sim.Precision);
-    else
-        writeFunctorCurrent_Bounds(sim, fname, src.yeeCells, src.bounds, src.field, ...
-            src.duration, src.fieldFunctor, sim.Precision);
-    end
-    
-    %warning('Not writing current')
-    
-    t6.xml.writeSourceSpec(sim, src, 'AutoSpaceTimeFile', fname);
-end
-
-if isfield(src, 'spaceTimeFile')
-    error('SpaceTimeFile should be gone now');
-end
-
 % durations and regions.
 for dd = 1:size(src.duration, 1)
     durXML = doc.createElement('Duration');
@@ -84,6 +29,74 @@ for rr = 1:size(src.yeeCells, 1)
 end
 
 gridXML.appendChild(elemXML);
+
+writeFile = true;
+if exist(fname, 'file') && ~src.overwrite
+    writeFile = false;
+    fprintf('Not overwriting current source %s.\n', fname);
+end
+
+% Time data
+if ~isempty(src.timeData)
+    elemXML.setAttribute('timeFile', fname);
+    
+    if writeFile
+        myWriteTimeFile(fname, src.timeData, sim.Precision);
+    end
+    
+    t6.xml.writeSourceSpec(sim, src, 'AutoTimeFile', fname);
+end
+
+% Space-time data
+if ~isempty(src.spaceTimeData)
+    elemXML.setAttribute('spaceTimeFile', fname);
+    
+    if writeFile
+        myWriteSpaceTimeData(fname, src.spaceTimeData, sim.Precision);
+    end
+    
+    t6.xml.writeSourceSpec(sim, src, 'AutoSpaceTimeFile', fname);
+end
+
+% Field function
+if ~isempty(src.fieldFunction)
+    elemXML.setAttribute('spaceTimeFile', fname);
+    
+    if writeFile
+        if isempty(src.bounds)
+            writeFunctionCurrent_Yee(fname, src.yeeCells, src.field, ...
+                src.duration, src.fieldFunction, sim.Precision);
+        else
+            writeFunctionCurrent_Bounds(sim, fname, src.yeeCells, src.bounds,...
+                src.field, src.duration, src.fieldFunction, sim.Precision);
+        end
+    end
+    
+    t6.xml.writeSourceSpec(sim, src, 'AutoSpaceTimeFile', fname);
+end
+
+% Field functor
+if ~isempty(src.fieldFunctor)
+    elemXML.setAttribute('spaceTimeFile', fname);
+    
+    if writeFile
+        if isempty(src.bounds)
+            writeFunctorCurrent_Yee(fname, src.yeeCells, src.field, ...
+                src.duration, src.fieldFunctor, sim.Precision);
+        else
+            writeFunctorCurrent_Bounds(sim, fname, src.yeeCells, src.bounds, src.field, ...
+                src.duration, src.fieldFunctor, sim.Precision);
+        end
+    end
+    
+    %warning('Not writing current')
+    
+    t6.xml.writeSourceSpec(sim, src, 'AutoSpaceTimeFile', fname);
+end
+
+if isfield(src, 'spaceTimeFile')
+    error('SpaceTimeFile should be gone now');
+end
 
 
 

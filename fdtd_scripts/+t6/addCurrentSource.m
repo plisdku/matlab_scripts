@@ -52,6 +52,10 @@ function addCurrentSource(varargin)
 %                   current values.  The space-time data file must be provided
 %                   according to this data request before the simulation may
 %                   run.  (SpaceTimeFile or TimeData required.)
+%       Overwrite   Writing complicated current sources takes a lot of
+%                   time.  If set to false, Trogdor will re-use any
+%                   previously-written current source files, saving time in
+%                   the setup phase.
 %
 %   Example:
 %
@@ -73,6 +77,7 @@ X.FieldFunctor = [];
 X.TimeData = [];
 X.SpaceTimeData = [];
 X.Mode = '';
+X.Overwrite = true;
 %X.SpaceTimeFile = [];
 X = parseargs(X, varargin{:});
 
@@ -125,6 +130,7 @@ obj.fieldFunctor = X.FieldFunctor;
 obj.timeData = X.TimeData;
 obj.spaceTimeData = X.SpaceTimeData;
 obj.mode = X.Mode;
+obj.overwrite = X.Overwrite;
 
 %obj.spaceTimeFile = X.SpaceTimeFile;
 

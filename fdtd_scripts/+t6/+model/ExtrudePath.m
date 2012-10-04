@@ -162,7 +162,7 @@ classdef ExtrudePath < t6.model.Node
             xy = [xBot yBot ones(size(xBot))];
             
             stretchOut = @(A) A(:);
-            v = stretchOut(multTensor(A, xy, 2));
+            v = stretchOut(t6.multTensor(A, xy, 2));
         end
         
         
