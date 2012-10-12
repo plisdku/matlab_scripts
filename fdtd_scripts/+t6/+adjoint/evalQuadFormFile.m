@@ -1,4 +1,4 @@
-function [f, Df, f_w, freqs] = evalQuadFormFile(file, objFunStruct)
+function [f, Df, f_w, freqs, filteredData] = evalQuadFormFile(file, objFunStruct)
 % evalQuadFormFile  Evaluate quadratic form on EM fields from file
 %
 % [f Df] = evalQuadForm(file, objectiveFunctionStruct)
@@ -14,19 +14,18 @@ data = t6.readOutputFile(file, 'InterpolateSpace', false);
 of = OutputFile(file);
 
 pos = cell(of.numFields(), 1);
-posInterp = pos;
+posInterp = of.positions(); % should just obtain natural sampling positions
 timeVals = pos;
 
 for ff = 1:of.numFields()
     pos{ff} = of.positions('Field', ff, 'InterpolateSpace', false);
-    posInterp{ff} = of.positions('Field', ff);
     timeVals{ff} = of.times('Field', ff);
     
-    xyzChars = 'XYZ';
     for xyz = 1:3
-        if isempty(objFunStruct.(xyzChars(xyz)))
-            objFunStruct.(xyzChars(xyz)){ff} = ...
-                adjoint.interpolationMatrix(pos{ff}{xyz}, posInterp{ff}{xyz});
+        interpField = ['Interp', char('W'+xyz)];
+        if isempty(objFunStruct.(interpField))
+            objFunStruct.(interpField){ff} = ...
+                adjoint.interpolationMatrix(pos{ff}{xyz}, posInterp{xyz});
         end
     end
 end
@@ -34,9 +33,17 @@ end
 %% Call the worker function
 
 if nargout > 2
+    [f, Df, f_w, freqs, filteredData] = adjoint.evalQuadForm(data, posInterp, timeVals, objFunStruct);
+else
+    [f, Df] = adjoint.evalQuadForm(data, posInterp, timeVals, objFunStruct);
+end
+
+%{
+if nargout > 2
     [f, Df, f_w, freqs] = adjoint.evalQuadForm(data, pos, timeVals, objFunStruct);
 else
     [f, Df] = adjoint.evalQuadForm(data, pos, timeVals, objFunStruct);
 end
+%}
 
 

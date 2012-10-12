@@ -1,4 +1,4 @@
-function [f, Df, f_w, freqs] = evalQuadForm(data, pos, timeVals, objFunStruct)
+function [f, Df, f_w, freqs, filteredData] = evalQuadForm(data, pos, timeVals, objFunStruct)
 % evalQuadForm  Evaluate objective function and its gradient
 %
 % [f Df] = evalQuadForm(data, pos, timeVals, objFunStruct)
@@ -13,6 +13,8 @@ function [f, Df, f_w, freqs] = evalQuadForm(data, pos, timeVals, objFunStruct)
 % operations are:
 % 
 % filterT * filterXYZ * filterZ * filterY * filterX * fields
+%
+% filterT * filterXYZ * filterZ * filterY * filterX * interpZ * interpY * interpX
 % 
 % Math background: let the objective function be x'*A*x.  Then the adjoint
 % source should be (A' + A)*x.  I think.  I'm trying to do that.
@@ -31,25 +33,53 @@ end
 for ff = 1:numFields
     oneFieldData = data(:,:,:,ff,:);
     
-    if ~isempty(objFunStruct.XYZ)
-        oneFieldData = bsxfun(@times, oneFieldData, ...
-            evalFilterArray(objFunStruct.XYZ, pos{ff}, ff));
+    % Spatial interpolation
+    if ~isempty(objFunStruct.InterpX)
+        oneFieldData = multTensor(oneFieldData, objFunStruct.InterpX{ff}, 1);
     end
     
+    if ~isempty(objFunStruct.InterpY)
+        oneFieldData = multTensor(oneFieldData, objFunStruct.InterpY{ff}, 2);
+    end
+    
+    if ~isempty(objFunStruct.InterpZ)
+        oneFieldData = multTensor(oneFieldData, objFunStruct.InterpZ{ff}, 3);
+    end
+    
+    % User integrations
     if ~isempty(objFunStruct.X)
-        filtmat = evalFilterMatrix(objFunStruct.X, pos{ff}, ff, 1);
         oneFieldData = multTensor(oneFieldData, ...
-            evalFilterMatrix(objFunStruct.X, pos{ff}, ff, 1), 1);
+            evalFilterMatrix(objFunStruct.X, pos, ff, 1), 1);
     end
     
     if ~isempty(objFunStruct.Y)
         oneFieldData = multTensor(oneFieldData, ...
-            evalFilterMatrix(objFunStruct.Y, pos{ff}, ff, 2), 2);
+            evalFilterMatrix(objFunStruct.Y, pos, ff, 2), 2);
     end
     
     if ~isempty(objFunStruct.Z)
         oneFieldData = multTensor(oneFieldData, ...
-            evalFilterMatrix(objFunStruct.Z, pos{ff}, ff, 3), 3);
+            evalFilterMatrix(objFunStruct.Z, pos, ff, 3), 3);
+    end
+    
+    if ~isempty(objFunStruct.XYZ)
+        
+        filterArray = evalFilterArray(objFunStruct.XYZ, pos, ff);
+        
+        % I'm adding a one to the end of the size array because reshape
+        % will barf if I ever happen to reshape to a
+        % less-than-two-dimensional form.
+        szDat = [size(oneFieldData) 1 1 1 1];
+        
+        oneFieldData = reshape(oneFieldData, [prod(szDat(1:3)), szDat(4:end)]);
+        filterArray = reshape(filterArray, 1, []);
+        
+        oneFieldData = multTensor(oneFieldData, filterArray, 1);
+        oneFieldData = reshape(oneFieldData, [1 1 1 szDat(4:end)]);
+        
+        %oneFieldData = sum(sum(sum(...
+        %    bsxfun(@times, oneFieldData, ...
+        %    evalFilterArray(objFunStruct.XYZ, pos, ff)), 3), 2), 1);
     end
     
     if ~isempty(objFunStruct.T)
@@ -67,7 +97,7 @@ end
 
 quadraticAddend = conj(filteredData) .* ...
     multTensor(filteredData, objFunStruct.Kernel, 4);
-f = sum(quadraticAddend(:));
+f = objFunStruct.Factor * sum(quadraticAddend(:));
 
 % Obtain Df
 % it should be Df = (A' + A)*x, which we evaluate carefully.
@@ -87,7 +117,8 @@ f = sum(quadraticAddend(:));
 
 assert(isequal(objFunStruct.Kernel, objFunStruct.Kernel'));
 
-zz = multTensor(conj(filteredData), objFunStruct.Kernel, 4);
+zz = objFunStruct.Factor * ...
+    multTensor(conj(filteredData), objFunStruct.Kernel, 4);
 
 for ff = 1:numFields
     oneFieldData = zz(:,:,:,ff,:);
@@ -97,24 +128,56 @@ for ff = 1:numFields
             transpose(evalTimeFilter(objFunStruct.T, timeVals{ff}, ff)), 5);
     end
     
+    if ~isempty(objFunStruct.XYZ)
+        filterArray = evalFilterArray(objFunStruct.XYZ, pos, ff);
+        
+        % I'm adding a one to the end of the size array because reshape
+        % will barf if I ever happen to reshape to a
+        % less-than-two-dimensional form.
+        szFilter = size(filterArray);
+        szFilter(end+1:3) = 1;
+        szDat = [size(oneFieldData) 1];
+        
+        %oneFieldData = reshape(oneFieldData, [prod(szDat(1:3)), szDat(4:end)]);
+        filterArray = reshape(filterArray, 1, []);
+        
+        oneFieldData = multTensor(oneFieldData, transpose(filterArray), 1);
+        oneFieldData = reshape(oneFieldData, [szFilter szDat(4:end)]);
+        
+        % this was never right.
+        %oneFieldData = bsxfun(@times, oneFieldData, ...
+        %    (evalFilterArray(objFunStruct.XYZ, pos, ff)));
+    end
+    
     if ~isempty(objFunStruct.Z)
         oneFieldData = multTensor(oneFieldData, ...
-            transpose(evalFilterMatrix(objFunStruct.Z, pos{ff}, ff, 3)), 3);
+            transpose(evalFilterMatrix(objFunStruct.Z, pos, ff, 3)), 3);
     end
     
     if ~isempty(objFunStruct.Y)
         oneFieldData = multTensor(oneFieldData, ...
-            transpose(evalFilterMatrix(objFunStruct.Y, pos{ff}, ff, 2)), 2);
+            transpose(evalFilterMatrix(objFunStruct.Y, pos, ff, 2)), 2);
     end
     
     if ~isempty(objFunStruct.X)
         oneFieldData = multTensor(oneFieldData, ...
-            transpose(evalFilterMatrix(objFunStruct.X, pos{ff}, ff, 1)), 1);
+            transpose(evalFilterMatrix(objFunStruct.X, pos, ff, 1)), 1);
     end
     
-    if ~isempty(objFunStruct.XYZ)
-        oneFieldData = bsxfun(@times, oneFieldData, ...
-            (evalFilterArray(objFunStruct.XYZ, pos{ff}, ff)));
+    % Spatial interpolation
+    if ~isempty(objFunStruct.InterpZ)
+        oneFieldData = multTensor(oneFieldData, ...
+            transpose(objFunStruct.InterpZ{ff}), 3);
+    end
+    
+    if ~isempty(objFunStruct.InterpY)
+        oneFieldData = multTensor(oneFieldData, ...
+            transpose(objFunStruct.InterpY{ff}), 2);
+    end
+    
+    if ~isempty(objFunStruct.InterpX)
+        oneFieldData = multTensor(oneFieldData, ...
+            transpose(objFunStruct.InterpX{ff}), 1);
     end
     
     if ff == 1; Df = 2*real(oneFieldData);
@@ -128,29 +191,68 @@ end
 if nargout > 2
     for ff = 1:numFields
         oneFieldData_w = data_w(:,:,:,ff,:);
-
-        if ~isempty(objFunStruct.XYZ)
-            oneFieldData_w = bsxfun(@times, oneFieldData_w, ...
-                evalFilterArray(objFunStruct.XYZ, pos{ff}, ff));
+        
+        % Spatial interpolation
+        if ~isempty(objFunStruct.InterpX)
+            oneFieldData_w = multTensor(oneFieldData_w, ...
+                objFunStruct.InterpX{ff}, 1);
         end
-
+        
+        if ~isempty(objFunStruct.InterpY)
+            oneFieldData_w = multTensor(oneFieldData_w, ...
+                objFunStruct.InterpY{ff}, 2);
+        end
+        
+        if ~isempty(objFunStruct.InterpZ)
+            oneFieldData_w = multTensor(oneFieldData_w, ...
+                objFunStruct.InterpZ{ff}, 3);
+        end
+        
+        % User integration
         if ~isempty(objFunStruct.X)
             oneFieldData_w = multTensor(oneFieldData_w, ...
-                evalFilterMatrix(objFunStruct.X, pos{ff}, ff, 1), 1);
+                evalFilterMatrix(objFunStruct.X, pos, ff, 1), 1);
         end
 
         if ~isempty(objFunStruct.Y)
             oneFieldData_w = multTensor(oneFieldData_w, ...
-                evalFilterMatrix(objFunStruct.Y, pos{ff}, ff, 2), 2);
+                evalFilterMatrix(objFunStruct.Y, pos, ff, 2), 2);
         end
 
         if ~isempty(objFunStruct.Z)
             oneFieldData_w = multTensor(oneFieldData_w, ...
-                evalFilterMatrix(objFunStruct.Z, pos{ff}, ff, 3), 3);
+                evalFilterMatrix(objFunStruct.Z, pos, ff, 3), 3);
         end
 
+
+        if ~isempty(objFunStruct.XYZ)
+
+            filterArray = evalFilterArray(objFunStruct.XYZ, pos, ff);
+
+            % I'm adding a one to the end of the size array because reshape
+            % will barf if I ever happen to reshape to a
+            % less-than-two-dimensional form.
+            szDat = [size(oneFieldData) 1 1 1 1];
+
+            oneFieldData = reshape(oneFieldData, [prod(szDat(1:3)), szDat(4:end)]);
+            filterArray = reshape(filterArray, 1, []);
+
+            oneFieldData = multTensor(oneFieldData, filterArray, 1);
+            oneFieldData = reshape(oneFieldData, [1 1 1 szDat(4:end)]);
+
+            %oneFieldData = sum(sum(sum(...
+            %    bsxfun(@times, oneFieldData, ...
+            %    evalFilterArray(objFunStruct.XYZ, pos, ff)), 3), 2), 1);
+        end
+
+        % never correct, this...
+%        if ~isempty(objFunStruct.XYZ)
+%            oneFieldData_w = bsxfun(@times, oneFieldData_w, ...
+%                evalFilterArray(objFunStruct.XYZ, pos, ff));
+%        end
+        
         if ~isempty(objFunStruct.T)
-            error('Cannot do a time filter in freq domain yet');
+            warning('Cannot do a time filter in freq domain yet');
         end
 
         if ff == 1, filteredData_w = oneFieldData_w;
@@ -158,7 +260,8 @@ if nargout > 2
         end
     end
 
-    f_w = squeeze(sum(sum(sum(sum(conj(filteredData_w) .* ...
+    f_w = objFunStruct.Factor * ...
+        squeeze(sum(sum(sum(sum(conj(filteredData_w) .* ...
         multTensor(filteredData_w, objFunStruct.Kernel, 4), ...
         4), 3), 2), 1));
 end
@@ -171,10 +274,17 @@ function vals = evalFilterArray(filter, pos, whichField)
 
 [xx yy zz] = ndgrid(pos{1}, pos{2}, pos{3});
 
+dxyz = [1 1 1];
+for xyz = 1:3
+    if length(pos{xyz}) > 1
+        dxyz(xyz) = pos{xyz}(2) - pos{xyz}(1);
+    end
+end
+
 if iscell(filter)
-    vals = filter{whichField}(xx, yy, zz);
+    vals = filter{whichField}(xx, yy, zz) * prod(dxyz);
 else
-    vals = filter(xx, yy, zz);
+    vals = filter(xx, yy, zz) * prod(dxyz);
 end
 
 end

@@ -19,6 +19,8 @@ vertJacobian = sparse(size(vertices, 1), 1);
 
 for fieldXYZ = 1:3
 
+fprintf('Reversing file, field %i of 3\n', fieldXYZ);
+
 fwdDE = OutputFile(['output/', fwdFileNames{fieldXYZ}]);
 adjoint.reverseFile(['output/', adjFileNames{fieldXYZ}]);
 adjDE = OutputFile(['output/', adjRevFileNames{fieldXYZ}]);
@@ -26,7 +28,8 @@ adjDE = OutputFile(['output/', adjRevFileNames{fieldXYZ}]);
 assert(fwdDE.numFramesAvailable() == adjDE.numFramesAvailable());
 numT = fwdDE.numFramesAvailable();
 
-readAheadValues = 500e6 / 8; % about 1 GB of doubles
+readAheadBytes = 100e6;
+readAheadValues = readAheadBytes / 8;
 chunkFrames = min(numT, ...
     floor(readAheadValues / (fwdDE.FrameSize  + adjDE.FrameSize)));
 
@@ -57,6 +60,8 @@ adjBuffer(:,bufferIndex(tAdjFirst:tAdjLast)) = adjDE.readFrames(...
 tBeginChunk = 1;
 
 while tBeginChunk <= numT
+    fprintf('Processing chunks %i to %i\n', tBeginChunk, ...
+        tBeginChunk+chunkFrames-1);
     tEndChunk = min(numT, tBeginChunk + chunkFrames - 1);
     
     % First we load the next frame into the buffer.
@@ -80,6 +85,8 @@ while tBeginChunk <= numT
             'NumFrames', loadAdjFrames, 'Regions', 'Together');
         %fprintf('Adj: load %i to %i\n\n', tAdjFirst, tAdjLast);
     end
+    
+    
     
     for movableVert = verts
     for freeDir = 1:3

@@ -411,7 +411,8 @@ else % OutputHarmonic-type functionality
     harmonic = cell(numRegions,1);
     if strcmpi(X.Regions, 'Separate')
         for rr = 1:numRegions
-            xyzPos = file.positions('Region', rr, 'Field', 1);
+            xyzPos = file.positions('Region', rr, 'Field', 1, ...
+                'InterpolateSpace', X.InterpolateSpace);
             dim{rr} = [reshape(cellfun(@numel, xyzPos), 1, []), numFields];
             harmonic{rr} = zeros([prod(dim{rr}), numel(freqs)]);
         end
@@ -442,8 +443,8 @@ else % OutputHarmonic-type functionality
 
         if numRegions == 1;
             frameData = {file.readFrames('NumFrames', chunkLength,...
-                'Regions', X.Regions, 'InterpolateSpace', X.InterpolateSpace), ...
-                'Positions', X.Positions};
+                'Regions', X.Regions, 'InterpolateSpace', X.InterpolateSpace, ...
+                'Positions', X.Positions)};
         else
             frameData = file.readFrames('NumFrames', chunkLength,...
                 'Regions', X.Regions, 'InterpolateSpace', X.InterpolateSpace, ...

@@ -5,8 +5,12 @@ X.Region = [];
 X.Field = [];
 X.Size = [];
 X.Bounds = [];
-X.InterpolateSpace = obj.hasBounds();
+X.InterpolateSpace = [];
 X = parseargs(X, varargin{:});
+
+if isempty(X.InterpolateSpace)
+    X.InterpolateSpace = obj.hasBounds();
+end
 
 validateArguments(obj, X);
 xyzPos = cell(3,1);

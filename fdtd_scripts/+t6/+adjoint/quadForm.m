@@ -16,6 +16,10 @@ X.Z = [];
 X.XYZ = [];
 X.T = [];
 X.Kernel = [];
+X.InterpX = []; % these interpolation matrices aren't the user's problem!
+X.InterpY = [];
+X.InterpZ = [];
+X.Factor = 1;
 
 X = parseargs(X, varargin{:});
 validateArguments(X);
