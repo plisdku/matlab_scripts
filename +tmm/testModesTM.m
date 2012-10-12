@@ -3,8 +3,8 @@
 %checkRelativelyClose = @(a, b) checkSmall(norm(a-b)/norm(a));
 %checkClose = @(a, b) checkSmall(norm(a-b));
 
-lambda = 632.8e-9;
-omega = 2*pi*3e8/lambda;
+lambda = 632.8;
+omega = 2*pi/lambda;
 k0 = 2*pi/lambda;
 
 eps1 = 1;
@@ -14,7 +14,7 @@ boundaries = 0;
 epsr = [eps1, eps2];
 mur = ones(size(epsr));
 
-k_spp = omega/3e8*sqrt(eps1*eps2/(eps1+eps2));
+k_spp = omega*sqrt(eps1*eps2/(eps1+eps2));
 n_spp = k_spp/k0;
 
 kMin = 1.01*k0;
@@ -31,19 +31,19 @@ fprintf('Surface plasmon dispersion test: passed\n');
 
 %% Normalization test
 
-boundaries = [0 1000e-9];
+boundaries = [0 1000];
 epsr = [1, 5+0.1i, 2];
 mur = ones(size(epsr));
 
 [ks, t22, kvals] = tmm.modes(boundaries, epsr, mur, omega, 1.01*k0, 3*k0, 'tm');
-
+%%
 for nn = 1:length(ks)
 
     k = ks(nn);
 
     % Plot a mode
 
-    outPos = linspace(boundaries(1)-500e-9, boundaries(end)+500e-9);
+    outPos = linspace(boundaries(1)-500, boundaries(end)+500);
 
     [hx ey ez bigT bigR mux epsy epsz txMat] = tmm.solveTM(boundaries, epsr, mur, omega, ...
         k, outPos, true);
@@ -57,7 +57,7 @@ fprintf('Mode normalization test: passed\n');
 
 %% TE Normalization test
 
-epsr = [1, 5+0.001i, 1];
+epsr = [1, 5+0.1i, 1];
 [ks, t22, kvals] = tmm.modes(boundaries, epsr, mur, omega, 1.01*k0, 3*k0, 'te');
 %%
 
@@ -68,7 +68,7 @@ k = ks(1);
 
 for nn = 1
     k = ks(nn);
-    outPos = linspace(boundaries(1)-500e-9, boundaries(end)+500e-9);
+    outPos = linspace(boundaries(1)-500, boundaries(end)+500);
     [ex hy hz] = tmm.solveTE(boundaries, epsr, mur, omega, k, outPos, true);
     
     figure(11); clf

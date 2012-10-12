@@ -6,16 +6,16 @@ function [k_better, t22, kvals] = modes(boundaries, epsr, mur, omega, kMin, kMax
 % of complex wavevectors, each corresponding to a likely bound mode of the
 % system.
 %
-%   k               array of interface-parallel wavevectors [1/m]
-%   boundaries      z positions of boundaries between materials [m]
-%   epsr            relative permittivity of each layer [unitless]
-%   mur             relative permeability of each layer [unitless]
-%   omega           optical angular frequency [1/s]
+%   k               array of interface-parallel wavevectors
+%   boundaries      z positions of boundaries between materials
+%   epsr            relative permittivity of each layer
+%   mur             relative permeability of each layer
+%   omega           optical angular frequency
 %   kMin, kMax      bounds on real parts of k to search over.  A good
 %                   choice for kMin is k0/nMax, where k0 is the free-space
 %                   wavevector of light (omega/c) and nMax is the larger of
 %                   the indices of refraction of the first and last layers
-%                   of the multilayer. [1/m]
+%                   of the multilayer.
 %   mode            a string, either "te" or "tm"; default value is "tm"
 %
 % [k, t22, kvals] = modes(...) returns the internal data used to locate
@@ -35,27 +35,27 @@ function [k_better, t22, kvals] = modes(boundaries, epsr, mur, omega, kMin, kMax
 %
 % EXAMPLE:
 %
-% omega = 2*pi*3e8/600e-9;
-% k0 = omega/3e8;
-% boundaries = [0e-9];
+% omega = 2*pi*3e8/600;
+% k0 = omega;
+% boundaries = [0];
 % epsr = [1, -10 + 1i]; % a dielectric-metal interface
 % mur = [1 1];
 % kMin = 1.01*k0;
 % kMax = 4*k0;
-% outPositions = linspace(-1000e-9, 1000e-9);
+% outPositions = linspace(-1000, 1000);
 %
 % kParallels = tmm.modes(boundaries, epsr, mur, omega, kMin, kMax, 'tm');
 % [hx ey ez] = tmm.solveTM(boundaries, epsr, mur, omega, kParallels(1), ...
 %       outPositions, true);
 %
-% plot(outPositions*1e9, real(hx), outPositions*1e9, imag(hx));
+% plot(outPositions, real(hx), outPositions, imag(hx));
 % xlabel('z (nm)');
 % ylabel('H_x (nm)');
 % legend('Real', 'Imag')
 %
 
 
-k0 = omega/3e8;
+k0 = omega;
 
 if ~exist('mode', 'var')
     mode = 'tm';

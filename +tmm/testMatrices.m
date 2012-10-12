@@ -2,18 +2,14 @@
 
 import tmm.*;
 
-mu0 = 4e-7*pi;
-eps0 = 8.854187817e-12;
-c = 1/sqrt(eps0*mu0);
-
 checkSmall = @(a) assert(abs(a) < 1e-5);
 checkRelativelyClose = @(a, b) checkSmall(norm(a-b)/norm(a));
 checkClose = @(a, b) checkSmall(norm(a-b));
 
-lambda = 1000e-9;
+lambda = 1000;
 k = 2*pi/lambda;
-omega = c*k;
-x = 100e-9;
+omega = k;
+x = 100;
 
 %% Test basic matrices
 
@@ -109,9 +105,9 @@ disp('Phase due to propagation: passed');
 epsr = 2 + .3i;
 mur = 1.1 + 2i;
 n = sqrt(epsr*mur);
-eta = sqrt(mu0*mur/epsr/eps0); % impedance of medium
+eta = sqrt(mur/epsr); % impedance of medium
 
-k = omega*n/c; % k vector in the medium, at normal incidence
+k = omega*n; % k vector in the medium, at normal incidence
 
 propagateTM = matrixPropagateHE(omega, k, x, epsr);
 propagateTE = matrixPropagateEH(omega, k, x, mur);
@@ -140,9 +136,9 @@ mur = 1;
 n1 = sqrt(epsr1);
 n2 = sqrt(epsr2);
 
-lambda = 1000e-9;
+lambda = 1000;
 k = 2*pi/lambda;
-omega = c*k;
+omega = k;
 
 thetas = linspace(0, 0.49*pi, 100);
 
@@ -152,8 +148,8 @@ for ii = 1:length(thetas)
     theta1 = thetas(ii);
     theta2 = asin(n1*sin(theta1)/n2);
     
-    k1 = omega*n1/c;
-    k2 = omega*n2/c;
+    k1 = omega*n1;
+    k2 = omega*n2;
     
     checkClose(n1*sin(theta1), n2*sin(theta2));
     

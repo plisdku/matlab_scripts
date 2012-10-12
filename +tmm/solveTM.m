@@ -16,27 +16,27 @@ function [Hx, Ey, Ez, T, R, murHx, epsrEy, epsrEz, transferHH] = solveTM(...
 %   right-propagating H amplitudes on the left side of the stack to left- and
 %   right-propagating H amplitudes on the right side of the stack
 % 
-% boundary_z is an array of z positions where E and H are continuous [meters]
+% boundary_z is an array of z positions where E and H are continuous
 % 
-% ky is the k vector parallel to the boundary. [1/meters]
+% ky is the k vector parallel to the boundary.
 % 
 % epsr is an array of relative permittivities, one per layer, including the
 % media before and after the multilayer.  Positive imaginary permittivity 
-% connotes loss. [unitless]
+% connotes loss.
 % 
 % mur is an array of relative permeabilities, one per layer, including the
-% media before and after the multilayer [unitless]
+% media before and after the multilayer
 % 
 % output_z is a vector of z positions to evaluate the fields at.  It may
 % also be a cell array with three vectors of positions, one each for Hx, Ey
-% and Ez. (optional) [meters]
+% and Ez. (optional)
 %
 % forceBoundModes can be true or false (false by default).  If true, the
 % transfer matrices and field amplitudes will be adjusted so no inbound
 % waves are present.  The modes returned will be normalized to unit "power".
 % (optional)
 %
-% A forward-propagating wave is represented as exp(1i*(k*k - w*t)).  This
+% A forward-propagating wave is represented as exp(1i*(k*x - w*t)).  This
 % negative frequency convention implies that lossy materials must have
 % positive imaginary permittivities.
 
@@ -65,13 +65,9 @@ if numel(varargin) > 1
     forceBoundModes = varargin{2};
 end
 
-mu0 = 4e-7*pi;
-eps0 = 8.854187817e-12;
-c = 1/sqrt(eps0*mu0);
-
 n = sqrt(epsr.*mur);
 
-ks = sqrt(omega^2*n.^2/c^2 - kParallel^2);
+ks = sqrt(omega^2*n.^2 - kParallel^2);
 ks(imag(ks) < 0) = -ks(imag(ks) < 0); % decay goes the right way now
 
 % Make matrices to convert [H+, H-] in layer n to [H+, H-] in layer n+1,
@@ -183,7 +179,7 @@ for nLayer = 1:length(boundary_z)+1
         z = output_zEz(ii);
         hh2he = matrixHH2HE(omega, ks(nLayer), z, epsr(nLayer));
         HE = hh2he*Hn;
-        Ez(ii) = HE(1)*kParallel/omega/epsr(nLayer)/eps0;
+        Ez(ii) = HE(1)*kParallel/omega/epsr(nLayer);
     end
     
     for ii = indicesNormalization
@@ -191,7 +187,7 @@ for nLayer = 1:length(boundary_z)+1
         hh2he = matrixHH2HE(omega, ks(nLayer), z, epsr(nLayer));
         HE = hh2he*Hn;
         Hx_normalization(ii) = HE(1);
-        Ez_normalization(ii) = HE(1)*kParallel/omega/epsr(nLayer)/eps0;
+        Ez_normalization(ii) = HE(1)*kParallel/omega/epsr(nLayer);
     end
     
     murHx(indicesHx) = mur(nLayer);

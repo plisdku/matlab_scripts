@@ -3,17 +3,17 @@ function ee2eh = matrixEE2EH(omega, k, x, varargin)
 %   amplitudes and phases (measured from zero) to E and H at a point.
 % 
 % Usage: ee2eh = matrixEE2EH(omega, k, x, mur)
-%   omega   angular frequency [1/s]
-%   k       longitudinal wavenumber, possibly complex [1/m]
-%   x       longitudinal position [m]
-%   mur     (optional) relative permeability [unitless]
+%   omega   angular frequency
+%   k       longitudinal wavenumber, possibly complex
+%   x       longitudinal position
+%   mur     (optional) relative permeability
 %
 % The fields are assumed to be in SI units.  If k has a positive imaginary
 % part, the forward fields will be attenuated.
 %
 % The inverse function is matrixEH2EE.
 
-mu0 = 4e-7*pi;
+%mu0 = 4e-7*pi;
 mur = 1;
 
 if nargin > 3
@@ -21,4 +21,4 @@ if nargin > 3
 end
 
 ee2eh = [ exp(1i*k*x), exp(-1i*k*x); ...
-          k/omega/mur/mu0*exp(1i*k*x), -k/omega/mur/mu0*exp(-1i*k*x) ];
+          k/omega/mur*exp(1i*k*x), -k/omega/mur*exp(-1i*k*x) ];

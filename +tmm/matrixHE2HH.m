@@ -3,16 +3,15 @@ function he2hh = matrixHE2HH(omega, k, x, varargin)
 %   H_forward and H_backward amplitudes and phases (measured from zero)
 % 
 % Usage: he2hh = matrixHE2HH(omega, k, x, epsr)
-%   omega   angular frequency [1/s]
-%   k       longitudinal wavenumber, possibly complex [1/m]
-%   x       longitudinal position [m]
-%   epsr     (optional) relative permittivity [unitless]
+%   omega   angular frequency
+%   k       longitudinal wavenumber, possibly complex
+%   x       longitudinal position
+%   epsr     (optional) relative permittivity
 %
 % The fields are assumed to be in SI units.
 %
 % The inverse function is matrixHH2HE.
 
-eps0 = 8.854187817e-12;
 epsr = 1;
 
 if nargin > 3
@@ -20,5 +19,5 @@ if nargin > 3
 end
 
 he2hh = 0.5 * ...
-    [ exp(-1i*k*x), -omega*epsr*eps0/k*exp(-1i*k*x); ...
-      exp(1i*k*x), omega*epsr*eps0/k*exp(1i*k*x) ];
+    [ exp(-1i*k*x), -omega*epsr/k*exp(-1i*k*x); ...
+      exp(1i*k*x), omega*epsr/k*exp(1i*k*x) ];
