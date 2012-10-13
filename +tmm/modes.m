@@ -132,6 +132,11 @@ testFn = @(p,x)lorentzians(x, amplitudes(p), centers(p), gammas(p));
 
 numBumps = length(candidateCenters);
 
+if numBumps == 0
+    warning('No modes found')
+    return
+end
+
 pMin = [0*candidateHeights, candidateCenters-0.1, 0*candidateWidths];
 pMax = [3*candidateHeights, candidateCenters+0.1, 1];
 
@@ -157,13 +162,15 @@ fits.amplitudes = fits.amplitudes(keepThese);
 fits.centers = fits.centers(keepThese);
 fits.gammas = fits.gammas(keepThese);
 
-%figure(1)
-%clf
-%plot(nEff, yy, '-', ...
-%    nEff, testFn(soln.pFinal, nEff), 'o', ...
-%    nEff, testFn(pInit, nEff), '--');
-%legend('t22', 'Final', 'Guess')
-
+%{
+figure(1)
+clf
+plot(nEff, yy, '-', ...
+    nEff, testFn(soln.pFinal, nEff), 'o', ...
+    nEff, testFn(pInit, nEff), '--');
+legend('t22', 'Final', 'Guess')
+pause
+%}
 
 %% Improve the fits
 %

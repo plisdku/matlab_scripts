@@ -237,7 +237,7 @@ end
 
 
 if ~isempty(normalizationPos)
-    modeEnergy = trapz(normalizationPos, -Hz_normalization.*Ex_normalization);
+    modeEnergy = 0.5*trapz(normalizationPos, -conj(Hz_normalization).*Ex_normalization);
 
     Ex = Ex / sqrt(modeEnergy);
     Hy = Hy / sqrt(modeEnergy);

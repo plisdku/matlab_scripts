@@ -197,7 +197,7 @@ end
 
 
 if ~isempty(normalizationPos)
-    modeEnergy = trapz(normalizationPos, Ez_normalization.*Hx_normalization);
+    modeEnergy = 0.5*trapz(normalizationPos, Ez_normalization.*conj(Hx_normalization));
 
     Hx = Hx / sqrt(modeEnergy);
     Ey = Ey / sqrt(modeEnergy);
