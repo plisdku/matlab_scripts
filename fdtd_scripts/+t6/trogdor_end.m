@@ -16,6 +16,7 @@ import com.mathworks.xml.XMLUtils.*;
 X.XML = 'params.xml';
 X.Directory = 'sim';
 X.OutputDirectory = 'output';
+X.Parameters = [];
 X = parseargs(X, varargin{:});
 
 if ~isstr(X.XML); error('Invalid filename'); end
@@ -42,6 +43,11 @@ end
 sim = t6.simulation();
 sim.Directory = X.Directory;
 sim.OutputDirectory = X.OutputDirectory;
+
+% Make meshes if we're asked to
+if ~isempty(sim.Grid.NodeGroup)
+    sim.Grid.Meshes = sim.Grid.NodeGroup.meshes(X.Parameters);
+end
 
 doc = t6.xml.generateXML(sim);
 xmlwrite([sim().directoryString, X.XML], doc);

@@ -11,10 +11,79 @@ classdef WaveguideModes
         nEff
     end
     
-    
     methods
-        function obj = WaveguideModes(varargin)
+        function obj = WaveguideModes(dimensionString, varargin)
             
+            if strcmpi(dimensionString, '2D')        
+                obj = obj.init2D(varargin{:});
+            elseif strcmpi(dimensionString, '1D')
+                obj = obj.init1D(varargin{:});
+            end
+            
+        end
+        
+        function obj = init1D(obj, varargin)
+            X.Wavelength = [];
+            X.IndexBounds = [];
+            X.Permittivities = [];
+            X.Permeabilities = [];
+            X.Mode = {'tmy', 'tey'};
+            X.BoundariesX = [];
+            X.X = [];
+            X = parseargs(X, varargin{:});
+            
+            k0 = 2*pi/X.Wavelength;
+            omega = k0;
+            
+            if strcmpi(X.Mode, 'tmy')
+                mode = 'tm';
+            else
+                mode = 'te';
+            end
+            
+            k = tmm.modes(X.BoundariesX, X.Permittivities, X.Permeabilities, ...
+                omega, k0*X.IndexBounds(1), k0*X.IndexBounds(2), mode);
+            
+            obj.nEff = k/k0;
+            obj.lambda = X.Wavelength;
+            obj.xE = X.X;
+            obj.xH = X.X;
+            obj.yE = 0;
+            obj.yH = 0;
+            obj.E = zeros(numel(X.X), 1, 3, numel(k));
+            obj.H = obj.E;
+                        
+            % We can figure out whether or not a mode is bound of course:
+            indices = real(sqrt(X.Permittivities.*X.Permeabilities));
+            isBound = @(modeNum) any(obj.nEff > indices([1 end]));
+            
+            if strcmpi(mode, 'te')
+                for mm = 1:numel(k)
+                    [ex hy hz] = tmm.solveTE(X.BoundariesX, X.Permittivities,...
+                        X.Permeabilities, omega, k(mm), X.X, isBound(mm));
+                    
+                    % Forward permutation: ex becomes ey and so on.
+                    
+                    obj.E(:,1,2,mm) = ex;
+                    obj.H(:,1,3,mm) = hy;
+                    obj.H(:,1,1,mm) = hz;
+                end
+            elseif strcmpi(mode, 'tm')
+                for mm = 1:numel(k)
+                    [hx ey ez] = tmm.solveTM(X.BoundariesX, X.Permittivities,...
+                        X.Permeabilities, omega, k(mm), X.X, isBound(mm));
+                    
+                    obj.H(:,:,2,mm) = hx; % forward permute to our coordinates.
+                    obj.E(:,:,3,mm) = ey;
+                    obj.E(:,:,1,mm) = ez;
+                end
+            else
+                error('what?');
+            end
+            
+        end
+        
+        function obj = init2D(obj, varargin)
             X.Wavelength = [];
             X.GuessIndex = [];
             X.NumModes = 1;
@@ -62,13 +131,13 @@ classdef WaveguideModes
 
             exhy = ex.*gridInterp(xH, yH, hy, xE, yE);
             eyhx = ey.*gridInterp(xH, yH, hx, xE, yE);
-
-            totalEnergy = 0.5*real(trapz(yE, trapz(xE, exhy - eyhx, 1), 2));
+            
+            totalEnergy = 0.5*real(trapzn({xE, yE}, exhy - eyhx));
         end
         
         
         function [Eout Hout] = interpolate(obj, varargin)
-            import modeInjection.*
+            import t6.modeInjection.*
             X.X = [];
             X.Y = [];
             X.Z = [];
@@ -81,24 +150,43 @@ classdef WaveguideModes
             
             numModes = size(obj.E, 4);
             
-            % Put in a fictitious Z dimension
-            E_with_z = repmat(reshape(obj.E, [szE(1:2) 1 szE(3) numModes]), ...
-                [1 1 2 1 1]);
-            H_with_z = repmat(reshape(obj.H, [szH(1:2) 1 szH(3) numModes]), ...
-                [1 1 2 1 1]);
+            % We will need to add some fictitious dimensions (one or two) to 
+            % make use of Matlab's interpolation functions for rotating the
+            % fields.  The z dimension must be duplicated once over, and the
+            % y dimension may need this treatment as well.
             
-            zFake = realmax*[-1 1];
-
+            repeats = [1 1 2 1 1];
+            if numel(obj.yE) == 1
+                repeats(2) = 2;
+            end
+            
+            E_repeated = repmat(reshape(obj.E, [szE(1:2) 1 szE(3) numModes]), ...
+                repeats);
+            H_repeated = repmat(reshape(obj.H, [szH(1:2) 1 szH(3) numModes]), ...
+                repeats);
+            
+            % Spatial locations of these duplicated samples: really far away!
+            distantPositions = realmax*[-1 1];
+            
             Eout = zeros(numel(X.X), numel(X.Y), numel(X.Z), 3, numModes);
             Hout = Eout;
             
             for mm = 1:numModes
-                Eout(:,:,:,:,mm) = transformField(X.Rotation, X.Translation, ...
-                    obj.xE, obj.yE, zFake, E_with_z(:,:,:,:,mm), ...
-                    X.X, X.Y, X.Z);
-                Hout(:,:,:,:,mm) = transformField(X.Rotation, X.Translation, ...
-                    obj.xH, obj.yH, zFake, H_with_z(:,:,:,:,mm), ...
-                    X.X, X.Y, X.Z);
+                if numel(obj.yE) == 1 % happens when I use transfer matrices
+                    Eout(:,:,:,:,mm) = transformField(X.Rotation, X.Translation, ...
+                        obj.xE, distantPositions, distantPositions, ...
+                        E_repeated(:,:,:,:,mm), X.X, X.Y, X.Z);
+                    Hout(:,:,:,:,mm) = transformField(X.Rotation, X.Translation, ...
+                        obj.xH, distantPositions, distantPositions, ...
+                        H_repeated(:,:,:,:,mm), X.X, X.Y, X.Z);
+                else % happens when I use the 2D mode solver
+                    Eout(:,:,:,:,mm) = transformField(X.Rotation, X.Translation, ...
+                        obj.xE, obj.yE, distantPositions, ...
+                        E_repeated(:,:,:,:,mm), X.X, X.Y, X.Z);
+                    Hout(:,:,:,:,mm) = transformField(X.Rotation, X.Translation, ...
+                        obj.xH, obj.yH, distantPositions, ...
+                        H_repeated(:,:,:,:,mm), X.X, X.Y, X.Z);
+                end
             end
             
         end

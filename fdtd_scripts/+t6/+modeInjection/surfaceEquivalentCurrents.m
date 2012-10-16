@@ -1,7 +1,7 @@
 function [phasorJ, phasorM] = surfaceEquivalentCurrents(srcE, srcH, ...
     inwardNormal, x0, y0, z0, k)
 
-import modeInjection.*
+import t6.modeInjection.*
 
 nCross = crossProductMatrix(inwardNormal);
 

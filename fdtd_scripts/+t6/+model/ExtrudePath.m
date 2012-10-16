@@ -131,6 +131,10 @@ classdef ExtrudePath < t6.model.Node
             
             path = cell2mat(arrayfun(@(t) obj.pathFunc(params,t), obj.t, ...
                 'UniformOutput', false));
+            
+            if any(isnan(path(:)))
+                keyboard;
+            end
             fwd = centeredDiff(path, 2);
             fwd = bsxfun(@times, fwd, 1./sqrt(sum(fwd.^2,1)));
             
@@ -173,6 +177,32 @@ classdef ExtrudePath < t6.model.Node
                 params = varargin{1};
             else
                 params = [];
+            end
+            
+            % Check all the functions!
+            sz = size(obj.pathFunc(params, 0));
+            if ~isequal(sz, [3 1])
+                error('Path function must return 3x1 array for each t!');
+            end
+            
+            szX = size(obj.xFunc(params));
+            szY = size(obj.yFunc(params));
+            if ~isequal(szX, szY)
+                error(['Waveguide X and Y cross section functions must ', ...
+                    ' return same number of vertices']);
+            end
+            
+            if ~isempty(obj.uFunc)
+                sz = size(obj.uFunc(params, 0));
+                if ~isequal(sz, [3 1])
+                    error('Waveguide U function must return 3x1 array for each t!');
+                end
+            end
+            if ~isempty(obj.vFunc)
+                sz = size(obj.vFunc(params, 0));
+                if ~isequal(sz, [3 1])
+                    error('Waveguide V function must return 3x1 array for each t!');
+                end
             end
             
             [xBot yBot tris] = obj.bottomFace(params);
