@@ -81,6 +81,8 @@ function [f, freqs, resid, residFrac] = spectrum(fileName, varargin)
 %   Additional named parameters:
 %   
 %   Regions             'Together' or 'Separate'
+%   InterpolateSpace    true or false
+%   Positions           cell array of monotone arrays: {x, y, z}
 %
 %   DEFINITION OF FREQUENCY DECOMPOSITION
 %
@@ -121,6 +123,10 @@ if ischar(fileName)
         [f, freqs, resid, residFrac] = doFileSpectrum(fileName, X);
     end
 else
+    % fileName is actually a data array, when spectrum is called as
+    %
+    %       spectrum(data)
+    %
     if nargout < 3
         [f, freqs] = doDataSpectrum(fileName, X);
     else
@@ -411,8 +417,12 @@ else % OutputHarmonic-type functionality
     harmonic = cell(numRegions,1);
     if strcmpi(X.Regions, 'Separate')
         for rr = 1:numRegions
-            xyzPos = file.positions('Region', rr, 'Field', 1, ...
-                'InterpolateSpace', X.InterpolateSpace);
+            if isempty(X.Positions)
+                xyzPos = file.positions('Region', rr, 'Field', 1, ...
+                    'InterpolateSpace', X.InterpolateSpace);
+            else
+                xyzPos = X.Positions;
+            end
             dim{rr} = [reshape(cellfun(@numel, xyzPos), 1, []), numFields];
             harmonic{rr} = zeros([prod(dim{rr}), numel(freqs)]);
         end
@@ -420,7 +430,7 @@ else % OutputHarmonic-type functionality
         harmonic{1} = zeros(file.fieldValues()*numFields, numel(freqs));
     end
     
-    chunkBytes = 50e6;
+    chunkBytes = 20e6;
     frameSizes = file.Regions.Size;
     frameSizes(:,4) = numFields;
     frameBytes = sum(prod(frameSizes,2))*8;
