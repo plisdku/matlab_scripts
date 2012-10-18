@@ -1,4 +1,5 @@
 classdef Translate < t6.model.Node
+% Translate(distance, children)
     
     properties
         children = {};

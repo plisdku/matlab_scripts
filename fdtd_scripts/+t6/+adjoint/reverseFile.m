@@ -64,7 +64,7 @@ end
 fclose(fid_in);
 fclose(fid_out);
 
-[pathstr, nom, extension, vers] = fileparts(theFile.SpecFileName);
+[pathstr, nom, extension] = fileparts(theFile.SpecFileName);
 
 if isempty(pathstr)
     copyToPath = [nom, '.rev.txt'];

@@ -18,6 +18,8 @@ classdef WaveguideModes
                 obj = obj.init2D(varargin{:});
             elseif strcmpi(dimensionString, '1D')
                 obj = obj.init1D(varargin{:});
+            else
+                error('Please specify 1D or 2D');
             end
             
         end
