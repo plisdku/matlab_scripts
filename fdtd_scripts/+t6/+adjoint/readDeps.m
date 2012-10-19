@@ -148,6 +148,7 @@ for tensor_ij = 0:2
     
 end
 
+fclose(fid);
 
 % Figure out which vertices have data in them.
 movableVertices = [];

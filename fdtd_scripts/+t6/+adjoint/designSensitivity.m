@@ -30,6 +30,10 @@ end
 
 [f dfdp dfdv] = designObject.evaluate(parameters);
 
+if isnan(f) || any(isnan(dfdp)) || any(isnan(dfdv))
+    keyboard
+end
+
 %fs(end+1) = f;
 %ps(end+1) = parameters;
 
