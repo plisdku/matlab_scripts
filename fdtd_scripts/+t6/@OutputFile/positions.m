@@ -1,4 +1,17 @@
 function xyzPos = positions(obj, varargin)
+% positions  Get the positions of each sample in the output file
+%
+% xyzPos = file.positions returns a cell array of size [3, NumFields].
+%
+% Named parameters:
+%
+% Regions           'Separate' or 'Together'
+% Region            index of region to get positions for
+% Field             index of field to get positions for
+% Size              3-element array [Nx Ny Nz], number of samples to take
+% Bounds            Ask Paul
+% InterpolateSpace  true or false
+%
 
 X.Regions = 'Separate'; % Separate or Together
 X.Region = [];
@@ -26,7 +39,7 @@ if strcmpi(X.Regions, 'Together') || ~X.InterpolateSpace
         xyzPos{xyz} = obj.Dxyz(xyz)*(yees{xyz} + offset(xyz)) + obj.Origin(xyz);
     end
 else
-    xyzPos = naturalSamplingPositions(obj, X.Bounds, X.Region, X.Size);
+    xyzPos(:) = naturalSamplingPositions(obj, X.Bounds, X.Region, X.Size);
 end
 
 

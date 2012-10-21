@@ -57,6 +57,8 @@ adjBuffer(:,bufferIndex(tAdjFirst:tAdjLast)) = adjDE.readFrames(...
 
 %%
 
+warning('Only handling one lag at a time!');
+
 tBeginChunk = 1;
 
 while tBeginChunk <= numT
@@ -86,87 +88,50 @@ while tBeginChunk <= numT
         %fprintf('Adj: load %i to %i\n\n', tAdjFirst, tAdjLast);
     end
     
-    
-    
-    for movableVert = verts
-    for freeDir = 1:3
-    if isstruct(coeffs{movableVert, freeDir})
-    if isstruct(coeffs{movableVert,freeDir}.tensor{1,1})
-    if length(coeffs{movableVert,freeDir}.tensor) >= fieldXYZ
-    if isstruct(coeffs{movableVert,freeDir}.tensor{fieldXYZ,fieldXYZ})
+    %lagsProvided = length(coeffs{movableVert,freeDir}.tensor{fieldXYZ, fieldXYZ}.DB);
+    lagsProvided = 1;
+    for lag = 1:lagsProvided
         
-        sumSensitivity = 0;
+        tAdj = [tFwdFirst + lag - 1, ...
+            min(numT, tFwdFirst + lag + chunkFrames - 2)];
+        tFwd = [tFwdFirst, tFwdFirst + tAdj(2) - tAdj(1)];
         
-        lagsProvided = length(coeffs{movableVert,freeDir}.tensor{fieldXYZ, fieldXYZ}.DB);
-        for lag = 1:lagsProvided
-            
-            tAdj = [tFwdFirst + lag - 1, ...
-                min(numT, tFwdFirst + lag + chunkFrames - 2)];
-            tFwd = [tFwdFirst, tFwdFirst + tAdj(2) - tAdj(1)];
+        adjE = adjBuffer(:,bufferIndex(tAdj(1):tAdj(2)));
+        fwdD = fwdDBuffer(:, (tFwd(1):tFwd(2))-tFwd(1)+1);
+        fwdE = fwdEBuffer(:, (tFwd(1):tFwd(2))-tFwd(1)+1);
+        
+        ED = sum(adjE.*fwdD, 2);
+        EE = sum(adjE.*fwdE, 2);
+    
+        for movableVert = verts
+        for freeDir = 1:3
+        if isstruct(coeffs{movableVert, freeDir})
+        if isstruct(coeffs{movableVert,freeDir}.tensor{1,1})
+        if length(coeffs{movableVert,freeDir}.tensor) >= fieldXYZ
+        if isstruct(coeffs{movableVert,freeDir}.tensor{fieldXYZ,fieldXYZ})
+
+            sumSensitivity = 0;
             
             coeffD = coeffs{movableVert,freeDir}.tensor{fieldXYZ, fieldXYZ}.DB{lag}.coefficients;
             indexD = coeffs{movableVert,freeDir}.tensor{fieldXYZ, fieldXYZ}.DB{lag}.indices;
-            
-            adjE = adjBuffer(indexD,bufferIndex(tAdj(1):tAdj(2)));
-            fwdD = fwdDBuffer(indexD, (tFwd(1):tFwd(2))-tFwd(1)+1);
-            
-            dotProdDE = -sum(coeffD.*sum(adjE.*fwdD, 2));
-            absDotDE = sum(abs(coeffD).*sum(abs(adjE).*abs(fwdD), 2));
-            
+            dotProdDE = -sum(coeffD.*ED(indexD));
             sumSensitivity = sumSensitivity + dotProdDE;
-            
-            %{
-            if norm(adjE(:)) ~= 0
-                figure(1); clf
-                plot(adjE); hold on; plot(fwdD)
-                title(sprintf('E-E %s along %s, v%i', char('w'+fieldXYZ), char('w'+freeDir), movableVert));
-                fprintf('Dot DE = %2.4g, abs dot %2.4f\n', dotProdDE, absDotDE);
-                fprintf('\tcoeffD = %2.4f\n', coeffD);
-                pause
-            end
-            %}
-            
-        end
-        
-        lagsProvided = length(coeffs{movableVert,freeDir}.tensor{fieldXYZ, fieldXYZ}.EH);
-        for lag = 1:lagsProvided
-            
-            tAdj = [tFwdFirst + lag - 1, ...
-                min(numT, tFwdFirst + lag + chunkFrames - 2)];
-            tFwd = [tFwdFirst, tFwdFirst + tAdj(2) - tAdj(1)];
             
             coeffE = coeffs{movableVert,freeDir}.tensor{fieldXYZ, fieldXYZ}.EH{lag}.coefficients;
             indexE = coeffs{movableVert,freeDir}.tensor{fieldXYZ, fieldXYZ}.EH{lag}.indices;
-            
-            adjE = adjBuffer(indexE,bufferIndex(tAdj(1):tAdj(2)));
-            fwdE = fwdEBuffer(indexE, (tFwd(1):tFwd(2))-tFwd(1)+1);
-            
-            dotProdEE = sum(coeffE.*sum(adjE.*fwdE, 2));
-            absDotEE = sum(abs(coeffE).*sum(abs(adjE).*abs(fwdE), 2));
-            
+            dotProdEE = sum(coeffE.*EE(indexE));
             sumSensitivity = sumSensitivity + dotProdEE;
             
-            %{
-            if norm(adjE(:)) ~= 0
-                figure(2); clf
-                plot(adjE); hold on; plot(fwdE)
-                title(sprintf('E-E %s along %s, v%i', char('w'+fieldXYZ), char('w'+freeDir), movableVert));
-                fprintf('Dot EE = %2.4g, abs dot %2.4f\n', dotProdEE, absDotEE);
-                fprintf('\tcoeffE = %2.4f\n', coeffE);
-                pause
-            end
-            %}
-        end
-        
-        vertJacobian(freeDir + 3*(movableVert-1), 1) = ...
-            vertJacobian(freeDir + 3*(movableVert-1), 1) ...
-            + sumSensitivity;
+            vertJacobian(freeDir + 3*(movableVert-1), 1) = ...
+                vertJacobian(freeDir + 3*(movableVert-1), 1) ...
+                + sumSensitivity;
     
-    end
-    end
-    end
-    end
-    end
+        end
+        end
+        end
+        end
+        end
+        end
     end
     
     tBeginChunk = tBeginChunk + chunkFrames;
