@@ -1,5 +1,36 @@
 function addModalSource(varargin)
+% addModalSource  Add electric and magnetic source currents to impress a field
 %
+% addModalSource('Bounds', [0 0 0 100 100 0], 'PhasorE', EE, 'PhasorH', HH, ...
+%   'TimeEnvelope', @(t) exp(1i*freq*t), ...
+%   'Direction', [0 0 1], 'X', xSrc, 'Y', ySrc, 'Z', zSrc)
+% Drive the grid with an impressed field distribution (e.g. waveguide mode).
+%
+%   Usage: addModalSource(named parameters)
+%
+%   Named parameters:
+%       Bounds      Region of simulation space in which to add electromagnetic
+%                   current
+%       PhasorE     An array of size [N M P 3] with complex amplitude of the E-
+%                   field in a volume including Bounds.  Internally the fields
+%                   necessary for the source currents will be interpolated to
+%                   all necessary positions, so the number of samples N, M and P
+%                   are at the discretion of the caller.
+%       PhasorH     An array of size [N M P 3] with complex amplitude of the H-
+%                   field.  These points should be colocated with E.
+%       Direction   The "forward" direction of the mode
+%       X           An N-element array of distances along the x-axis for each
+%                   element of PhasorE or PhasorH
+%       Y           An M-element array (see X)
+%       Z           A P-element array (see X)
+%       TimeFunction    A function of time returning a complex amplitude to
+%                   multiply PhasorE and PhasorH by
+%       Overwrite   "true" to rewrite the source J and M on every call to 
+%                   trogdor_end.  "false" to save and re-use current sources.
+%                   Setting Overwrite to false may save a lot of time setting
+%                   up simulations that share source conditions!
+%       Mode        "forward" or "adjoint".  If unspecified, the source will
+%                   be added to both forward and adjoint simulations.
 
 import t6.*
 import modeInjection.*
