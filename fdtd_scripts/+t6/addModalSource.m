@@ -31,6 +31,17 @@ function addModalSource(varargin)
 %                   up simulations that share source conditions!
 %       Mode        "forward" or "adjoint".  If unspecified, the source will
 %                   be added to both forward and adjoint simulations.
+%
+% Typically a modal source will be injected along a plane, or several planes,
+% in the simulation space.  PhasorE and PhasorH should include samples
+% surrounding the plane to guarantee successful field interpolation.  In
+% particular, no dimension N, M or P of PhasorE or PhasorH should be less than
+% two!  That is, we require that
+%
+%       X(1) < Bounds(1) <= Bounds(4) < X(end)
+%       Y(1) < Bounds(2) <= Bounds(5) < Y(end)
+%       Z(1) < Bounds(3) <= Bounds(6) < Z(end)
+%
 
 import t6.*
 import modeInjection.*
