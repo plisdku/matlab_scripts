@@ -12,6 +12,7 @@ X.Sensitivity = [];
 X.Mesh = [];
 X.FaceAlpha = 0.2;
 X.EdgeAlpha = 0.02;
+X.EdgeColor = 'k';
 
 X = parseargs(X, varargin{:});
 
@@ -53,7 +54,7 @@ matlColors = {'g', 'b', 'g', 'y', 'g', 'b', 'y'};
         flatPatch('Vertices', X.Units*theMesh.permittivity{pp}.vertices, ...
             'Faces', theMesh.permittivity{pp}.faces,...
             'FaceColor', matlColors{pp}, 'FaceAlpha', X.FaceAlpha, ...
-            'EdgeAlpha', X.EdgeAlpha)
+            'EdgeAlpha', X.EdgeAlpha, 'EdgeColor', X.EdgeColor)
     end
     view(2) % top-down
     hold on

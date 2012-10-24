@@ -1,4 +1,21 @@
 classdef ExtrudePath < t6.model.Node
+% ExtrudePath  Pasta machine!
+%
+% Usage: ExtrudePath(named parameters)
+%
+% Named parameters:
+%   Permittivity
+%   Permeability
+%   Path                function f(p,t) returning row vectors [x y z]
+%   X                   function f(p) returning x coords of cross-section
+%   Y                   function f(p) returning y coords of cross-section
+%   U                   function f(p,t) returning 3-vectors along "x"
+%   V                   function f(p,t) returning 3-vectors along "y"
+%   T                   values of t in [0 1]
+%   
+% I consider the design vis-a-vis "T to be sort of unnecessarily
+% complicated.  Probably I should just have the Path function return the
+% actual knots I want for the structure, using interpolation if I want it.
     
     properties
         permittivity = 'none';
@@ -9,7 +26,7 @@ classdef ExtrudePath < t6.model.Node
         fwdFunc = [];
         uFunc = [];    % map [0 1] to [ux uy uz]
         vFunc = [];
-        t = [];
+        %t = [];
     end
     
     methods
@@ -22,7 +39,7 @@ classdef ExtrudePath < t6.model.Node
             X.Path = [];
             X.U = [];
             X.V = [];
-            X.T = linspace(0, 1, 10);
+            %X.T = linspace(0, 1, 10);
             X = parseargs(X, varargin{:});
             
             if isempty(X.U) && isempty(X.V)
@@ -49,9 +66,9 @@ classdef ExtrudePath < t6.model.Node
                 error('V must be a function handle');
             end
             
-            if ~isa(X.T, 'numeric')
-                error('T must be an array of numbers in [0, 1]');
-            end
+            %if ~isa(X.T, 'numeric')
+            %    error('T must be an array of numbers in [0, 1]');
+            %end
             
             obj.permittivity = X.Permittivity;
             obj.permeability = X.Permeability;
@@ -60,7 +77,7 @@ classdef ExtrudePath < t6.model.Node
             obj.pathFunc = X.Path;
             obj.uFunc = X.U;
             obj.vFunc = X.V;
-            obj.t = reshape(X.T, 1, []);
+            %obj.t = reshape(X.T, 1, []);
         end
         
         function [xBot yBot tris] = bottomFace(obj, params)
@@ -88,7 +105,7 @@ classdef ExtrudePath < t6.model.Node
             
         end
         
-        function allFaces = faces(obj, tris, numEdges)
+        function allFaces = faces(obj, tris, numEdges, numRings)
             
             v0 = 1:numEdges;
             v1 = [2:numEdges, 1];
@@ -98,7 +115,7 @@ classdef ExtrudePath < t6.model.Node
             ringFaces = [v0' v1' v2'; v0' v2' v3'];
 
             numEndFaces = size(tris, 1);
-            numRings = length(obj.t)-1;
+            %numRings = length(obj.t)-1;
             allFaces = zeros(numEdges*2*numRings + 2*numEndFaces, 3);
 
             facesPerRing = 2*numEdges;
@@ -129,8 +146,10 @@ classdef ExtrudePath < t6.model.Node
             % 3. calculate the rotation matrix at each position
             % 4. arrange vertices as single column (right?)
             
-            path = cell2mat(arrayfun(@(t) obj.pathFunc(params,t), obj.t, ...
-                'UniformOutput', false));
+            path = obj.pathFunc(params);
+            
+            %path = cell2mat(arrayfun(@(t) obj.pathFunc(params,t), obj.t, ...
+            %    'UniformOutput', false));
             
             if any(isnan(path(:)))
                 keyboard;
@@ -139,13 +158,15 @@ classdef ExtrudePath < t6.model.Node
             fwd = bsxfun(@times, fwd, 1./sqrt(sum(fwd.^2,1)));
             
             if ~isempty(obj.uFunc)
-                u = cell2mat(arrayfun(@(t) obj.uFunc(params,t), obj.t, ...
-                    'UniformOutput', false));
+                u = obj.uFunc(params);
+                %u = cell2mat(arrayfun(@(t) obj.uFunc(params,t), obj.t, ...
+                %    'UniformOutput', false));
             end
             
             if ~isempty(obj.vFunc)
-                v = cell2mat(arrayfun(@(t) obj.vFunc(params,t), obj.t, ...
-                    'UniformOutput', false));
+                v = obj.vFunc(params);
+                %v = cell2mat(arrayfun(@(t) obj.vFunc(params,t), obj.t, ...
+                %    'UniformOutput', false));
             end
             
             if ~exist('u', 'var')
@@ -180,11 +201,6 @@ classdef ExtrudePath < t6.model.Node
             end
             
             % Check all the functions!
-            sz = size(obj.pathFunc(params, 0));
-            if ~isequal(sz, [3 1])
-                error('Path function must return 3x1 array for each t!');
-            end
-            
             szX = size(obj.xFunc(params));
             szY = size(obj.yFunc(params));
             if ~isequal(szX, szY)
@@ -192,25 +208,53 @@ classdef ExtrudePath < t6.model.Node
                     ' return same number of vertices']);
             end
             
+            sz = size(obj.pathFunc(params));
+            numKnots = sz(2);
+            if sz(1) ~= 3
+                error('Path function must return 3xN array!');
+            end
+            
             if ~isempty(obj.uFunc)
-                sz = size(obj.uFunc(params, 0));
-                if ~isequal(sz, [3 1])
-                    error('Waveguide U function must return 3x1 array for each t!');
+                sz = size(obj.uFunc(params));
+                if sz(1) ~= 3
+                    error('U function must return 3xN array!');
+                elseif sz(2) ~= numKnots
+                    error('U and Path functions return different array sizes!');
                 end
             end
+            
             if ~isempty(obj.vFunc)
-                sz = size(obj.vFunc(params, 0));
-                if ~isequal(sz, [3 1])
-                    error('Waveguide V function must return 3x1 array for each t!');
+                sz = size(obj.vFunc(params));
+                if sz(1) ~= 3
+                    error('V function must return 3xN array!');
+                elseif sz(2) ~= numKnots
+                    error('V and Path functions return different array sizes!');
                 end
             end
+            
+            %sz = size(obj.pathFunc(params, 0));
+            %if ~isequal(sz, [3 1])
+            %    error('Path function must return 3x1 array for each t!');
+            %end
+            %if ~isempty(obj.uFunc)
+            %    sz = size(obj.uFunc(params, 0));
+            %    if ~isequal(sz, [3 1])
+            %        error('Waveguide U function must return 3x1 array for each t!');
+            %    end
+            %end
+            %if ~isempty(obj.vFunc)
+            %    sz = size(obj.vFunc(params, 0));
+            %    if ~isequal(sz, [3 1])
+            %        error('Waveguide V function must return 3x1 array for each t!');
+            %    end
+            %end
             
             [xBot yBot tris] = obj.bottomFace(params);
             
             vertFunc = @(p) obj.allVertices(p);
             
             myVerts = vertFunc(params);
-            myFaces = obj.faces(tris, length(xBot));
+            myFaces = obj.faces(tris, length(xBot), numKnots-1);
             
             myJacobian = jacobian(vertFunc, params);
             

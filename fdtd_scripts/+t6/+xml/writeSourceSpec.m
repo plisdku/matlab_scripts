@@ -41,7 +41,7 @@ if ~isempty(X.AutoTimeFile)
         fprintf(fh, 'duration from %i to %i period 1\n', source.duration(dd,:));
     end
     
-    if ~isempty(source.bounds)
+    if isfield(source, 'bounds') && ~isempty(source.bounds)
         for bb = 1:size(source.bounds, 1)
             fprintf(fh, 'region [[%i, %i, %i], [%i, %i, %i]] stride [1, 1, 1]',...
                 source.yeeCells(bb,:));

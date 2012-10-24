@@ -1,4 +1,28 @@
 classdef WaveguideModes
+% WaveguideModes  Class handling 1D and 2D waveguide mode sourcing
+%
+% Usage: WaveguideModes(dimensionString, named parameters)
+%
+% dimensionString is either '1D' or '2D'
+%
+% 1D named parameters:
+%   Wavelength
+%   IndexBounds         [minIndex, maxIndex]: range of mode indices to search
+%   Permittivities      length-N array of relative permittivities
+%   Permeabilities      length-N array of relative permeabilities
+%   Mode                'tey' or 'tmy'
+%   BoundariesX         length-N-1 array of boundary positions
+%
+%
+% 2D named parameters:
+%   Wavelength
+%   GuessIndex          Approximate mode index to search near
+%   NumModes            How many modes to solve for
+%   X                   length-M ascending array of x positions
+%   Y                   length-N ascending array of y positions
+%   Permittivity        size MxN array of relative permittivities
+%   BoundaryConditions  a string, e.g. '0000', compatible with modesolver package
+%
     
     properties
         E
@@ -116,6 +140,8 @@ classdef WaveguideModes
             totalEnergy = obj.calcEnergy(ex, ey, ez, hx, hy, hz, ...
                 obj.xE, obj.yE, obj.xH, obj.yH);
             sqrtEnergy = sqrt(totalEnergy);
+            
+            sqrtEnergy(sqrtEnergy == 0) = 1.0; % don't normalize evanescent modes
 
             ex = bsxfun(@times, ex, 1./sqrtEnergy);
             ey = bsxfun(@times, ey, 1./sqrtEnergy);

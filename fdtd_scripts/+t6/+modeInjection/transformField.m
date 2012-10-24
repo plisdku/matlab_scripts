@@ -24,8 +24,10 @@ Erot = t6.multTensor(E, T, 4);
 checkInterpBounds(x, y, z, xyzInterp);
 
 for dim = 1:3
+    extrapVal = 0;
     Eout(:,:,:,dim) = interpn(xIn, yIn, zIn, Erot(:,:,:,dim), ...
-        xyzInterp(:,:,:,1), xyzInterp(:,:,:,2), xyzInterp(:,:,:,3));
+        xyzInterp(:,:,:,1), xyzInterp(:,:,:,2), xyzInterp(:,:,:,3), ...
+        'linear', extrapVal);
     if any(isnan(Eout(:)))
         keyboard
     end
@@ -41,10 +43,10 @@ toVec = @(A) A(:);
 
 for dim = 1:3
     if any(toVec(xyzInterp(:,:,:,dim)) < min(xyzIn{dim}))
-        error('Sample requested below lowest provided %s (%f < %f)', ...
+        warning('Sample requested below lowest provided %s (%f < %f)', ...
             char('w'+dim), min(toVec(xyzInterp(:,:,:,dim))), min(xyzIn{dim}));
     elseif any(toVec(xyzInterp(:,:,:,dim)) > max(xyzIn{dim}))
-        error('Sample requested below lowest provided %s (%f < %f)', ...
+        warning('Sample requested below lowest provided %s (%f < %f)', ...
             char('w'+dim), max(toVec(xyzInterp(:,:,:,dim))), max(xyzIn{dim}));
     end
 end
