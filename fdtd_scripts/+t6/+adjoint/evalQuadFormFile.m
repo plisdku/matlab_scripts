@@ -23,10 +23,10 @@ for ff = 1:of.numFields()
     
     for xyz = 1:3
         interpField = ['Interp', char('W'+xyz)];
-        if isempty(objFunStruct.(interpField))
-            objFunStruct.(interpField){ff} = ...
-                adjoint.interpolationMatrix(pos{ff}{xyz}, posInterp{xyz});
-        end
+        %if isempty(objFunStruct.(interpField){ff})
+        objFunStruct.(interpField){ff} = ...
+            adjoint.interpolationMatrix(pos{ff}{xyz}, posInterp{xyz});
+        %end
     end
 end
 

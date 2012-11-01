@@ -2,6 +2,7 @@
 % This is my output file
 
 classdef OutputFile < handle
+    % Output file!
     properties (Hidden)
         FrameSize = 0; %  = nFields * total Yee cells, for field outputs
         FieldOffsetsInFrames = [0];  % measured in # values, not bytes

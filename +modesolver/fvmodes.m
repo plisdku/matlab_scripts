@@ -59,6 +59,9 @@ function [ex ey ez hx hy hz neff] = fvmodes(lambda, guess, nmodes, dx, dy, ...
 % fields will have a size of [n,m].
 %
 % AUTHORS:  Thomas E. Murphy (tem@umd.edu)
+%
+% The convenience function fvmodes.m was added by
+%
 %           Paul C. Hansen (pch@stanford.edu)
 %
 

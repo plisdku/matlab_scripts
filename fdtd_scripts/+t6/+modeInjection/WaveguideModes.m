@@ -136,12 +136,10 @@ classdef WaveguideModes
                 X.GuessIndex, X.NumModes, ...
                 diff(obj.xH), diff(obj.yH), X.Permittivity, ...
                 X.BoundaryConditions);
-
-            totalEnergy = obj.calcEnergy(ex, ey, ez, hx, hy, hz, ...
+            
+            totalEnergy = obj.complexPower(ex, ey, ez, hx, hy, hz, ...
                 obj.xE, obj.yE, obj.xH, obj.yH);
             sqrtEnergy = sqrt(totalEnergy);
-            
-            sqrtEnergy(sqrtEnergy == 0) = 1.0; % don't normalize evanescent modes
 
             ex = bsxfun(@times, ex, 1./sqrtEnergy);
             ey = bsxfun(@times, ey, 1./sqrtEnergy);
@@ -149,6 +147,9 @@ classdef WaveguideModes
             hx = bsxfun(@times, hx, 1./sqrtEnergy);
             hy = bsxfun(@times, hy, 1./sqrtEnergy);
             hz = bsxfun(@times, hz, 1./sqrtEnergy);
+            
+            newEnergy = obj.complexPower(ex, ey, ez, hx, hy, hz, ...
+                obj.xE, obj.yE, obj.xH, obj.yH);
             
             obj.E = permute(cat(4, ex, ey, ez), [1 2 4 3]);
             obj.H = permute(cat(4, hx, hy, hz), [1 2 4 3]);
@@ -161,6 +162,15 @@ classdef WaveguideModes
             eyhx = ey.*gridInterp(xH, yH, hx, xE, yE);
             
             totalEnergy = 0.5*real(trapzn({xE, yE}, exhy - eyhx));
+        end
+        
+        function totalEnergy = complexPower(obj, ex, ey, ez, hx, hy, hz, ...
+            xE, yE, xH, yH)
+
+            exhy = ex.*gridInterp(xH, yH, conj(hy), xE, yE);
+            eyhx = ey.*gridInterp(xH, yH, conj(hx), xE, yE);
+            
+            totalEnergy = 0.5*trapzn({xE, yE}, exhy - eyhx);
         end
         
         

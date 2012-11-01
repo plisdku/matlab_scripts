@@ -15,6 +15,7 @@ X.Colormap = [];
 X.UnitString = [];
 X.FilePattern = '';
 X.Subplots = [];
+X.Times = [];
 X = parseargs(X, varargin{:});
 
 if isempty(X.Colormap) && exist('orangecrush', 'file')
@@ -29,11 +30,6 @@ if ~isempty(X.CLim)
 end
 
 file = OutputFile(fileName);
-
-fieldNames = {};
-for nn = 1:file.numFields()
-    fieldNames{nn} = file.Fields{nn}.Name;
-end
 
 if file.numRegions() > 1
     error('Function does not yet work with multi-region outputs.');
@@ -61,53 +57,9 @@ numFrames = file.numFramesAvailable;
 % M N 1 3       2D output: plot 2D movie with three parts
 
 if (prod(dim(1:3)) == 1)   % All 0D cases
-    file.open();
-    data = file.readFrames();
-    file.close();
-    if (length(dim) == 3)
-        plot(squeeze(data));
-    elseif (length(dim) == 4)  % assuming dim4 = 3
-        plot(squeeze(data)');
-        legend(fieldNames{:})
-    end
+    handle0D(file, X);
 elseif (nnz(dim(1:3) == 1) == 2)   % All 1D cases
-    if (length(dim) == 3)
-        frameNum = 1;
-        file.open
-        data = file.readFrames('NumFrames', 1);
-        while frameNum <= numFrames
-            if (mod(frameNum, X.Period) == 0)
-                plot(squeeze(data));
-                ylim(X.YLim);
-                legend(fieldNames{:})
-                title(sprintf('Frame %i', frameNum));
-                pause(0.01);
-            end
-            if frameNum < numFrames
-                data = file.readFrames('NumFrames', 1);
-            end
-            frameNum = frameNum + 1;
-        end
-        file.close
-    elseif (length(dim) == 4)
-        frameNum = 1;
-        file.open
-        data = file.readFrames('NumFrames', 1);
-        while frameNum <= numFrames
-            if (mod(frameNum, X.Period) == 0)
-                plot(squeeze(data(:,:,:,:)));
-                ylim(X.YLim);
-                legend(fieldNames{:})
-                title(sprintf('Frame %i', frameNum));
-                pause(0.01);
-            end
-            if frameNum < numFrames
-                data = file.readFrames('NumFrames', 1);
-            end
-            frameNum = frameNum + 1;
-        end
-        file.close
-    end
+    handle1D(file, X);
 elseif (nnz(dim(1:3) == 1) == 1)    % All 2D cases
     handle2D(file, X, imagesc_args);
 elseif (nnz(dim(1:3) == 1) == 0)   % All 3D cases
@@ -115,6 +67,77 @@ elseif (nnz(dim(1:3) == 1) == 0)   % All 3D cases
 end
 
 end
+
+
+function handle0D(file, X)
+
+fieldNames = {};
+for nn = 1:file.numFields()
+    fieldNames{nn} = file.Fields{nn}.Name;
+end
+
+file.open();
+data = file.readFrames('Times', X.Times);
+file.close();
+
+fileTimes = {};
+for ff = 1:file.numFields
+    fileTimes{ff} = file.times('Field', ff);
+
+    ft(:,ff) = fileTimes{ff}(1:size(data,5));
+end
+
+if ~isempty(X.Times)
+    plot(X.Times, squish(data));
+else
+    %for ff = 1:file.numFields
+        %plot(fileTimes{ff}, squish(data(:,:,:,ff,:)));
+        plot(ft, squish(data)');
+    %    hold on
+    %end
+end
+
+xlabel('Time')
+ylabel('Field')
+legend(fieldNames{:});
+%lineColors('jet')
+    
+end
+
+function handle1D(file, X)
+
+fieldNames = {};
+for nn = 1:file.numFields()
+    fieldNames{nn} = file.Fields{nn}.Name;
+end
+
+xyz = file.positions();
+
+frameNum = 1;
+file.open
+data = file.readFrames('NumFrames', 1);
+while frameNum <= numFrames
+    if (mod(frameNum, X.Period) == 0)
+        
+        plot(squeeze(data(:,:,:,:)));
+        ylim(X.YLim);
+        legend(fieldNames{:})
+        title(sprintf('Frame %i', frameNum));
+        pause(0.01);
+        
+        if frameNum < numFrames
+            data = file.readFrames('NumFrames', 1);
+        end
+        frameNum = frameNum + 1;
+        
+    end
+end
+file.close;
+
+
+end
+
+
 
 function nxny = bestSubplots(Lx, Ly, numFields)
 

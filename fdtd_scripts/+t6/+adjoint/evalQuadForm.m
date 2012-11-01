@@ -62,11 +62,29 @@ for ff = 1:numFields
             evalFilterMatrix(objFunStruct.Z, pos, ff, 3), 3);
     end
     
+    if ~isempty(objFunStruct.T)
+        oneFieldData = multTensor(oneFieldData, ...
+            evalTimeFilter(objFunStruct.T, timeVals{ff}, ff), 5);
+        
+%         figure(9); clf
+%         %image(complex2rgb(transpose(squish(oneFieldData))));
+%         imagesc(abs(transpose(squish(oneFieldData))));
+%         axis xy image;
+%         prettify('Times', 14)
+%         title(sprintf('Measured magnitude %i', ff)); colorbar
+%         pause
+    end
+    
     if ~isempty(objFunStruct.XYZ)
         
         filterArray = evalFilterArray(objFunStruct.XYZ, pos, ff);
         
-        % I'm adding a one to the end of the size array because reshape
+        figure(2); clf
+        image(complex2rgb(transpose(squish(filterArray))));
+        axis xy image; title(sprintf('Filter %i', ff));
+        pause
+        
+        % I'm adding ones to the end of the size array because reshape
         % will barf if I ever happen to reshape to a
         % less-than-two-dimensional form.
         szDat = [size(oneFieldData) 1 1 1 1];
@@ -77,15 +95,14 @@ for ff = 1:numFields
         oneFieldData = multTensor(oneFieldData, filterArray, 1);
         oneFieldData = reshape(oneFieldData, [1 1 1 szDat(4:end)]);
         
-        %oneFieldData = sum(sum(sum(...
-        %    bsxfun(@times, oneFieldData, ...
-        %    evalFilterArray(objFunStruct.XYZ, pos, ff)), 3), 2), 1);
+        fprintf('Field %i tensor product: %2.2f + %2.2fi \n', ...
+            ff, real(oneFieldData), imag(oneFieldData));
     end
     
-    if ~isempty(objFunStruct.T)
-        oneFieldData = multTensor(oneFieldData, ...
-            evalTimeFilter(objFunStruct.T, timeVals{ff}, ff), 5);
-    end
+%    if ~isempty(objFunStruct.T)
+%        oneFieldData = multTensor(oneFieldData, ...
+%            evalTimeFilter(objFunStruct.T, timeVals{ff}, ff), 5);
+%    end
     
     if ff == 1, filteredData = oneFieldData;
     else filteredData(:,:,:,ff,:) = oneFieldData;
@@ -324,7 +341,7 @@ end
 
 function vals = evalTimeFilter(filter, timeVals, whichField)
 
-if length(timeVals) > 1
+if length(timeVals) > 2 % I use 2 because of frequency filter?what a kludge!
     dt = timeVals(2) - timeVals(1);
 else
     dt = 1;
@@ -339,7 +356,7 @@ if iscell(filter)
         if isVector(vals)
             vals = vals*dt;
             
-            if length(vals) > 1
+            if length(vals) > 2
                 vals([1 end]) = vals([1 end])/2; % implement trapezoidal integration
             end
         else
@@ -356,7 +373,7 @@ else
         if isVector(vals)
             vals = vals*dt;
             
-            if length(vals) > 1
+            if length(vals) > 2
                 vals([1 end]) = vals([1 end])/2; % implement trapezoidal integration
             end
         else
