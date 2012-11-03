@@ -58,7 +58,7 @@ assert(ndims(B) == numel(szB));
 
 
 if isempty(inA)
-    C = permute(outerProduct(A, szA, B, szB), reorderC);
+    C = permute(outerProduct(A, ndims(A), B, ndims(B)), reorderC);
     
 else
     C = txt_faster(A, szA_, B, szB_, inA_, outA_, inB_, outB_);

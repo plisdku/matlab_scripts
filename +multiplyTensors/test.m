@@ -4,6 +4,16 @@ import multiplyTensors.*
 
 isClose = @(A, B) norm(A(:) - B(:))/(0.5*norm(A(:)) + 0.5*norm(B(:))) < 1e-6;
 
+%% Tensor size
+
+A = rand(1);
+assert(isequal(tsize(A, 1), 1));
+assert(isequal(tsize(A, 2), [1 1]));
+
+A = rand(3,3);
+assert(isequal(tsize(A, 2), [3 3]));
+assert(isequal(tsize(A, 3), [3 3 1]));
+
 %% Tensor dimensions
 
 sz = tensorOrder(1, 1, [], [], []);
@@ -27,7 +37,7 @@ fprintf('Tensor size PASSED\n');
 
 A = rand(3,3);
 B = rand(2,2);
-[C szC] = txt(A, [3 3], B, [2 2]);
+[C szC] = txt(A, ndims(A), B, ndims(B));
 
 assert(isequal(size(C), [size(A) size(B)]));
 
@@ -48,7 +58,7 @@ fprintf('Outer product test PASSED\n');
 
 A = rand(3,3,3,3);
 
-A_frobenius = txt(A, [3 3 3 3], A, [3 3 3 3], 1:4, 1:4);
+A_frobenius = txt(A, ndims(A), A, ndims(A), 1:4, 1:4);
 
 assert(isClose(A_frobenius, sum(A(:).^2)));
 
@@ -59,7 +69,7 @@ fprintf('Frobenius norm test PASSED\n');
 A = rand(3,3,2);
 B = rand(3,3,2);
 
-AB = txt(A, [3 3 2], B, [3 3 2], 1:3);
+AB = txt(A, ndims(A), B, ndims(B), 1:3);
 
 assert(isClose(AB, dot(A(:), B(:))));
 fprintf('Inner product test PASSED\n');
@@ -69,13 +79,13 @@ fprintf('Inner product test PASSED\n');
 A = rand(3,2,4);
 B = rand(4,1,3);
 
-AB = txt(A, [3 2 4], B, [4 1 3], 1, 3);
+AB = txt(A, ndims(A), B, ndims(B), 1, 3);
 
 assert(isequal(size(AB), [2 4 4]));
 
 % Do it by brute force
 
-AoxB = txt(A, [3 2 4], B, [4 1 3]); % outer product
+AoxB = txt(A, ndims(A), B, ndims(B)); % outer product
 
 AB2 = zeros(2,4,4);
 
@@ -99,7 +109,7 @@ fprintf('Inner-1 outer-2 product test PASSED\n');
 A = rand(3,2,4);
 B = rand(1,4,3,2);
 
-AB = txt(A, [3 2 4], B, [1 4 3 2], 1:2, 3:4);
+AB = txt(A, ndims(A), B, ndims(B), 1:2, 3:4);
 
 assert(isequal(size(AB), [4 1 4]));
 
@@ -125,7 +135,7 @@ A = rand(3,3);
 B = rand(3,1);
 
 % Matrix times column vector
-AB = txt(A, [3 3], B, [3 1], 2, 1);
+AB = txt(A, ndims(A), B, 2, 2, 1);
 assert(isequal(size(AB), [3 1]));
 assert(isequal(AB, A*B));
 fprintf('Matrix-vector product test PASSED\n');
@@ -133,7 +143,7 @@ fprintf('Matrix-vector product test PASSED\n');
 % Matrix times column vector, worked backwards (why not)
 % This is not the same as B'*A.  I'm just re-ordering the output indices
 % from A*B.  Fun, huh.
-BA = txt(B, [3 1], A, [3 3], 1, 2);
+BA = txt(B, 2, A, ndims(A), 1, 2);
 assert(isequal(size(BA), [1 3]));
 assert(isClose(BA, (A*B)'));
 fprintf('Vector-matrix product test PASSED\n');
@@ -143,7 +153,7 @@ fprintf('Vector-matrix product test PASSED\n');
 T = rand(4,4,3,4);
 B = rand(5,3);
 
-[C szC] = txa(T, [4 4 3 4], B, 3);
+[C szC] = txa(T, ndims(T), B, 3);
 
 assert(isequal(szC, [4 4 5 4]));
 assert(isequal(size(C), [4 4 5 4]));
@@ -164,7 +174,7 @@ fprintf('Tensor-matrix product test PASSED\n');
 A = rand(10,7,3,2,5);   % [x y i j z]    free j
 B = rand(5,3,7,10,4);   % [z i y x k]    k replaces i
 
-C = tfxtf(A, [10 7 3 2 5], [1 2 5], B, [5 3 7 10 4], [4 3 1], ...
+C = tfxtf(A, ndims(A), [1 2 5], B, ndims(B), [4 3 1], ...
     3, 2); % 5
 
 assert(isequal(size(C), [10 7 2 5 4]));
@@ -175,7 +185,7 @@ for ii = 1:size(A,1)
             a = squish(A(ii,jj,:,:,kk));
             b = squish(B(kk,:,jj,ii,:));
         
-            c = txt(a, [3 2], b, [3 4], 1, 1); % 2
+            c = txt(a, ndims(a), b, ndims(b), 1, 1); % 2
             
             assert(isequal(c, squish(C(ii, jj, :, kk, :))));
         end
@@ -185,7 +195,7 @@ end
 fprintf('Tensor field product, no replacement PASSED\n');
 
 %%
-C = tfxtf(A, [10 7 3 2 5], [1 2 5], B, [5 3 7 10 4], [4 3 1], ...
+C = tfxtf(A, ndims(A), [1 2 5], B, ndims(B), [4 3 1], ...
     3, 2, 5);
 
 assert(isequal(size(C), [10 7 4 2 5]));
@@ -196,7 +206,7 @@ for ii = 1:size(A,1)
             a = squish(A(ii,jj,:,:,kk));
             b = squish(B(kk,:,jj,ii,:));
         
-            c = txt(a, [3 2], b, [3 4], 1, 1, 2);
+            c = txt(a, ndims(a), b, ndims(b), 1, 1, 2);
             
             assert(isequal(c, squish(C(ii, jj, :, :, kk))));
         end
@@ -209,8 +219,7 @@ fprintf('Tensor field product with replacement PASSED\n');
 
 A = rand(10, 11, 3);
 B = rand(5, 10, 3);
-C = tfxtf(A, [10 11 3], 3, B, [5 10 3], 3, 1, 2, 1);
-%C = tfxtf(A, B, 3, 3, 1, 2, 1);
+C = tfxtf(A, ndims(A), 3, B, ndims(B), 3, 1, 2, 1);
 
 assert(isequal(size(C), [5 11 3]));
 
@@ -225,10 +234,10 @@ e = ones(100, 1);
 b = spdiags([e -2*e e], -1:1, 100, 100); % Matlab example: 2nd difference
 B = repmat({b}, [1 3]);
 
-C = txca(A, [100 100 3 2], 3, B, 2, 2);
+C = txca(A, ndims(A), 3, B, 2, 2);
 
 for nn = 1:3
-    c = txa(A(:,:,nn,:), [100 100 1 2], B{nn}, 2, 2);
+    c = txa(A(:,:,nn,:), ndims(A), B{nn}, 2, 2);
     assert(isequal(C(:,:,nn,:), c));
 end
 
@@ -239,7 +248,8 @@ fprintf('Tensor times cell array test PASSED\n');
 A = rand(8, 30);
 B = rand(31, 30);
 
-[C szC] = txa(A, [8 30 1], B, 2, 2);
+% We consider A to be size [8 30 1], so ndims == 3.
+[C szC] = txa(A, 3, B, 2, 2);
 assert(isequal(szC, [8 31 1]));
 
         
@@ -262,12 +272,12 @@ B_cell = repmat({b}, [1 3]);
 
 % Method 1: tfxtf
 tic
-C1 = tfxtf(A, [Nx Ny 3], 3, B_mat, [Nyy Ny 3], 3, 2, 2, 1);
+C1 = tfxtf(A, ndims(A), 3, B_mat, ndims(B_mat), 3, 2, 2, 1);
 tFull = toc;
 
 %% Method 2: cells
 tic
-C2 = txca(A, [Nx Ny 3], 3, B_cell, 2, 2);
+C2 = txca(A, ndims(A), 3, B_cell, 2, 2);
 tSparse = toc;
 
 assert(isClose(C1, C2));
@@ -276,3 +286,12 @@ fprintf('Transform size [%i %i %i] tensor to [%i %i %i] tensor:\n', ...
     Nx, Ny, 3, Nx, Nyy, 3);
 fprintf('\t%2.3e seconds (full matrix method)\n', tFull);
 fprintf('\t%2.3e seconds (cell array of sparse matrices)\n', tSparse);
+
+%% All done.
+
+fprintf('All tests done.\n');
+
+
+
+
+

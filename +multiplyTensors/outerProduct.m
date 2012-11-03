@@ -1,4 +1,4 @@
-function [C szC] = outerProduct(A, szA, B, szB)
+function [C szC] = outerProduct(A, ndimA, B, ndimB)
 % outerProduct(A, szA, B, szB)  Calculate tensor outer product A ox B
 %
 % [C szC] = outerProduct(A, szA, B, szC) will satisfy szC == [szA szB].
@@ -6,8 +6,11 @@ function [C szC] = outerProduct(A, szA, B, szB)
 
 import multiplyTensors.*
 
+szA = tsize(A, ndimA);
+
 if nargin == 4
-    C = reshape(outerProduct(A, szA, B(:)), [szA szB]);
+    szB = tsize(B, ndimB);
+    C = reshape(outerProduct(A, ndimA, B(:)), [szA szB]);
 else
 
     assert(isvector(szA));

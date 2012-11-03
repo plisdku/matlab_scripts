@@ -1,5 +1,8 @@
-function [C szC] = tfxtf(A, szA, coordA, B, szB, coordB, inA, inB, replaceDims)
+function [C szC] = tfxtf(A, ndimA, coordA, B, ndimB, coordB, inA, inB, replaceDims)
 % tfxtf  Calculate product of tensor fields
+
+szA = multiplyTensors.tsize(A, ndimA);
+szB = multiplyTensors.tsize(B, ndimB);
 
 if nargin < 9
     replaceDims = [];

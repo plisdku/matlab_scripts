@@ -1,7 +1,10 @@
-function [C, szC] = txt(A, szA, B, szB, inA, inB, replaceDims)
+function [C, szC] = txt(A, ndimA, B, ndimB, inA, inB, replaceDims)
 % C = txt(A, szA, B, szB, inA, inB, replaceDims)
 
 import multiplyTensors.*
+
+szA = tsize(A, ndimA);
+szB = tsize(B, ndimB);
 
 if nargin < 5
     inA = [];

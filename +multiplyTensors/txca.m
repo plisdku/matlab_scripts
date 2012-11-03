@@ -1,8 +1,10 @@
-function [C szC] = txca(A, szA, coordA, B, inA, inB)
+function [C szC] = txca(A, ndimA, coordA, B, inA, inB)
 % C = txca(A, szA, B, inA, coordA)   Multiply tensor by cell array of matrices
 %
 
 import multiplyTensors.*
+
+szA = tsize(A, ndimA);
 
 validateArguments(A, szA, coordA, B, inA, inB);
 outB = 3-inB;
@@ -18,7 +20,7 @@ for nn = 1:numel(B)
     
     szA_slice = szA;
     szA_slice(coordA) = 1;
-    C(indices{:}) = txa(A(indices{:}), szA_slice, B{nn}, inA, inB);
+    C(indices{:}) = txa(A(indices{:}), ndimA, B{nn}, inA, inB);
 end
 
 
