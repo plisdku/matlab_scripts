@@ -29,6 +29,21 @@ if nargin >= 2
     assert(length(lamRange) == 2);
 end
 
+[lam, ~, ~, er, ei] = loadData(matName);
+
+[lam, indices] = sort(lam);
+er = er(indices);
+ei = ei(indices);
+eps = er + 1i*ei;
+
+indices = find(lam >= lamRange(1) & lam <= lamRange(2));
+
+lam = lam(indices);
+eps = eps(indices);
+
+
+function [lam n k er ei] = loadData(matName)
+
 thisfile = mfilename('fullpath');
 [pathstr, name] = fileparts(thisfile);
 
@@ -45,14 +60,3 @@ n = AA(:,2);
 k = AA(:,3);
 er = AA(:,4);
 ei = AA(:,5);
-
-[lam, indices] = sort(lam);
-er = er(indices);
-ei = ei(indices);
-eps = er + i*ei;
-
-indices = find(lam >= lamRange(1) & lam <= lamRange(2));
-
-lam = lam(indices);
-eps = eps(indices);
-

@@ -140,6 +140,17 @@ end
 
 fprintf('Tensor-matrix product test PASSED\n');
 
+%% Regression test for a txt bug
+
+A = rand(1, 20, 20, 4);
+B = rand(1, 20);
+
+C = txt(A, B, 2, 2, 1);
+
+assert(isequal(size(C), [1 1 20 4]));
+
+fprintf('Trailing singleton dimension bug STILL SQUARSHED\n');
+
 %% Tensor field times tensor field
 
 A = rand(10,11,3,2,2);   % [x y i j z]    free j
@@ -183,7 +194,7 @@ e = ones(100, 1);
 b = spdiags([e -2*e e], -1:1, 100, 100); % Matlab example: 2nd difference
 B = repmat({b}, [1 3]);
 
-C = txca(A, B, 2, 3);
+C = txca(A, B, 2, 2, 3);
 
 for nn = 1:3
     c = txa(A(:,:,nn,:), B{nn}, 2);
@@ -217,10 +228,11 @@ tFull = toc;
 
 % Method 2: cells
 tic
-C2 = txca(A, B_cell, 2, 3);
+C2 = txca(A, B_cell, 2, 2,3);
 tSparse = toc;
 
 assert(isClose(C1, C2));
+fprintf('tfxtf and txca agree...\n');
 
 fprintf('Transform size [%i %i %i] tensor to [%i %i %i] tensor:\n', ...
     Nx, Ny, 3, Nx, Nyy, 3);

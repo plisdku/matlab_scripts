@@ -1,23 +1,23 @@
-function [C szC] = txca(A, B, inA, coordA)
+function [C szC] = txca(A, B, inA, inB, coordA)
 % C = txca(A, B, inA, coordA)   Multiply tensor by cell array of matrices
 %
 
-validateArguments(A, B, inA, coordA);
+validateArguments(A, B, inA, inB, coordA);
 
 szC = size(A);
-szC(inA) = size(B{1}, 1);
+szC(inA) = size(B{1}, 3-inB);
 
 C = zeros([szC 1 1]);
 
 indices = repmat({':'}, [1 ndims(C)]);
 for nn = 1:numel(B)
     indices{coordA} = nn;
-    C(indices{:}) = multiplyTensors.txa(A(indices{:}), B{nn}, inA);
+    C(indices{:}) = multiplyTensors.txt(A(indices{:}), B{nn}, inA, inB, 3-inB);
 end
 
 
 
-function validateArguments(A, B, inA, coordA)
+function validateArguments(A, B, inA, inB, coordA)
 
 if ~iscell(B)
     error('B must be 1-D cell array of matrices');
@@ -33,6 +33,6 @@ for nn = 2:numel(B)
     end
 end
 
-if size(B{1}, 2) ~= size(A, inA)
+if size(B{1}, inB) ~= size(A, inA)
     error('size(A, inA) must be equal to number of columns of elements of B');
 end

@@ -1,4 +1,5 @@
-function [C szC] = txt_lowLevel(A, B, inA, inB, replaceDims, outA, outB, szA, szB, szC)
+function [C szC] = txt_lowLevel(A, B, inA, inB, replaceDims, outA, outB,...
+    szA, szB, szC)
 
 % Now, how to do the products...
 
@@ -47,12 +48,35 @@ else
         newIndices(outA) = 1:numel(outA);
         newIndices = [newIndices, setdiff(1:numel(szC), newIndices)];
         
-        C = permute(C, newIndices(1:ndims(C)));
+        C = safePermute(C, newIndices);
         szC = szC(newIndices);
     end
     
 end
 
+function B = safePermute(A, sigma)
+% safePermute   Permute function, allowing inclusion of trailing singletons
+% B = safePermute(A, sigma)
+
+if isscalar(A)
+    B = A;
+    return
+end
+
+numSingletons = max(sigma) - numActualDims(A);
+
+B = shiftdim(A, -numSingletons);
+
+newOrder = [1 + mod(sigma-1 + numSingletons, ndims(B)), ...
+    numel(sigma)+1:ndims(B)];
+B = permute(B, newOrder);
+
+function n = numActualDims(A)
+
+n = ndims(A);
+if n == 2 && size(A,2) == 1
+    n = 1;
+end
 
 function C = outerProduct(A, szA, B, szB)
 % outerProduct(A, szA, b)  Calculate outer product tensor A with vector b
