@@ -129,6 +129,24 @@ end
 assert(isequal(AB, AB2));
 fprintf('Inner-2 product test PASSED\n');
 
+%% Big scalar times matrix with txt (regression test)
+
+A = 1;
+dimsA = 5;
+inA = 4;
+
+B = rand(2, 1);
+inB = 2;
+replace = 1;
+
+[C szC] = txt(A, dimsA, B, ndims(B), inA, inB, replace);
+
+assert(isequal(szC, [1 1 1 2 1]));
+assert(isequal(A*B(:), C(:)));
+
+fprintf('Big scalar test PASSED\n');
+
+
 %% Matrix-vector product (a special case worth testing)
 
 A = rand(3,3);
@@ -242,6 +260,15 @@ for nn = 1:3
 end
 
 fprintf('Tensor times cell array test PASSED\n');
+
+%% TXCA regression test
+
+A = rand([1 26 26 4 2]);
+B = repmat({rand(1,2)}, [1 4]);
+[C szC] = txca(A, 5, 4, B, 5, 2);
+
+assert(isequal(size(C), [1 26 26 4]));
+assert(isequal(szC, [1 26 26 4 1]));
 
 %% Another test, about sizes...
 

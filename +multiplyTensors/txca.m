@@ -1,5 +1,8 @@
 function [C szC] = txca(A, ndimA, coordA, B, inA, inB)
-% C = txca(A, szA, B, inA, coordA)   Multiply tensor by cell array of matrices
+% txca   Multiply tensor by cell array of matrices
+%
+% Usage:
+%   C = txca(A, ndimA, coordA, B, inA, inB)
 %
 
 import multiplyTensors.*
@@ -14,7 +17,7 @@ szC(inA) = size(B{1}, outB);
 
 C = zeros([szC 1 1]);
 
-indices = repmat({':'}, [1 ndims(C)]);
+indices = repmat({':'}, [1 ndimA]);
 for nn = 1:numel(B)
     indices{coordA} = nn;
     

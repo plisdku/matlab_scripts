@@ -27,3 +27,10 @@ outB = 1:numel(szB); outB(inB) = [];
 
 C = txt_fast(A, szA, B, szB, inA, inB, replaceDims, outA, outB);
 
+% This is just a sanity check
+if numel(szC) >= 2
+    szC_actual = size(C);
+    assert(isequal(szC_actual, szC(1:numel(szC_actual))));
+end
+
+assert(numel(C) == prod(szC));

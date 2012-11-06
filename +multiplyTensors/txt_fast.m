@@ -2,10 +2,10 @@ function C = txt_fast(A, szA, B, szB, inA, inB, replaceDims, outA, outB)
 
 import multiplyTensors.*
 
-if isscalar(A) || isscalar(B)
-    C = A*B;
-    return
-end
+%if isscalar(A) || isscalar(B)
+%    C = A*B;
+%    return
+%end
 
 % Neither A nor B is a scalar.  
 %
@@ -53,8 +53,8 @@ end
 [~, orderB] = sort(orderB(outB_));
 reorderC = invPerm([orderA, orderB + numel(orderA)]);
 
-assert(ndims(A) == numel(szA));
-assert(ndims(B) == numel(szB));
+%assert(ndims(A) == numel(szA));
+%assert(ndims(B) == numel(szB));
 
 
 if isempty(inA)
