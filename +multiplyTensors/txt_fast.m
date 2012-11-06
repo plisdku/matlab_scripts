@@ -38,7 +38,7 @@ else
     orderA = 1:numel(szA);
 end
 
-if onesB > 0
+if onesB > 0 && ~ismatrix(B) % matrices are always 2D, no probs here
     B = shiftdim(B, -onesB);
     inB_ = wrapIndices(numel(szB), inB + onesB);
     outB_ = wrapIndices(numel(szB), outB + onesB);

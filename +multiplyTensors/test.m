@@ -187,6 +187,16 @@ end
 
 fprintf('Tensor-matrix product test PASSED\n');
 
+%% Tensor-matrix product, matrix is Nx1, sparse (regression test)
+% The point is that the sparse matrix has a trailing singleton dim.
+
+T = rand([1 6 6 1 2]);
+B = sparse(3, 1, 1);
+
+[C szC] = txa(T, 5, B, 1, 2);
+
+assert(isequal(szC, size(C)));
+
 %% Tensor field times tensor field, no replacement
 
 A = rand(10,7,3,2,5);   % [x y i j z]    free j
