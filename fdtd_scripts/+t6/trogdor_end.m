@@ -30,12 +30,14 @@ if ~isempty(X.Directory) && ~exist([pwd filesep X.Directory], 'dir')
     end
 end
 
+%{
 if ~isempty(X.OutputDirectory) && ~exist([pwd filesep X.OutputDirectory], 'dir')
     try mkdir([pwd filesep X.OutputDirectory])
     catch exception
         error('Could not create output directory!');
     end
 end
+%}
 
 % Last things:
 %   store the extent of source grids in links

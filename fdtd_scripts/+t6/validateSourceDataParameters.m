@@ -3,8 +3,8 @@ function validateSourceDataParameters(X)
 % This function will:
 % - make sure Yee cells and Bounds are Nx6 (whichever is provided)
 % - make sure only one of YeeCells and Bounds is provided
-% - make sure Duration is Mx2
-% - make sure TimeData is as long as numT (total from Durations with period 1)
+% - make sure Timesteps is Mx2
+% - make sure TimeData is as long as numT (total from Timesteps with period 1)
 %   and has one value per input field
 % - make sure SpaceTimeData has dimensions [x y z nFields numT]
 % Furthermore this makes sure that the TimeData does not occur
@@ -39,18 +39,18 @@ if isempty(X.YeeCells) && size(X.Bounds, 2) ~= 6
     error('Bounds must have six columns.');
 end
 
-if length(X.Duration) == 0
-    X.Duration = [0, t6.simulation().NumT-1];
-elseif size(X.Duration, 2) ~= 2
-    error('Duration must have two columns (first and last timestep).');
+if length(X.Timesteps) == 0
+    X.Timesteps = [0, t6.simulation().NumT-1];
+elseif size(X.Timesteps, 2) ~= 2
+    error('Timesteps must have two columns (first and last timestep).');
 end
 
-numT = sum(X.Duration(:,2) - X.Duration(:,1) + 1);
+numT = sum(X.Timesteps(:,2) - X.Timesteps(:,1) + 1);
 
 % 1/3  Validate time data.
 if length(X.TimeData) ~= 0
     if length(X.TimeData) ~= numT
-        error('TimeData must have the same length as the Duration');
+        error('TimeData must have the same length as the Timesteps');
     elseif size(X.TimeData, 1) ~= length(fieldTokens)
         error('TimeData must have size [nFields, timesteps]');
     end

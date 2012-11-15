@@ -39,12 +39,7 @@ classdef ExtrudePath < t6.model.Node
             X.Path = [];
             X.U = [];
             X.V = [];
-            %X.T = linspace(0, 1, 10);
             X = parseargs(X, varargin{:});
-            
-            if isempty(X.U) && isempty(X.V)
-                error('Neither U nor V was provided');
-            end
             
             if ~isa(X.X, 'function_handle')
                 error('X must be a function handle');
@@ -66,10 +61,6 @@ classdef ExtrudePath < t6.model.Node
                 error('V must be a function handle');
             end
             
-            %if ~isa(X.T, 'numeric')
-            %    error('T must be an array of numbers in [0, 1]');
-            %end
-            
             obj.permittivity = X.Permittivity;
             obj.permeability = X.Permeability;
             obj.xFunc = X.X;
@@ -77,7 +68,6 @@ classdef ExtrudePath < t6.model.Node
             obj.pathFunc = X.Path;
             obj.uFunc = X.U;
             obj.vFunc = X.V;
-            %obj.t = reshape(X.T, 1, []);
         end
         
         function [xBot yBot tris] = bottomFace(obj, params)
@@ -115,7 +105,6 @@ classdef ExtrudePath < t6.model.Node
             ringFaces = [v0' v1' v2'; v0' v2' v3'];
 
             numEndFaces = size(tris, 1);
-            %numRings = length(obj.t)-1;
             allFaces = zeros(numEdges*2*numRings + 2*numEndFaces, 3);
 
             facesPerRing = 2*numEdges;
@@ -148,9 +137,6 @@ classdef ExtrudePath < t6.model.Node
             
             path = obj.pathFunc(params);
             
-            %path = cell2mat(arrayfun(@(t) obj.pathFunc(params,t), obj.t, ...
-            %    'UniformOutput', false));
-            
             if any(isnan(path(:)))
                 keyboard;
             end
@@ -159,21 +145,17 @@ classdef ExtrudePath < t6.model.Node
             
             if ~isempty(obj.uFunc)
                 u = obj.uFunc(params);
-                %u = cell2mat(arrayfun(@(t) obj.uFunc(params,t), obj.t, ...
-                %    'UniformOutput', false));
             end
             
             if ~isempty(obj.vFunc)
                 v = obj.vFunc(params);
-                %v = cell2mat(arrayfun(@(t) obj.vFunc(params,t), obj.t, ...
-                %    'UniformOutput', false));
             end
             
-            if ~exist('u', 'var')
+            if ~exist('u', 'var') && ~exist('v', 'var')
+                [u v] = obj.normalBasis(fwd);
+            elseif ~exist('u', 'var')
                 u = cross(v, fwd, 1);
-            end
-            
-            if ~exist('v', 'var')
+            elseif ~exist('v', 'var')
                 v = cross(fwd, u, 1);
             end
             
@@ -232,24 +214,7 @@ classdef ExtrudePath < t6.model.Node
                 end
             end
             
-            %sz = size(obj.pathFunc(params, 0));
-            %if ~isequal(sz, [3 1])
-            %    error('Path function must return 3x1 array for each t!');
-            %end
-            %if ~isempty(obj.uFunc)
-            %    sz = size(obj.uFunc(params, 0));
-            %    if ~isequal(sz, [3 1])
-            %        error('Waveguide U function must return 3x1 array for each t!');
-            %    end
-            %end
-            %if ~isempty(obj.vFunc)
-            %    sz = size(obj.vFunc(params, 0));
-            %    if ~isequal(sz, [3 1])
-            %        error('Waveguide V function must return 3x1 array for each t!');
-            %    end
-            %end
-            
-            [xBot yBot tris] = obj.bottomFace(params);
+            [xBot, ~, tris] = obj.bottomFace(params);
             
             vertFunc = @(p) obj.allVertices(p);
             
@@ -262,6 +227,41 @@ classdef ExtrudePath < t6.model.Node
                 obj.permeability) };
         end
         
+        
+        function [u v n b] = normalBasis(obj, fwd)
+            fwd = unit(fwd);
+            n = unit(centeredDiff(fwd, 2));  % principal normal
+            b = unit(cross(fwd, n, 1));      % binormal
+            tnb = cat(3, fwd, n, b);
+
+            n_ahead = unit(cross(b(:,1:end-1), fwd(:,2:end), 1));
+            tnb_ahead = cat(3, fwd(:,2:end), n_ahead, b(:,1:end-1));
+
+            u = 0*fwd;
+            firstNormalPlane = null(fwd(:,1)');
+            u(:,1) = firstNormalPlane(:,1);
+
+            for pp = 2:size(fwd, 2)
+
+                U = squish(tnb(:,pp-1,:));
+                V = squish(tnb_ahead(:,pp-1,:));
+
+                if any(isnan(U(:))) || any(isnan(V(:)))
+                    u(:,pp) = u(:,pp-1);
+                else
+                    u(:,pp) = V*inv(U)*u(:,pp-1);
+                end
+
+                if dot(u(:,pp), u(:,pp-1)) < 0
+                    u(:,pp) = -u(:,pp);
+                end
+
+            end
+
+            u = unit(u);
+            v = cross(fwd, u, 1);
+        end
+
         
         
     end % methods

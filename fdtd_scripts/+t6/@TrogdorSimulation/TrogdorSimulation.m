@@ -20,23 +20,7 @@ classdef TrogdorSimulation < handle
         function obj = TrogdorSimulation()
             obj.Grid = t6.TrogdorGrid;
         end
-    %{
-        function grid = currentGrid(obj)
-            
-            
-            if ~isa(obj.CurrentGrid, 't6.TrogdorGrid')
-                error('Please call addGrid to create a new grid.');
-            end
-            grid = obj.CurrentGrid;
-        end
         
-        function setCurrentGrid(obj, grid)
-            if ~isa(grid, 't6.TrogdorGrid')
-                error('Not a valid grid handle.');
-            end
-            obj.CurrentGrid = grid;
-        end
-    %}
         function str = directoryString(obj)
             if isempty(obj.Directory)
                 str = '';
@@ -53,6 +37,7 @@ classdef TrogdorSimulation < handle
             end
         end
         
+        timesteps = timeToTimesteps(obj, timeBounds, fieldTokens);
         yeeCells = boundsToYee(obj, bounds, fieldTokens); 
         y = yeeCells(obj, bounds);
         v = extendIntoPML(obj, verts);

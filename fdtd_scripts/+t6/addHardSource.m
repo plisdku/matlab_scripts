@@ -23,7 +23,7 @@ function addHardSource(varargin)
 %                   will be used to choose the YeeCells [m0 n0 p0 m1 n1 p1] in
 %                   which to source fields, suitably for the grid resolution
 %                   (YeeCells or Bounds required)
-%       Duration    The range of timesteps on which to source fields; [t0 t1]
+%       Timesteps    The range of timesteps on which to source fields; [t0 t1]
 %                   will source on timesteps t such that t0 <= t <= t1.  Using
 %                   multiple rows specifies multiple ranges of timesteps.
 %                   (default: all timesteps)
@@ -33,7 +33,7 @@ function addHardSource(varargin)
 %                   argument must be a cell array with one function per field
 %                   component, e.g. {exFunc, eyFunc, ezFunc}.
 %                   (FieldFunction, TimeData, or SpaceTimeData required)
-%       TimeData    An array of size [nFields nTimesteps].  If the Duration
+%       TimeData    An array of size [nFields nTimesteps].  If the Timesteps
 %                   is specified as [0 10] then TimeData needs 11 columns, one
 %                   for each sourced timestep.
 %                   (TimeData or SpaceTimeData required)
@@ -42,14 +42,14 @@ function addHardSource(varargin)
 %                   SpaceTimeData must have size [nx ny nz nFields nTimesteps].
 %                   If YeeCells has multiple rows, then SpaceTimeData must be
 %                   a cell array with one entry per row of YeeCells.  If the 
-%                   Duration is specified as [0 10] then SpaceTimeData must
+%                   Timesteps is specified as [0 10] then SpaceTimeData must
 %                   provide data for 11 timesteps.
 %      
 %
 %   Example:
 %
 %   addHardSource('Field', 'ex hx', 'YeeCells', [50 50 50 50 50 50; ...
-%       60 60 60 60 60 60], 'Duration', [0 10; 100 110], 'TimeData', ...
+%       60 60 60 60 60 60], 'Timesteps', [0 10; 100 110], 'TimeData', ...
 %       [sin(0:10), cos(100:110); exp(-(0:10)), exp(-(100:110))])
 %
 %   Specify soft source in cells (50, 50, 50) and (60, 60, 60), nonzero for
@@ -63,7 +63,7 @@ sim = simulation();
 X.Field = '';
 X.YeeCells = [];
 X.Bounds = [];
-X.Duration = [];
+X.Timesteps = [];
 X.FieldFunction = [];
 X.TimeData = [];
 X.SpaceTimeData = [];
@@ -82,18 +82,18 @@ if ~isempty(X.Bounds)
 end
 
 % Validate duration
-if length(X.Duration) == 0
-    X.Duration = [0, sim.NumT-1];
-elseif size(X.Duration, 2) ~= 2
-    error('Duration must have two columns (first and last timestep).');
+if length(X.Timesteps) == 0
+    X.Timesteps = [0, sim.NumT-1];
+elseif size(X.Timesteps, 2) ~= 2
+    error('Timesteps must have two columns (first and last timestep).');
 end
 
-numT = sum(X.Duration(:,2) - X.Duration(:,1) + 1);
+numT = sum(X.Timesteps(:,2) - X.Timesteps(:,1) + 1);
 
 %  Validate time data.
 if length(X.TimeData) ~= 0
     if length(X.TimeData) ~= numT
-        error('TimeData must have the same length as the Duration');
+        error('TimeData must have the same length as the Timesteps');
     elseif size(X.TimeData, 1) ~= length(fieldTokens) && ...
         size(X.TimeData, 1) ~= 1
         error('TimeData must have size [nFields, timesteps] or [timsteps].');
@@ -127,7 +127,7 @@ obj = struct;
 obj.type = 'HardSource';
 obj.field = fieldTokens;
 obj.yeeCells = X.YeeCells;
-obj.duration = X.Duration; % validated
+obj.timesteps = X.Timesteps; % validated
 obj.timeData = X.TimeData; % validated
 obj.maskData = X.MaskData; % validated
 obj.spaceTimeData = X.SpaceTimeData;

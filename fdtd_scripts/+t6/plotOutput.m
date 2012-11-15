@@ -112,6 +112,7 @@ for nn = 1:file.numFields()
 end
 
 xyz = file.positions();
+numFrames = file.numFramesAvailable;
 
 frameNum = 1;
 file.open
@@ -122,7 +123,7 @@ while frameNum <= numFrames
         plot(squeeze(data(:,:,:,:)));
         ylim(X.YLim);
         legend(fieldNames{:})
-        title(sprintf('Frame %i', frameNum));
+        title(sprintf('Frame %i of %i', frameNum, numFrames));
         pause(0.01);
         
         if frameNum < numFrames

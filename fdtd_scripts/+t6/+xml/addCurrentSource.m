@@ -14,10 +14,10 @@ end
 elemXML.setAttribute('fields', fieldstr);
 
 % durations and regions.
-for dd = 1:size(src.duration, 1)
+for dd = 1:size(src.timesteps, 1)
     durXML = doc.createElement('Duration');
-    durXML.setAttribute('firstTimestep', num2str(src.duration(dd,1)));
-    durXML.setAttribute('lastTimestep', num2str(src.duration(dd,2)));
+    durXML.setAttribute('firstTimestep', num2str(src.timesteps(dd,1)));
+    durXML.setAttribute('lastTimestep', num2str(src.timesteps(dd,2)));
     elemXML.appendChild(durXML);
 end
 
@@ -65,10 +65,10 @@ if ~isempty(src.fieldFunction)
     if writeFile
         if isempty(src.bounds)
             writeFunctionCurrent_Yee(fname, src.yeeCells, src.field, ...
-                src.duration, src.fieldFunction, sim.Precision);
+                src.timesteps, src.fieldFunction, sim.Precision);
         else
             writeFunctionCurrent_Bounds(sim, fname, src.yeeCells, src.bounds,...
-                src.field, src.duration, src.fieldFunction, sim.Precision);
+                src.field, src.timesteps, src.fieldFunction, sim.Precision);
         end
     end
     
@@ -82,10 +82,10 @@ if ~isempty(src.fieldFunctor)
     if writeFile
         if isempty(src.bounds)
             writeFunctorCurrent_Yee(fname, src.yeeCells, src.field, ...
-                src.duration, src.fieldFunctor, sim.Precision);
+                src.timesteps, src.fieldFunctor, sim.Precision);
         else
             writeFunctorCurrent_Bounds(sim, fname, src.yeeCells, src.bounds, src.field, ...
-                src.duration, src.fieldFunctor, sim.Precision);
+                src.timesteps, src.fieldFunctor, sim.Precision);
         end
     end
     

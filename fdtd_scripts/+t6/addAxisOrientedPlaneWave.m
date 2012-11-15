@@ -17,7 +17,7 @@ function addAxisOrientedPlaneWave(varargin)
 %                   largest full Yee rectangle [m0 n0 p0 m1 n1 p1], suitably for
 %                   the grid resolution.
 %                   (YeeCells or Bounds required)
-%       Duration    The range of timesteps on which to source fields; [t0 t1]
+%       Timesteps    The range of timesteps on which to source fields; [t0 t1]
 %                   will source on timesteps t such that t0 <= t <= t1.  Using
 %                   multiple rows specifies multiple ranges of timesteps.
 %                   (default: all timesteps)
@@ -26,7 +26,7 @@ function addAxisOrientedPlaneWave(varargin)
 %                   must be a cell array with one function per field component,
 %                   e.g. {exFunc eyFunc}.
 %                   (FieldFunction or TimeData required)
-%       TimeData    An array of size [nFields nTimesteps].  If the Duration
+%       TimeData    An array of size [nFields nTimesteps].  If the Timesteps
 %                   is specified as [0 10] then TimeData needs 11 columns, one
 %                   for each sourced timestep.  (required)
 %       OmitSide    An axis-aligned unit vector or cell array of axis-aligned
@@ -51,7 +51,7 @@ sim = simulation();
 X.Field = '';
 X.YeeCells = [];
 X.Bounds = [];
-X.Duration = [];
+X.Timesteps = [];
 X.Direction = [];
 X.FieldFunction = [];
 X.TimeData = [];
@@ -69,18 +69,18 @@ if ~isempty(X.Bounds)
     X.YeeCells = sim.boundsToYee(X.Bounds, fieldTokens);
 end
 
-if length(X.Duration) == 0
-    X.Duration = [0, sim.NumT-1];
-elseif size(X.Duration, 2) ~= 2
-    error('Duration must have two columns (first and last timestep).');
+if length(X.Timesteps) == 0
+    X.Timesteps = [0, sim.NumT-1];
+elseif size(X.Timesteps, 2) ~= 2
+    error('Timesteps must have two columns (first and last timestep).');
 end
 
-numT = sum(X.Duration(:,2) - X.Duration(:,1) + 1);
+numT = sum(X.Timesteps(:,2) - X.Timesteps(:,1) + 1);
 
 %  Validate time data.
 if length(X.TimeData) ~= 0
     if length(X.TimeData) ~= numT
-        error('TimeData must have the same length as the Duration');
+        error('TimeData must have the same length as the Timesteps');
     elseif size(X.TimeData, 1) ~= length(fieldTokens) && ...
         size(X.TimeData, 1) ~= 1
         error('TimeData must have size [nFields, timesteps] or [timsteps].');
@@ -109,7 +109,7 @@ obj = struct;
 obj.type = 'TFSFSource';
 obj.field = fieldTokens;
 obj.yeeCells = X.YeeCells;
-obj.duration = X.Duration;
+obj.timesteps = X.Timesteps;
 obj.timeData = X.TimeData;
 obj.fieldFunction = X.FieldFunction;
 obj.direction = X.Direction;

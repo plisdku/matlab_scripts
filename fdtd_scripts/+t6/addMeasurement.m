@@ -30,11 +30,11 @@ function addMeasurement(varargin)
 %                       resolution.
 %                       (YeeCells or Bounds required)
 %       Function        The merit function
-%       Duration        The range of timesteps on which to save data; [t0 t1]
+%       Timesteps       The range of timesteps on which to save data; [t0 t1]
 %                       will save all timesteps t such that t0 <= t <= t1.
 %                       Multiple-row arrays will cause Trogdor to save multiple
 %                       ranges of timesteps; to save only timesteps 100 and 144,
-%                       use addOutput('Duration', [100 100; 144 144]).
+%                       use addOutput('Timesteps', [100 100; 144 144]).
 %                       Timesteps range from 0 to numTimesteps-1.
 %                       (default: all timesteps)
 %       Stride          Spatial sampling period.  Set to [2 2 2] to save every
@@ -44,10 +44,10 @@ function addMeasurement(varargin)
 %                       number of rows as YeeCells, then each region will have
 %                       its own spatial sampling period.  (default: [1 1 1])
 %       Period          Temporal sampling period.  Set to 10 to save every tenth
-%                       timestep of each range in Duration.  If there are 
-%                       multiple rows in Duration, then each range of timesteps
+%                       timestep of each range in Timesteps.  If there are 
+%                       multiple rows in Timesteps, then each range of timesteps
 %                       will have the same Period; if Period has the same
-%                       number of rows as Duration, then each Duration will
+%                       number of rows as Timesteps, then each Timesteps will
 %                       have its own Period.  (default: 1)
 %       CutoffFrequency The highest angular frequency expected to be
 %                       measured.  The sampling period of the output file
@@ -77,7 +77,7 @@ X.Fields = '';
 X.YeeCells = []; % [x y z x y z]
 X.Bounds = [];
 X.Function = [];
-X.Duration = [];  % [first last]
+X.Timesteps = [];  % [first last]
 X.Stride = []; % scalar
 X.Period = []; % scalar
 X.CutoffFrequency = [];
@@ -95,10 +95,10 @@ if ~isempty(X.Bounds)
     X.YeeCells = sim.boundsToYee(X.Bounds, fieldTokens);
 end
 
-if isempty(X.Duration)
-    X.Duration = [0, sim.NumT-1];
-elseif size(X.Duration, 2) ~= 2
-    error('Duration must have two columns (first and last timestep).');
+if isempty(X.Timesteps)
+    X.Timesteps = [0, sim.NumT-1];
+elseif size(X.Timesteps, 2) ~= 2
+    error('Timesteps must have two columns (first and last timestep).');
 end
 if isempty(X.Stride)
     X.Stride = ones(size(X.YeeCells, 1), 3);
@@ -119,14 +119,14 @@ if isempty(X.Period)
         X.Period = floor(0.5*2*pi./X.CutoffFrequency/sim.Dt);
         X.Period(X.Period < 1) = 1;
     else
-        X.Period = ones(size(X.Duration, 1), 1);
+        X.Period = ones(size(X.Timesteps, 1), 1);
     end
 end
 
 if size(X.Period, 1) == 1
-    X.Period = repmat(X.Period, size(X.Duration, 1), 1);
-elseif size(X.Period, 1) ~= size(X.Duration, 1)
-    error('Period must have as many rows as Duration.');
+    X.Period = repmat(X.Period, size(X.Timesteps, 1), 1);
+elseif size(X.Period, 1) ~= size(X.Timesteps, 1)
+    error('Period must have as many rows as Timesteps.');
 end
 
 if ~isempty(X.InterpolationPoint)
@@ -151,7 +151,7 @@ obj.function = X.Function;
 obj.filename = 'measurement';
 obj.yeeCells = X.YeeCells; % validated
 obj.bounds = X.Bounds; % validated
-obj.duration = X.Duration; % validated
+obj.timesteps = X.Timesteps; % validated
 obj.stride = X.Stride; % validated
 obj.period = X.Period; % validated
 obj.mode = X.Mode;

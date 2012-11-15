@@ -19,11 +19,11 @@ function addSurfaceOutput(fileName, fields, varargin)
 %                       [m0 n0 p0 m1 n1 p1] to save, suitably for the grid
 %                       resolution.
 %                       (required)
-%       Duration        The range of timesteps on which to save data; [t0 t1]
+%       Timesteps       The range of timesteps on which to save data; [t0 t1]
 %                       will save all timesteps t such that t0 <= t <= t1.
 %                       Multiple-row arrays will cause Trogdor to save multiple
 %                       ranges of timesteps; to save only timesteps 100 and 144,
-%                       use addOutput('Duration', [100 100; 144 144]).
+%                       use addOutput('Timesteps', [100 100; 144 144]).
 %                       (default: all timesteps)
 %       Stride          Spatial sampling period.  Set to [2 2 2] to save every
 %                       second cell in X, Y and Z (cutting file size by 8).  If
@@ -40,10 +40,10 @@ function addSurfaceOutput(fileName, fields, varargin)
 %                       theorem.  CutoffFrequency is an alternative to Period.
 %                       (default: unused)
 %       Period          Temporal sampling period.  Set to 10 to save every tenth
-%                       timestep of each range in Duration.  If there are 
-%                       multiple rows in Duration, then each range of timesteps
+%                       timestep of each range in Timesteps.  If there are 
+%                       multiple rows in Timesteps, then each range of timesteps
 %                       will have the same Period; if Period has the same
-%                       number of rows as Duration, then each Duration will
+%                       number of rows as Timesteps, then each Timesteps will
 %                       have its own Period.  (default: 1)
 %       Sides           A row vector of six elements.  A nonzero value
 %                       at position n signifies that the output should
@@ -56,7 +56,7 @@ sim = simulation();
 
 X.Bounds = [];
 X.YeeCells = [];
-X.Duration = [];
+X.Timesteps = [];
 X.Stride = [1 1 1];
 X.Period = [];
 X.CutoffFrequency = [];
@@ -86,7 +86,7 @@ if isempty(bounds)
 end
 
 addOutput(fileName, fields, ...
-    'Bounds', bounds, 'Duration', X.Duration, ...
+    'Bounds', bounds, 'Timesteps', X.Timesteps, ...
     'Period', X.Period, 'CutoffFrequency', X.CutoffFrequency);
 
 

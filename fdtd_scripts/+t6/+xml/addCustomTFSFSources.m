@@ -20,10 +20,10 @@ for ll = 1:length(sim.Grid.CustomTFSFSources)
         elemXML.appendChild(omitXML);
     end
     
-    for dd = 1:size(src.duration, 1)
+    for dd = 1:size(src.timesteps, 1)
         durXML = doc.createElement('Duration');
-        durXML.setAttribute('firstTimestep', num2str(src.duration(dd,1)));
-        durXML.setAttribute('lastTimestep', num2str(src.duration(dd,2)));
+        durXML.setAttribute('firstTimestep', num2str(src.timesteps(dd,1)));
+        durXML.setAttribute('lastTimestep', num2str(src.timesteps(dd,2)));
         elemXML.appendChild(durXML);
     end
     

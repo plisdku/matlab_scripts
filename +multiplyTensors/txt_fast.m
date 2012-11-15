@@ -128,9 +128,13 @@ C = reshape(A_out_in*B_in_out, [szC_current 1 1]);
 function A = subArray(B, I)
 A = B(I);
 
+
 function n = numTrailingOnes(sz)
 
 n = numel(sz) - find(sz > 1, 1, 'last');
+if isempty(n)
+    n = 0;
+end
 
 
 function ii = wrapIndices(numDims, indices)

@@ -27,7 +27,7 @@ function addCurrentSource(varargin)
 %                   will be used to choose the YeeCells [m0 n0 p0 m1 n1 p1] in
 %                   which to source fields, suitably for the grid resolution
 %                   (YeeCells or Bounds required)
-%       Duration    The range of timesteps on which to source currents; [t0 t1]
+%       Timesteps   The range of timesteps on which to source currents; [t0 t1]
 %                   will source on timesteps t such that t0 <= t <= t1.  Using
 %                   multiple rows specifies multiple ranges of timesteps.
 %                   (default: all timesteps)
@@ -39,7 +39,7 @@ function addCurrentSource(varargin)
 %                   (FieldFunction, TimeData, or SpaceTimeData required)
 %       FieldFunctor    A function F(x,y,z) that returns a function f(t)
 %                   providing the field on each timestep.
-%       TimeData    An array of size [nFields nTimesteps].  If the Duration
+%       TimeData    An array of size [nFields nTimesteps].  If the Timesteps
 %                   is specified as [0 10] then TimeData needs 11 columns, one
 %                   for each sourced timestep.
 %                   (FieldFunction, TimeData or SpaceTimeFile required)
@@ -71,7 +71,7 @@ sim = simulation();
 X.Field = '';
 X.YeeCells = [];
 X.Bounds = [];
-X.Duration = [];
+X.Timesteps = [];
 X.FieldFunction = [];
 X.FieldFunctor = [];
 X.TimeData = [];
@@ -93,10 +93,10 @@ if ~isempty(X.Bounds)
 end
 
 % Validate duration
-if isempty(X.Duration)
-    X.Duration = [0, sim.NumT-1];
-elseif size(X.Duration, 2) ~= 2
-    error('Duration must have two columns (first and last timestep).');
+if isempty(X.Timesteps)
+    X.Timesteps = [0, sim.NumT-1];
+elseif size(X.Timesteps, 2) ~= 2
+    error('Timesteps must have two columns (first and last timestep).');
 end
 
 % Evaluate the field function at all the right places and times
@@ -124,7 +124,7 @@ obj.type = 'CurrentSource';
 obj.field = fieldTokens;
 obj.yeeCells = X.YeeCells;
 obj.bounds = X.Bounds;
-obj.duration = X.Duration;
+obj.timesteps = X.Timesteps;
 obj.fieldFunction = X.FieldFunction;
 obj.fieldFunctor = X.FieldFunctor;
 obj.timeData = X.TimeData;

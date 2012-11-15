@@ -173,11 +173,10 @@ try % everything else, but close file before rethrow
                     obj.Regions.Bounds(nRegion,:) = dat(10:15)';
                     nRegion = nRegion + 1;
                 else
-                    count
                     error('Cannot parse line %s', lineFromFile);
                 end
             case 'duration'
-                [dat, count] = sscanf(remainder, ' from %f to %f period %f');
+                [dat, count] = sscanf(remainder, ' from %f to %f period %f interval (%f, %f)');
                 if count == 3
                     duration = struct;
                     duration.First = dat(1);
@@ -186,7 +185,13 @@ try % everything else, but close file before rethrow
                     duration.NumTimesteps = floor( (dat(2)-dat(1)+1)/dat(3) );
                     obj.Durations{nDuration} = duration;
                     nDuration = nDuration + 1;
-                    %obj.Durations = {obj.Durations{:}, duration};
+                elseif count == 5
+                    duration = struct('First', dat(1), ...
+                        'Last', dat(2), 'Period', dat(3), ...
+                        'NumTimesteps', floor( (dat(2)-dat(1)+1)/dat(3) ), ...
+                        'Duration', [dat(4) dat(5)]);
+                    obj.Durations{nDuration} = duration;
+                    nDuration = nDuration + 1;
                 else
                     error('Cannot parse line %s', lineFromFile);
                 end

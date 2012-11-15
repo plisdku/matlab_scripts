@@ -22,7 +22,7 @@ function addCustomTFSFSource(varargin)
 %                   [x0 y0 z0 x1 y1 z1] specifies all cells (x, y, z)
 %                   where x0 <= x <= x1, y0 <= y <= y1, z0 <= z <= z1.
 %                   (required)
-%       Duration    The range of timesteps on which to source fields; [t0 t1]
+%       Timesteps   The range of timesteps on which to source fields; [t0 t1]
 %                   will source on timesteps t such that t0 <= t <= t1.  Using
 %                   multiple rows specifies multiple ranges of timesteps.
 %                   (default: all timesteps)
@@ -57,7 +57,7 @@ sim = simulation();
 % with a TimeFile.  Likewise there is no Field because all E and H fields
 % will be requested!
 X.YeeCells = [];
-X.Duration = [];
+X.Timesteps = [];
 X.SpaceTimeFile = [];
 X.OmitSide = [];
 X.Symmetries = [0 0 0];
@@ -71,10 +71,10 @@ if ~isempty(X.Bounds)
     X.YeeCells = sim.boundsToYee(X.Bounds, {'ex', 'ey', 'ez', 'hx', 'hy', 'hz'});
 end
 
-if isempty(X.Duration)
-    X.Duration = [0, sim.NumT-1];
-elseif size(X.Duration, 2) ~= 2
-    error('Duration must have two columns (first and last timestep).');
+if isempty(X.Timesteps)
+    X.Timesteps = [0, sim.NumT-1];
+elseif size(X.Timesteps, 2) ~= 2
+    error('Timesteps must have two columns (first and last timestep).');
 end
 
 if isempty(X.SpaceTimeFile)
@@ -95,7 +95,7 @@ end
 obj = struct;
 obj.type = 'TFSFSource';
 obj.yeeCells = X.YeeCells;
-obj.duration = X.Duration;
+obj.timesteps = X.Timesteps;
 obj.spaceTimeFile = X.SpaceTimeFile;
 obj.symmetries = X.Symmetries;
 obj.omitSides = {};

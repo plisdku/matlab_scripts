@@ -92,6 +92,7 @@ classdef OutputFile < handle
         data = readFrames_SeparateRegions(obj, numFrames);
         data = readFrames_RegionsTogether(obj, numFrames);
         pos = naturalSamplingPositions(obj, bounds, region, numSamples);
+        tt = naturalSamplingTimes(obj, duration, numSamples);
     end
     
     methods (Static, Access = private)

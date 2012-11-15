@@ -12,11 +12,16 @@ end
 elemXML.setAttribute('file', output.filename);
 
 % durations and regions.
-for dd = 1:size(output.duration, 1)
+for dd = 1:size(output.timesteps, 1)
     durXML = doc.createElement('Duration');
-    durXML.setAttribute('firstTimestep', num2str(output.duration(dd,1)));
-    durXML.setAttribute('lastTimestep', num2str(output.duration(dd,2)));
+    durXML.setAttribute('firstTimestep', num2str(output.timesteps(dd,1)));
+    durXML.setAttribute('lastTimestep', num2str(output.timesteps(dd,2)));
     durXML.setAttribute('period', num2str(output.period(dd)));
+    
+    if isfield(output, 'duration') && ~isempty(output.duration)
+        durXML.setAttribute('duration', num2str(output.duration(dd,:)));
+    end
+    
     elemXML.appendChild(durXML);
 end
 
