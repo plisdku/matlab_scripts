@@ -261,7 +261,28 @@ C = tfxtf(A, ndims(A), 3, B, ndims(B), 3, 1, 2, 1);
 
 assert(isequal(size(C), [5 11 3]));
 
-fprintf('\tTensor field product size test PASSED\n');
+fprintf('Tensor field product size test PASSED\n');
+
+%% Tensor fields with leading singular dims
+
+A = randi(9, 1, 3, 10);
+B = randi(9, 1, 3, 10);
+
+C = tfxtf(A, ndims(A), [1 3], B, ndims(B), [1 3]);
+
+for xx = 1:size(A,1)
+    for yy = 1:size(A,3);
+        axy = squish(A(xx,:,yy));
+        bxy = squish(B(xx,:,yy));
+        AB = outerProduct(axy, 1, bxy, 1);
+        
+        cxy = squish(C(xx,:,yy,:));
+        
+        assert(isClose(AB, cxy));
+    end
+end
+
+fprintf('Tensor field product with no inner products PASSED\n');
 
 %% Tensor field times cell array of matrices
 % This provides a way to use sparse matrices simply.
@@ -299,7 +320,7 @@ B = rand(31, 30);
 [C szC] = txa(A, 3, B, 2, 2);
 assert(isequal(szC, [8 31 1]));
 
-        
+
 %% Speed comparison
 % Compare full tensor field multiplication to cell-sparse method.
 

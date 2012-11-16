@@ -58,7 +58,7 @@ reorderC = invPerm([orderA, orderB + numel(orderA)]);
 
 
 if isempty(inA)
-    C = permute(outerProduct(A, ndims(A), B, ndims(B)), reorderC);
+    C = permute(outerProduct(A, numel(szA), B, numel(szB)), reorderC);
     
 else
     C = txt_faster(A, szA_, B, szB_, inA_, outA_, inB_, outB_);
