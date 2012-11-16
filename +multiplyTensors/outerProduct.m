@@ -1,7 +1,7 @@
 function [C szC] = outerProduct(A, ndimA, B, ndimB)
-% outerProduct(A, szA, B, szB)  Calculate tensor outer product A ox B
+% outerProduct(A, ndimA, B, ndimB)  Calculate tensor outer product A ox B
 %
-% [C szC] = outerProduct(A, szA, B, szC) will satisfy szC == [szA szB].
+% [C szC] = outerProduct(A, ndimA, B, ndimB) will satisfy szC == [szA szB].
 %
 
 import multiplyTensors.*

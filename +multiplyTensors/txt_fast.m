@@ -99,7 +99,7 @@ else
     end
     
     if ~isempty(reorderC)
-        C = permute(C, reorderC);
+        C = permute(C, [reorderC numel(reorderC)+1]);
     end
     
 end
@@ -110,9 +110,9 @@ function C = txt_faster(A, szA, B, szB, inA, outA, inB, outB)
 % Divide the indices of A and B into inner and outer product indices.
 % That is, reorder indices to [outA inA] and [inB outB] for matrix
 % multiplication.
-A_out_in = reshape(permute(A, [outA inA]), ...
+A_out_in = reshape(permute(A, [outA, inA, numel(szA)+1]), ...
     prod(szA(outA)), prod(szA(inA)));
-B_in_out = reshape(permute(B, [inB outB]), ...
+B_in_out = reshape(permute(B, [inB, outB, numel(szB)+1]), ...
     prod(szB(inB)), prod(szB(outB)));
 
 % Here's C, sorted with indices of A before indices of B.  The reshape

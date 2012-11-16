@@ -166,6 +166,16 @@ assert(isequal(size(BA), [1 3]));
 assert(isClose(BA, (A*B)'));
 fprintf('Vector-matrix product test PASSED\n');
 
+%% Matrix times vector with txt (regression test)
+
+A = eye(3);
+B = rand(3,1);
+
+AB = txt(A, 2, B, 1, 2, 1);
+
+assert(isClose(AB, A*B));
+fprintf('Matrix-vector product test with truly 1D vector PASSED\n');
+
 %% Tensor-matrix product
 
 T = rand(4,4,3,4);

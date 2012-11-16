@@ -27,6 +27,16 @@ if ~areUnique(inB)
         num2str(inB));
 end
 
+if max(inA) > numel(szA)
+    error('inA = %i is out of bounds (A is %i-dimensional)', ...
+        max(inA), numel(szA));
+end
+
+if max(inB) > numel(szB)
+    error('inB = %i is out of bounds (B is %i-dimensional)', ...
+        max(inB), numel(szB));
+end
+
 if length(inA) ~= length(inB)
     errString = ['Number of contracting dimensions is inconsistent:\n', ...
         sprintf('\tnumel(inA) = %i\n\tnumel(inB) = %i', ...
