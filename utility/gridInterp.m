@@ -62,7 +62,7 @@ if size(A,dim) > 1 && ~isempty(x{dim})
     distLeft = xOut - xIn(leftCell);
     distRight = dx - distLeft;
     
-    szWeight = [1 1 1]; szWeight(dim) = length(distRight);
+    szWeight = ones(1,ndims(A)); szWeight(dim) = length(distRight);
     weightLeft = zeros(szWeight);
     weightLeft(:) = distRight(:)/dx;
     weightRight = 1 - weightLeft;

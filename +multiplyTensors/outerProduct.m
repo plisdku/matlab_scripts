@@ -17,7 +17,7 @@ else
     assert(isvector(B));
 
     C = zeros([szA numel(B)]);
-
+    
     indicesA = repmat({':'}, 1, numel(szA));
     indicesC = indicesA;
     lastIndex = length(indicesC) + 1;
@@ -34,3 +34,5 @@ end
 if nargout > 1
     szC = [szA szB];
 end
+
+

@@ -114,10 +114,17 @@ end
 xyz = file.positions();
 numFrames = file.numFramesAvailable;
 
+figureHandle = gcf;
+
 frameNum = 1;
 file.open
 data = file.readFrames('NumFrames', 1);
 while frameNum <= numFrames
+    
+    if ~ishandle(figureHandle)
+        return;
+    end
+    
     if (mod(frameNum, X.Period) == 0)
         
         plot(squeeze(data(:,:,:,:)));
@@ -218,8 +225,14 @@ end
 
 movieFrame = 0;
 
+figureHandle = gcf;
+
 file.open;
 for frame = 0:numFrames-1
+    
+    if ~ishandle(figureHandle)
+        return;
+    end
     
     data = file.readFrames('NumFrames', 1);
     

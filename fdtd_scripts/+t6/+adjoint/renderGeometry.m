@@ -19,6 +19,9 @@ X = parseargs(X, varargin{:});
 if isempty(X.Mesh)
     theMesh = Main();
 else
+    if strcmpi(X.Mesh([end-1:end]), '.m')
+        X.Mesh = X.Mesh(1:end-2);
+    end
     func = inline(sprintf('%s()', X.Mesh));
     theMesh = func([]);
 end
@@ -48,17 +51,16 @@ end
 
 
 matlColors = {'g', 'b', 'g', 'y', 'g', 'b', 'y'};
-%if (numel(theMesh.permittivity) > 1)
     
-    for pp = X.Materials
-        flatPatch('Vertices', X.Units*theMesh.permittivity{pp}.vertices, ...
-            'Faces', theMesh.permittivity{pp}.faces,...
-            'FaceColor', matlColors{pp}, 'FaceAlpha', X.FaceAlpha, ...
-            'EdgeAlpha', X.EdgeAlpha, 'EdgeColor', X.EdgeColor)
-    end
-    view(2) % top-down
-    hold on
-%end
+for pp = X.Materials
+    %fprintf('Material %i\n', pp)
+    flatPatch('Vertices', X.Units*theMesh.permittivity{pp}.vertices, ...
+        'Faces', theMesh.permittivity{pp}.faces,...
+        'FaceColor', matlColors{pp}, 'FaceAlpha', X.FaceAlpha, ...
+        'EdgeAlpha', X.EdgeAlpha, 'EdgeColor', X.EdgeColor)
+end
+view(2) % top-down
+hold on
 
 
 if ~isempty(X.Sensitivity)
