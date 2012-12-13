@@ -38,7 +38,6 @@ classdef DesignObject < handle
                     error('Could not create output directory!');
                 end
             end
-
             
 %            assert(numel(obj.Sim.Grids) == 1);
 %            if ~isempty(obj.Sim.Grids{1}.Links)

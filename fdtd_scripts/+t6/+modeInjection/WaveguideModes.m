@@ -12,6 +12,7 @@ classdef WaveguideModes
 %   Permeabilities      length-N array of relative permeabilities
 %   Mode                'tey' or 'tmy'
 %   BoundariesX         length-N-1 array of boundary positions
+%   X                   length-M ascending array of x positions
 %
 %
 % 2D named parameters:
@@ -81,7 +82,8 @@ classdef WaveguideModes
                         
             % We can figure out whether or not a mode is bound of course:
             indices = real(sqrt(X.Permittivities.*X.Permeabilities));
-            isBound = @(modeNum) any(obj.nEff > indices([1 end]));
+            isBound = @(modeNum) any(obj.nEff > indices(1)) | ...
+                any(obj.nEff) > indices(end);
             
             if strcmpi(mode, 'te')
                 for mm = 1:numel(k)

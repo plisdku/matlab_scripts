@@ -1,5 +1,7 @@
 function [x fval iter] = fminnaive(fn, x0, minX, maxX, bigDelta, smallDelta, ...
     shrinkFactor, growFactor, goalF)
+% [x fval iter] = fminnaive(fn, x0, minX, maxX, bigDelta, smallDelta, ...
+%   shrinkFactor, growFactor, goalF)
 
 if nargin < 5
     bigDelta = 1;
@@ -102,7 +104,7 @@ while ~done
             
             
             isBetter = all(diff(fHist(end-2:end)) < 0);
-
+            
             if isBetter
                 stepSizes = stepSizes * growFactor;
             end

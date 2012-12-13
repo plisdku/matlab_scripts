@@ -6,7 +6,9 @@ function lineColors(cmap)
 % lineColors(jet);
 % lineColors(hot);
 
-if ischar(cmap)
+if nargin == 0
+    cmap = varycolor(20);
+elseif ischar(cmap)
     cmap = feval(cmap);
 end
 
