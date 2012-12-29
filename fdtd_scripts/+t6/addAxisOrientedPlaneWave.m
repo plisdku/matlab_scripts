@@ -1,21 +1,22 @@
 function addAxisOrientedPlaneWave(varargin)
 %addAxisOrientedPlaneWave Source fields into the grid with a plane wave
-%   addAxisOrientedPlaneWave('YeeCells', [0 0 0 100 100 100], ...
-%       'Field', 'ex', 'Direction', [0 0 1], 'TimeData', sin(1:numT)) will add
+%   addAxisOrientedPlaneWave('Bounds', [0 0 0 100 100 100], ...
+%       'Field', 'ex', 'Direction', [0 0 1], ...
+%       'FieldFunction', @(t) sin(t) ) will add
 %       an ex-polarized plane wave with time dependence sin(timestep) into the
 %       grid with a total-field scattered-field boundary.
 %
 %   Usage: addAxisOrientedPlaneWave(named parameters)
 %
 %   Named parameters:
-%       YeeCells    The cells making up the total-field region of the grid;
-%                   [x0 y0 z0 x1 y1 z1] specifies all cells (x, y, z)
-%                   where x0 <= x <= x1, y0 <= y <= y1, z0 <= z <= z1.
-%                   (YeeCells or Bounds required)
 %       Bounds      The real extent of the total-field region of the grid;
 %                   [x0 y0 z0 x1 y1 z1] will be rounded outwards to the next
 %                   largest full Yee rectangle [m0 n0 p0 m1 n1 p1], suitably for
 %                   the grid resolution.
+%                   (YeeCells or Bounds required)
+%       YeeCells    The cells making up the total-field region of the grid;
+%                   [x0 y0 z0 x1 y1 z1] specifies all cells (x, y, z)
+%                   where x0 <= x <= x1, y0 <= y <= y1, z0 <= z <= z1.
 %                   (YeeCells or Bounds required)
 %       Timesteps    The range of timesteps on which to source fields; [t0 t1]
 %                   will source on timesteps t such that t0 <= t <= t1.  Using

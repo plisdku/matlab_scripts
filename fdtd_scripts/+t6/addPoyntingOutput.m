@@ -1,14 +1,11 @@
 function addPoyntingOutput(fileName, varargin)
 %addPoyntingOutput Add an output that saves ex, ey, ez, hx, hy, and hz
-%   addPoyntingOutput('poynting', 'YeeCells', [0 0 0 0 20 20]) will instruct
+%   addPoyntingOutput('poynting', 'Bounds', [0 0 0 0 20 20]) will instruct
 %   Trogdor to save the E and H fields in a binary file named 'poynting' on
 %   every timestep.
 %
 %   This function differs from addOutput essentially in specifying the six
-%   E and H field components and interpolation point [0 0 0] by default;
-%   it will fail if the Stride does not allow for output in each corner of
-%   YeeCells (this is important for integration of the Poynting vector flux
-%   through a surface).
+%   E and H field components by default.
 %
 %   Usage: addPoyntingOutput(filename, named parameters)
 %
