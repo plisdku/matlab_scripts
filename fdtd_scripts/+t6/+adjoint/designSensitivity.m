@@ -5,7 +5,14 @@ function [f dfdp dfdv] = designSensitivity(designObject, parameters, callback)
 
 designObject.applyParameters(parameters);
 designObject.writeSimulation(parameters, 'forward');
-exitval = unix('snapdragon --geometry --sensitivity --outputDirectory output sim/params.xml > out.txt');
+
+if strcmpi(computer, 'GLNXA64')
+    snapdragon = 'env -u LD_LIBRARY_PATH snapdragon';
+else
+    snapdragon = 'snapdragon';
+end
+
+exitval = unix([snapdragon, ' --geometry --sensitivity --outputDirectory output sim/params.xml > out.txt']);
 
 if exitval
     warning('Unix is unhappy with forward sim');
@@ -17,7 +24,7 @@ if exitval
 end
 
 designObject.writeSimulation(parameters, 'adjoint');
-exitval = unix('snapdragon --adjoint --sensitivity --outputDirectory output sim/params.xml > out.txt');
+exitval = unix([snapdragon, ' --adjoint --sensitivity --outputDirectory output sim/params.xml > out.txt']);
 
 if exitval
     warning('Unix is unhappy with adjoint sim');
