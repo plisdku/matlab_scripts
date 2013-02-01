@@ -19,3 +19,4 @@ logP = log(power);
 a = -0.5*dw^2/logP;
 w0 = mean(freqRange);
 
+% 
