@@ -58,6 +58,15 @@ classdef DesignObject < handle
             
         end
         
+        function f = evaluateForward(obj)
+            
+            meas = obj.Sim.Grid.Measurement;
+            
+            fname = [obj.Sim.OutputDirectory filesep meas.filename];
+            
+            f = t6.adjoint.evalQuadraticFormFile(fname, meas.function);
+        end
+        
         function [f dfdp dfdv dvdp] = evaluate(obj, designParameters)
             
             meas = obj.Sim.Grid.Measurement;
