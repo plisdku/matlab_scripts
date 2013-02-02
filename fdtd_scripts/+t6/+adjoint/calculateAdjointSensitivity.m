@@ -57,7 +57,7 @@ adjBuffer(:,bufferIndex(tAdjFirst:tAdjLast)) = adjDE.readFrames(...
 
 %%
 
-warning('Only handling one lag at a time!');
+%warning('Only handling one lag at a time!');
 
 tBeginChunk = 1;
 
@@ -89,7 +89,8 @@ while tBeginChunk <= numT
     end
     
     %lagsProvided = length(coeffs{movableVert,freeDir}.tensor{fieldXYZ, fieldXYZ}.DB);
-    lagsProvided = 1;
+    %lagsProvided = 1;
+    lagsProvided = 10;
     for lag = 1:lagsProvided
         
         tAdj = [tFwdFirst + lag - 1, ...
@@ -109,6 +110,7 @@ while tBeginChunk <= numT
         if isstruct(coeffs{movableVert,freeDir}.tensor{1,1})
         if length(coeffs{movableVert,freeDir}.tensor) >= fieldXYZ
         if isstruct(coeffs{movableVert,freeDir}.tensor{fieldXYZ,fieldXYZ})
+        if length(coeffs{movableVert,freeDir}.tensor{fieldXYZ, fieldXYZ}.DB) >= lag
 
             sumSensitivity = 0;
             
@@ -125,7 +127,8 @@ while tBeginChunk <= numT
             vertJacobian(freeDir + 3*(movableVert-1), 1) = ...
                 vertJacobian(freeDir + 3*(movableVert-1), 1) ...
                 + sumSensitivity;
-    
+            
+        end
         end
         end
         end

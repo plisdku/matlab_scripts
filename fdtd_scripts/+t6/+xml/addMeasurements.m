@@ -24,7 +24,7 @@ elseif strcmpi(mode, 'adjoint')
     fname = ['output' filesep meas.filename];
     %warning('Need to get file name in a better way');
     %[f Df] = adjoint.evalQuadFormFile(fname, meas.function);
-    [f Df] = evalQuadraticFormFile(fname, meas.function);
+    [f Df] = adjoint.evalQuadraticFormFile(fname, meas.function);
     [adjCurrents permutedFields] = adjoint.adjointCurrentNames(fname);
     of = OutputFile(fname);
     fwdTimesteps = of.timesteps();

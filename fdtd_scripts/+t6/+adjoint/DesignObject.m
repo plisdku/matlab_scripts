@@ -74,7 +74,7 @@ classdef DesignObject < handle
             fname = [obj.Sim.OutputDirectory filesep meas.filename];
             
             %f = t6.adjoint.evalQuadFormFile(fname, meas.function);
-            f = evalQuadraticFormFile(fname, meas.function);
+            f = t6.adjoint.evalQuadraticFormFile(fname, meas.function);
             
             [dfdp dfdv dvdp] = t6.adjoint.calculateAdjointSensitivity(...
                 obj.Sim.Grid.NodeGroup, designParameters);
