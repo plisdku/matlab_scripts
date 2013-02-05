@@ -3,17 +3,17 @@ function filter = lf(varargin)
 %
 % Usage:
 %
-%   filter = lf('Matrix', mat, 'dim', n);
+%   filter = lf('Matrix', mat, 'Dim', n);
 %
-%   filter = lf('Matrix', @(coords) mat, 'dim', n)
+%   filter = lf('Matrix', @(coords) mat, 'Dim', n)
 %
 %   filter = lf('Multiply', array)
 %
-%   filter = lf('Multiply', @(x1,x2,x3) array, 'dim', [n m p])
+%   filter = lf('Multiply', @(x1,x2,x3) array, 'Dim', [n m p])
 %
 %   filter = lf('Integrate', dim)
 %
-%   filter = lf('MatrixArray', cells, 'dim', n) % one matrix per field
+%   filter = lf('MatrixArray', cells, 'Dim', n) % one matrix per field
 %
 % For any of these you may add the 'Field' argument to restrict operation
 % to one or several fields (the fourth dimension of the data array, e.g.

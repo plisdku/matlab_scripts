@@ -8,7 +8,7 @@ classdef TrogdorGrid % < handle
         PML = [0 0 0 0 0 0];
         PMLParams = struct('alpha', '', 'kappa', '', 'sigma', '');
         
-        Measurement = {};
+        Measurements = {};
         Outputs = {};
         HardSources = {};
         SoftSources = {};

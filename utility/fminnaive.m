@@ -115,6 +115,7 @@ while ~done
         maxStepSizes(stepSizes > maxStepSizes);
     
     unitGrad = Df / norm(Df(ii));
+    unitGrad(isnan(unitGrad) | isinf(unitGrad)) = 0;
     
     step = -stepSizes .* unitGrad';
     

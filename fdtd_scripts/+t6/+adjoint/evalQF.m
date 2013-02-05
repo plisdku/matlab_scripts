@@ -1,8 +1,9 @@
-function [f Df] = evalQF(data, filters, xs, ys, zs, ts)
+function [f Df] = evalQF(data, filters, kernel, xs, ys, zs, ts)
 % [f Df] = evalQuadraticForm(data, filters, coords)
 %
 
 import multiplyTensors.*
+import t6.adjoint.*
 
 % Evaluate f
 
@@ -10,18 +11,17 @@ d = data;
 
 for mm = 1:numel(filters)
     
-    %fprintf('Filter:\n');
-    %disp(filters{mm});
+    %if isa(filters{mm}.Data, 'function_handle')
+    %    U = applyCoordinates(filters{mm}.Data, filters{mm}.dim, ...
+    %        xs, ys, zs, ts);
+    %else
+    %    U = filters{mm}.Data;
+    %end
     
-    if isa(filters{mm}.Data, 'function_handle')
+    if any(strcmpi(filters{mm}.Operation, {'Matrix', 'MatrixArray'}))
+        
         U = applyCoordinates(filters{mm}.Data, filters{mm}.dim, ...
             xs, ys, zs, ts);
-    else
-        U = filters{mm}.Data;
-    end
-    
-    
-    if any(strcmpi(filters{mm}.Operation, {'Matrix', 'MatrixArray'})) 
         
         if iscell(U)        % Cell array of matrices
             d = txca(d, 5, 4, U, filters{mm}.dim, 2);
@@ -31,6 +31,10 @@ for mm = 1:numel(filters)
     
     elseif strcmpi(filters{mm}.Operation, 'Pointwise')
         
+        U = applyCoords_Multiply(filters{mm}.Data, filters{mm}.dim, ...
+            xs, ys, zs, ts);
+        
+        %d = bsxfun(@times, shape(U, size(d), filters{mm}.dim), d);
         d = bsxfun(@times, U, d);
         
     end
@@ -38,28 +42,59 @@ for mm = 1:numel(filters)
 end
 
 % At this point any remaining nonsingular dimensions of d must be eaten by
-% a quadratic form, as d' * K * d, to obtain f.
+% a quadratic form, as d' * K * d, to obtain f.  The kernel needs to do
+% this.
 
-% Now the quadratic form: it should operate over FIELDS to achieve
-% something like a Poynting vector optimization!  That's dimension 4.
-%kernel = speye([1 1]*size(d, 4));
-kernel = 1;
+% Build up this kernel term in stages, then?
+% I also will need transpose(k)*d, so build that one too.
 
-colVec = @(x) reshape(x, [], 1);
+kd = d;
+ktd = d;
 
-f = colVec(d)'*kernel*colVec(d);
-
-%f = txt(conj(d), 5, txa(d, 5, kernel, 4, 1), 5, 4);
-
-%fprintf('f is:\n');
-%disp(f);
-
-% and integrate if that's missing:
-if numel(f) > 1
-    error('Still need an integral.');
+if ~iscell(kernel) && ~isempty(kernel)
+    kernel = {kernel};
+end
+for mm = 1:numel(kernel)
+    
+    %if isa(kernel{mm}.Data, 'function_handle')
+    %    U = applyCoordinates(kernel{mm}.Data, kernel{mm}.dim, ...
+    %        xs, ys, zs, ts);
+    %else
+    %    U = kernel{mm}.Data;
+    %end
+    
+    if any(strcmpi(kernel{mm}.Operation, {'Matrix', 'MatrixArray'}))
+        U = applyCoordinates(kernel{mm}.Data, kernel{mm}.dim, ...
+            xs, ys, zs, ts);
+        
+        if iscell(U)
+            error('Not supporting this now, what would it mean?');
+            %kd = txca(kd, 5, 4, U, kernel{mm}.dim, 2);
+            %ktd = txca(ktd, 5, 4, U, kernel{mm}.dim, 2);
+        else
+            %ktkd = txa(ktkd, 5, U+U', kernel{mm}.dim);
+            kd = txa(kd, 5, U, kernel{mm}.dim);
+            ktd = txa(ktd, 5, U', kernel{mm}.dim);
+        end
+    elseif strcmpi(kernel{mm}.Operation, 'Pointwise')
+        
+        U = applyCoords_Multiply(kernel{mm}.Data, kernel{mm}.dim, ...
+            xs, ys, zs, ts);
+        %kd = bsxfun(@times, shape(U, size(kd), filters{mm}.dim), kd);
+        %ktd = bsxfun(@times, shape(U, size(ktd), filters{mm}.dim), ktd);
+        kd = bsxfun(@times, U, kd);
+        ktd = bsxfun(@times, U, ktd);
+    end
+    
 end
 
-%fprintf('f = %2.5e\n', f);
+% ktkd ?? (K' + K) * d
+ktkd = kd + ktd;
+
+% And now the last part: sum it up...
+% This used to be f = colVec(d)'*kernel*colVec(d)
+colVec = @(x) reshape(x, [], 1);
+f = colVec(d)'*colVec(kd);
 
 % Evaluate Df.
 % 
@@ -67,7 +102,9 @@ end
 %
 % Presently, d = U*x.  I will let Dx be the identity operator here.  So
 
-dd = txa(d, 5, kernel, 4, 1); % kernel*colVec(d);
+dd = ktkd;
+
+%dd = txa(d, 5, kernel, 4, 1); % kernel*colVec(d);
 %fprintf('dd is this big: \n');
 %disp(size(dd));
 
@@ -76,15 +113,17 @@ for mm = numel(filters):-1:1
     %fprintf('Filter:\n');
     %disp(filters{mm});
     
-    if isa(filters{mm}.Data, 'function_handle')
-        U = applyCoordinates(filters{mm}.Data, filters{mm}.dim, ...
-            xs, ys, zs, ts);
-    else
-        U = filters{mm}.Data;
-    end
-    
+    %if isa(filters{mm}.Data, 'function_handle')
+    %    U = applyCoordinates(filters{mm}.Data, filters{mm}.dim, ...
+    %        xs, ys, zs, ts);
+    %else
+    %    U = filters{mm}.Data;
+    %end
     
     if any(strcmpi(filters{mm}.Operation, {'Matrix', 'MatrixArray'})) 
+        
+        U = applyCoordinates(filters{mm}.Data, filters{mm}.dim, ...
+            xs, ys, zs, ts);
         
         if iscell(U)        % Cell array of matrices
             
@@ -102,59 +141,35 @@ for mm = numel(filters):-1:1
     
     elseif strcmpi(filters{mm}.Operation, 'Pointwise')
         
+        U = applyCoords_Multiply(filters{mm}.Data, filters{mm}.dim, ...
+            xs, ys, zs, ts);
+        %dd = bsxfun(@times, shape(conj(U), size(dd), filters{mm}.dim), dd);
         dd = bsxfun(@times, conj(U), dd);
         
     end
     
-    %{
-    if  isfield(filters{mm}, 'field')
-        ff = filters{mm}.field;
-    else
-        ff = [];
-    end
-    
-    if isfield(filters{mm}, 'U')
-    
-        if isa(filters{mm}.U, 'function_handle')
-            U = filters{mm}.U(coordinates{filters{mm}.dim});
-        else
-            U = filters{mm}.U;
-        end
-        
-        if iscell(U)
-            % Matlab's cellfun() does not support cell arrays of sparse
-            % matrices.  WTF Mathworks, ??????.
-            txU = cell(size(U));
-            for nn = 1:length(U)
-                txU{nn} = U{nn}';
-            end
-            
-            dd = txca(dd, 5, 4, txU, filters{mm}.dim, 2);
-        elseif ~isempty(ff)
-            dd(:,:,:,ff,:) = txa(dd(:,:,:,ff,:), 5, U', filters{mm}.dim);
-        else
-            dd = txa(dd, 5, U', filters{mm}.dim);
-        end
-    
-    elseif isfield(filters{mm}, 'y')
-        
-        if isa(filters{mm}.y, 'function_handle')
-            y = filters{mm}.y(coordinates{filters{mm}.dim});
-        else
-            y = filters{mm}.y;
-        end
-        
-        if ~isempty(ff)
-            dd(:,:,:,ff,:) = bsxfun(@times, conj(y), dd(:,:,:,ff,:));
-        else
-            dd = bsxfun(@times, conj(y), dd);
-        end
-    end
-    %}
-    
 end
 
-% Now dd = U'*K*U*x.  Twice its real part is the sensitivity, I guess.
+% Now dd = U'*(K'+K)*U*x.  Perfect.  Right?
 
-Df = 2*real(dd);
+Df = dd;
+
+% Now dd = U'*K*U*x.  Twice its real part is the sensitivity, I guess.
+% Df = 2*real(dd);
+
+%{
+function y = shape(x, sz, dims)
+
+allCoords = 1:numel(sz);
+
+ySize = sz;
+ySize(setdiff(allCoords, dims)) = 1;
+
+xSize = size(x);
+
+
+ySize(dims) = size(x);
+
+y = reshape(x, ySize);
+%}
 

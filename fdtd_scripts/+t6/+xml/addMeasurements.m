@@ -4,14 +4,13 @@ import t6.*
 
 %directory = sim.outputDirectoryString;
 
-%for oo = 1:length(grid.Measurements)
-    %meas = grid.Measurements{oo};
-    
-meas = sim.Grid.Measurement;
+for oo = 1:length(sim.Grid.Measurements)
 
-if isempty(meas)
-    return
-end
+meas = sim.Grid.Measurements{oo};
+%meas = sim.Grid.Measurement;
+%if isempty(meas)
+%    return
+%end
 
 if strcmpi(mode, 'forward')
     
@@ -22,9 +21,7 @@ if strcmpi(mode, 'forward')
 elseif strcmpi(mode, 'adjoint')
     
     fname = ['output' filesep meas.filename];
-    %warning('Need to get file name in a better way');
-    %[f Df] = adjoint.evalQuadFormFile(fname, meas.function);
-    [f Df] = adjoint.evalQuadraticFormFile(fname, meas.function);
+    [f Df] = adjoint.evalQuadraticFormFile(fname, meas.filters, meas.kernel);
     [adjCurrents permutedFields] = adjoint.adjointCurrentNames(fname);
     of = OutputFile(fname);
     fwdTimesteps = of.timesteps();
@@ -53,6 +50,6 @@ elseif strcmpi(mode, 'adjoint')
 else
     error('Mode must be forward or adjoint');
 end
-    
-%    t6.xml.addOutput(output, sim, grid, gridXML, doc);
-%end
+
+
+end

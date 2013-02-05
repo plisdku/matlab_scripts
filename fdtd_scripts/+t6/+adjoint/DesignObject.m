@@ -60,25 +60,41 @@ classdef DesignObject < handle
         
         function f = evaluateForward(obj)
             
-            meas = obj.Sim.Grid.Measurement;
+            f = 0;
             
-            fname = [obj.Sim.OutputDirectory filesep meas.filename];
+            for mm = 1:numel(obj.Sim.Grid.Measurements)
+                meas = obj.Sim.Grid.Measurements{mm};
             
-            f = t6.adjoint.evalQuadraticFormFile(fname, meas.function);
+                fname = [obj.Sim.OutputDirectory filesep meas.filename];
+            
+                f = f + t6.adjoint.evalQuadraticFormFile(fname, meas.filters, meas.kernel);
+            end
         end
         
         function [f dfdp dfdv dvdp] = evaluate(obj, designParameters)
             
-            meas = obj.Sim.Grid.Measurement;
-            
-            fname = [obj.Sim.OutputDirectory filesep meas.filename];
-            
-            %f = t6.adjoint.evalQuadFormFile(fname, meas.function);
-            f = t6.adjoint.evalQuadraticFormFile(fname, meas.function);
-            
-            [dfdp dfdv dvdp] = t6.adjoint.calculateAdjointSensitivity(...
-                obj.Sim.Grid.NodeGroup, designParameters);
-            
+            for mm = 1:numel(obj.Sim.Grid.Measurements)
+                meas = obj.Sim.Grid.Measurements{mm};
+                
+                fname = [obj.Sim.OutputDirectory filesep meas.filename];
+                
+                f_ = t6.adjoint.evalQuadraticFormFile(fname, meas.filters, meas.kernel);
+                
+                [dfdp_ dfdv_ dvdp_] = t6.adjoint.calculateAdjointSensitivity(...
+                    obj.Sim.Grid.NodeGroup, designParameters);
+                
+                if mm == 1
+                    f = f_;
+                    dfdp = dfdp_;
+                    dfdv = dfdv_;
+                    dvdp = dvdp_;
+                else
+                    f = f + f_;
+                    dfdp = dfdp + dfdp_;
+                    dfdv = dfdv + dfdv_;
+                    dvdp = dvdp + dvdp_;
+                end
+            end
         end
         
     end

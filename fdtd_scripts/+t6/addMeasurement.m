@@ -1,7 +1,7 @@
 function addMeasurement(varargin)
 %addMeasurement Add a measurement to optimize
 %   addMeasurement('Fields', 'ex ey ez', 'Bounds', [0 0 0 100 100 100], ...
-%       'Function', f)
+%       'Filters', f)
 %       will prepare Trogdor to calculate the function f and its derivative
 %       df/dFields from a forward FDTD simulation, and to generate a current
 %       source for adjoint simulations.
@@ -29,7 +29,8 @@ function addMeasurement(varargin)
 %                       [m0 n0 p0 m1 n1 p1] to save, suitably for the grid
 %                       resolution.
 %                       (YeeCells or Bounds required)
-%       Function        The merit function
+%       Filters         The filters for the merit function
+%       Kernel          The kernel for the merit function (optional)
 %       Timesteps       The range of timesteps on which to save data; [t0 t1]
 %                       will save all timesteps t such that t0 <= t <= t1.
 %                       Multiple-row arrays will cause Trogdor to save multiple
@@ -77,6 +78,8 @@ X.Fields = '';
 X.YeeCells = []; % [x y z x y z]
 X.Bounds = [];
 X.Function = [];
+X.Filters = [];
+X.Kernel = [];
 X.Timesteps = [];  % [first last]
 X.Stride = []; % scalar
 X.Period = []; % scalar
@@ -144,11 +147,17 @@ if ~isempty(X.Mode)
     end
 end
 
+if ~isempty(X.Function)
+    X.Filters = X.Function;
+    warning('Function is deprecated and should be replaced with Filters');
+end
+
 obj = struct;
 obj.type = 'Output';
 obj.fields = X.Fields;
-obj.function = X.Function;
-obj.filename = 'measurement';
+obj.filters = X.Filters;
+obj.kernel = X.Kernel;
+obj.filename = sprintf('measurement%i', length(sim.Grid.Measurements)+1);
 obj.yeeCells = X.YeeCells; % validated
 obj.bounds = X.Bounds; % validated
 obj.timesteps = X.Timesteps; % validated
@@ -160,11 +169,11 @@ if ~isempty(X.InterpolationPoint)
     obj.interpolationPoint = X.InterpolationPoint;
 end
 
-if ~isempty(sim.Grid.Measurement)
-    warning('Overwriting measurement');
-end
+%if ~isempty(sim.Grid.Measurement)
+%    warning('Overwriting measurement');
+%end
 
-sim.Grid.Measurement = obj;
+sim.Grid.Measurements{end+1} = obj;
 
 end
 
