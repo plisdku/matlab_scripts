@@ -236,9 +236,9 @@ else
     freqs = reshape(X.Frequency, [], 1);
     timestamps = reshape(X.Time, 1, []);
     
-    phaseFactors = exp(-1i*freqs*timestamps);
+    fourierKets = exp(-1i*freqs*timestamps);
     
-    harmonics = reshape(phaseFactors*timeFirstData(:,:), szHarm);
+    harmonics = reshape(fourierKets*timeFirstData(:,:), szHarm);
     f = ipermute(harmonics, timeFirstIndices) / numT;
     
 end
@@ -283,7 +283,6 @@ if (isempty(X.Frequency) && isempty(X.SteadyStateFrequency)) || ...
     end
     
     deltaT = file.Durations{1}.Period * file.Dt;
-    
     freqs = 2*pi*(0:numT-1) / (numT*deltaT);
     
     % Correct for field offset time
@@ -293,11 +292,12 @@ if (isempty(X.Frequency) && isempty(X.SteadyStateFrequency)) || ...
                 offset = file.Fields{ff}.Offset(4);
                 phaseFactors = exp(-1i*offset*file.Dt*freqs);
                 
-                indices = repmat({':'}, [1, ndims(f{rr})-1]);
-
+                indices = repmat({':'}, [1, ndims(f{rr})-2]);
+                
                 for pp = 1:numel(freqs)
-                    f{rr}(indices{:},pp) = f{rr}(indices{:},pp) * phaseFactors(pp);
+                    f{rr}(indices{:},ff,pp) = f{rr}(indices{:},ff,pp) * phaseFactors(pp);
                 end
+                
             end
         end
     else
@@ -378,7 +378,6 @@ elseif ~isempty(X.SteadyStateFrequency)
             cosAndSin = ipermute(decomp, [nd, 1:nd-1]); % size: [x y z 1 t]
             
             indices = repmat({':'}, [1 ndims(cosAndSin)-1]);
-            %indices_f = repmat({':'}, [1 ndims(f{rr})-1]);
             indices_f = {':', ':', ':'};
             
             % size of f{rr}: [x y z f] or smaller if singleton dims exist
@@ -406,15 +405,16 @@ elseif ~isempty(X.SteadyStateFrequency)
     end
     
     
-else % OutputHarmonic-type functionality
+else % Inner product with a few harmonics (like old outputHarmonic)
     freqs = reshape(X.Frequency, 1, []); % a row vector!!
     deltaT = file.Durations{1}.Period * file.Dt;
+    %fprintf('deltaT = %2.2f\n', deltaT);
     
     if length(file.Durations) > 1
         error('Cannot extract single frequencies from multi-duration output.');
     end
     
-    harmonic = cell(numRegions,1);
+    outHarmonic = cell(numRegions,1);
     if strcmpi(X.Regions, 'Separate')
         for rr = 1:numRegions
             if isempty(X.Positions)
@@ -424,10 +424,10 @@ else % OutputHarmonic-type functionality
                 xyzPos = X.Positions;
             end
             dim{rr} = [reshape(cellfun(@numel, xyzPos), 1, []), numFields];
-            harmonic{rr} = zeros([prod(dim{rr}), numel(freqs)]);
+            outHarmonic{rr} = zeros([prod(dim{rr}), numel(freqs)]);
         end
     else
-        harmonic{1} = zeros(file.fieldValues()*numFields, numel(freqs));
+        outHarmonic{1} = zeros(file.fieldValues()*numFields, numel(freqs));
     end
     
     chunkBytes = 20e6;
@@ -446,9 +446,9 @@ else % OutputHarmonic-type functionality
 
         timesteps = reshape((n0:n1)-1, 1, []);
         freqs = reshape(freqs, [], 1);
-
-        phaseFactors = exp(-1i*freqs*timesteps*deltaT);
-
+        
+        fourierKets = exp(-1i*freqs*timesteps*deltaT) / numT;
+        
         timeFirstIndices = [5, 1:4];
 
         if numRegions == 1;
@@ -461,6 +461,10 @@ else % OutputHarmonic-type functionality
                 'Positions', X.Positions);
         end
         
+        %assignin('base', 'specKets', fourierKets);
+        %assignin('base', 'specTs', timesteps*deltaT);
+        %assignin('base', 'specData', frameData);
+        
         for rr = 1:length(frameData)
             frameData{rr} = permute(frameData{rr}, timeFirstIndices);
         end
@@ -470,10 +474,10 @@ else % OutputHarmonic-type functionality
             szHarm = [numel(freqs), szFrameData(2:end)];
 
             harmonicAddend = ipermute(...
-                reshape(phaseFactors*frameData{rr}(:,:)/numT, szHarm), ...
+                reshape(fourierKets*frameData{rr}(:,:), szHarm), ...
                 timeFirstIndices);
 
-            harmonic{rr} = harmonic{rr} + ...
+            outHarmonic{rr} = outHarmonic{rr} + ...
                 reshape(harmonicAddend(:), [], numel(freqs));
         end
 
@@ -484,10 +488,10 @@ else % OutputHarmonic-type functionality
     if strcmpi(X.Regions, 'Separate')
         f = cell(numRegions,1);
         for rr = 1:numRegions
-            f{rr} = reshape(harmonic{rr}, [dim{rr} numel(freqs)]);
+            f{rr} = reshape(outHarmonic{rr}, [dim{rr} numel(freqs)]);
         end
     else
-        f{1} = reshape(harmonic{1}, [], numFields, numel(freqs));
+        f{1} = reshape(outHarmonic{1}, [], numFields, numel(freqs));
     end
     
     % Correct for field offset time
@@ -502,6 +506,7 @@ else % OutputHarmonic-type functionality
             for pp = 1:numel(freqs)
                 f{rr}(indices{:},ff,pp) = f{rr}(indices{:},ff,pp) * phaseFactors(pp);
             end
+            
         end
     else
         offset = file.Fields{1}.Offset(4);

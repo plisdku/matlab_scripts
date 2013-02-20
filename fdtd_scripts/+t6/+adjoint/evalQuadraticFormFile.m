@@ -1,4 +1,5 @@
 function [f Df] = evalQuadraticFormFile(file, userFilters, userKernel)
+% [f Df] = evalQuadraticFormFile(file, userFilters, userKernel)
 
 import t6.*
 

@@ -1,4 +1,5 @@
 function [f dfdp dfdv] = designSensitivity(designObject, parameters, callback)
+% [f dfdp dfdv] = designSensitivity(designObject, parameters, callback)
 
 %global fs;
 %global ps;

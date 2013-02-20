@@ -73,6 +73,9 @@ classdef DesignObject < handle
         
         function [f dfdp dfdv dvdp] = evaluate(obj, designParameters)
             
+            [dfdp dfdv dvdp] = t6.adjoint.calculateAdjointSensitivity(...
+                obj.Sim.Grid.NodeGroup, designParameters);
+                
             for mm = 1:numel(obj.Sim.Grid.Measurements)
                 meas = obj.Sim.Grid.Measurements{mm};
                 
@@ -80,19 +83,10 @@ classdef DesignObject < handle
                 
                 f_ = t6.adjoint.evalQuadraticFormFile(fname, meas.filters, meas.kernel);
                 
-                [dfdp_ dfdv_ dvdp_] = t6.adjoint.calculateAdjointSensitivity(...
-                    obj.Sim.Grid.NodeGroup, designParameters);
-                
                 if mm == 1
                     f = f_;
-                    dfdp = dfdp_;
-                    dfdv = dfdv_;
-                    dvdp = dvdp_;
                 else
                     f = f + f_;
-                    dfdp = dfdp + dfdp_;
-                    dfdv = dfdv + dfdv_;
-                    dvdp = dvdp + dvdp_;
                 end
             end
         end

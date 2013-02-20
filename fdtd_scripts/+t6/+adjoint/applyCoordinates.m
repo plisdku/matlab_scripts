@@ -1,4 +1,5 @@
 function UU = applyCoordinates(U, whichCoords, xs, ys, zs, ts)
+% UU = applyCoordinates(U, whichCoords, xs, ys, zs, ts)
 % How does the user signal that U is separately evaluated for each field?
 % Well, if U returns four fields, that's a signal.
 % If U depends on t, that's a signal too.

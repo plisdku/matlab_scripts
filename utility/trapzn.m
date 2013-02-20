@@ -1,4 +1,4 @@
-function A = trapzn(xyzCoordinates, A)
+function A = trapzn(xyzCoordinates, A, dimFlags)
 % z = trapzn(x, y) computes the integral of y with respect to x along all its
 % non-singleton dimensions using Matlab's built-in trapz() function.
 %
@@ -18,8 +18,16 @@ function A = trapzn(xyzCoordinates, A)
 %    81
 %
 
-for xyz = 1:length(xyzCoordinates)
-    if numel(xyzCoordinates{xyz}) > 1
-        A = trapz(xyzCoordinates{xyz}, A, xyz);
+if nargin > 2
+    for xyz = 1:length(xyzCoordinates)
+        if numel(xyzCoordinates{xyz}) > 1 && dimFlags(xyz)
+            A = trapz(xyzCoordinates{xyz}, A, xyz);
+        end
+    end
+else
+    for xyz = 1:length(xyzCoordinates)
+        if numel(xyzCoordinates{xyz}) > 1
+            A = trapz(xyzCoordinates{xyz}, A, xyz);
+        end
     end
 end

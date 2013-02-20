@@ -1,5 +1,5 @@
 function [f Df] = evalQF(data, filters, kernel, xs, ys, zs, ts)
-% [f Df] = evalQuadraticForm(data, filters, coords)
+% [f Df] = evalQF(data, filters, kernel, xs, ys, zs, ts)
 %
 
 import multiplyTensors.*
@@ -39,7 +39,15 @@ for mm = 1:numel(filters)
         
     end
     
+    %if mm == 4
+    %    assignin('base', 'qfData', d);
+    %end
+    
 end
+
+%assignin('base', 'qfKet', U);
+%assignin('base', 'qfd', d);
+%assignin('base', 'qfts', ts);
 
 % At this point any remaining nonsingular dimensions of d must be eaten by
 % a quadratic form, as d' * K * d, to obtain f.  The kernel needs to do
