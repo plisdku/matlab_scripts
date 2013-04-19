@@ -9,10 +9,14 @@ function plotOutput(fileName, varargin)
 
 import t5.*
 
+climCell = {};
+
 if nargin == 2
     period = varargin{1};
 else
+    X.CLim = [];
     X.Period = 1;
+    X.Callback = [];
     if exist('orangecrush', 'file')
         X.Colormap = 'orangecrush';
     else
@@ -23,6 +27,10 @@ else
     period = X.Period;
     if ~isempty(X.Colormap)
         colormap(X.Colormap);
+    end
+    
+    if ~isempty(X.CLim)
+        climCell = {X.CLim};
     end
 end
 
@@ -134,14 +142,20 @@ elseif (nnz(dim(1:3) == 1) == 1)    % All 2D cases
         data = file.readFrames(1);
         while frameNum <= numFrames
             if (mod(frameNum, period) == 0)
+                clf
                 imagesc_centered(xyzPos{row}, xyzPos{col}, ...
-                    transpose(squeeze(data)));
+                    transpose(squeeze(data)), climCell{:});
                 axis image
                 set(gca, 'YDir', 'Normal');
                 colorbar;
                 title(sprintf('Frame %i', frameNum));
                 xlabel(sprintf('%s (m)', coords(row)));
                 ylabel(sprintf('%s (m)', coords(col)));
+                
+                if ~isempty(X.Callback)
+                    X.Callback();
+                end
+                
                 pause(0.01);
             end
             if frameNum < numFrames
@@ -164,7 +178,7 @@ elseif (nnz(dim(1:3) == 1) == 1)    % All 2D cases
                 %if datsize(1) < datsize(2)   % tall skinny
                     subplot(131);
                     imagesc_centered(xyzPos{row}{1}, xyzPos{col}{1}, ...
-                        transpose(squeeze(data(:,:,:,1))));
+                        transpose(squeeze(data(:,:,:,1))), climCell{:});
                     axis image
                     set(gca, 'YDir', 'Normal');
                     colorbar;
@@ -174,7 +188,7 @@ elseif (nnz(dim(1:3) == 1) == 1)    % All 2D cases
                     
                     subplot(132)
                     imagesc_centered(xyzPos{row}{2}, xyzPos{col}{2}, ...
-                        transpose(squeeze(data(:,:,:,2))));
+                        transpose(squeeze(data(:,:,:,2))), climCell{:});
                     axis image
                     set(gca, 'YDir', 'Normal');
                     colorbar;
@@ -184,7 +198,7 @@ elseif (nnz(dim(1:3) == 1) == 1)    % All 2D cases
                     
                     subplot(133)
                     imagesc_centered(xyzPos{row}{3}, xyzPos{col}{3}, ...
-                        transpose(squeeze(data(:,:,:,3))));
+                        transpose(squeeze(data(:,:,:,3))), climCell{:});
                     axis image
                     set(gca, 'YDir', 'Normal');
                     colorbar;
@@ -195,7 +209,7 @@ elseif (nnz(dim(1:3) == 1) == 1)    % All 2D cases
                 else
                     subplot(311)
                     imagesc_centered(xyzPos{row}{1}, xyzPos{col}{1}, ...
-                        transpose(squeeze(data(:,:,:,1))));
+                        transpose(squeeze(data(:,:,:,1))), climCell{:});
                     axis image
                     set(gca, 'YDir', 'Normal');
                     colorbar;
@@ -205,7 +219,7 @@ elseif (nnz(dim(1:3) == 1) == 1)    % All 2D cases
                     
                     subplot(312)
                     imagesc_centered(xyzPos{row}{2}, xyzPos{col}{2}, ...
-                        transpose(squeeze(data(:,:,:,2))));
+                        transpose(squeeze(data(:,:,:,2))), climCell{:});
                     axis image
                     set(gca, 'YDir', 'Normal');
                     colorbar;
@@ -215,7 +229,7 @@ elseif (nnz(dim(1:3) == 1) == 1)    % All 2D cases
                     
                     subplot(313)
                     imagesc_centered(xyzPos{row}{3}, xyzPos{col}{3}, ...
-                        transpose(squeeze(data(:,:,:,3))));
+                        transpose(squeeze(data(:,:,:,3))), climCell{:});
                     axis image
                     set(gca, 'YDir', 'Normal');
                     colorbar;

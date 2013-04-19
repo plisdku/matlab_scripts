@@ -43,14 +43,16 @@ function [X,FVAL,EXITFLAG,OUTPUT] = PSO(FUN,X0,LB,UB,OPTIONS,varargin)
 %     0  Maximum number of function evaluations or iterations reached.
 %    -1  Maximum time exceeded.
 %   
-%   [X,FVAL,EXITFLAG,OUTPUT]=PSO(FUN,X0,...) returns a structure OUTPUT with 
-%   the number of iterations taken in OUTPUT.nITERATIONS, the number of function
-%   evaluations in OUTPUT.nFUN_EVALS, the coordinates of the different particles in 
-%   the swarm in OUTPUT.SWARM, the corresponding fitness values in OUTPUT.FITNESS, 
-%   the particle's best position and its corresponding fitness in OUTPUT.PBEST and
-%   OUTPUT.PBEST_FITNESS, the best position ever achieved by the swarm in 
-%   OUTPUT.GBEST and its corresponding fitness in OUTPUT.GBEST_FITNESS, the amount
-%   of time needed in OUTPUT.TIME and the options used in OUTPUT.OPTIONS.
+%   [X,FVAL,EXITFLAG,OUTPUT]=PSO(FUN,X0,...) returns a structure OUTPUT with:
+%     nFUN_EVALS    = number of function evaluations
+%     SWARM         = coordinates of different particles in the swarm
+%     FITNESS       = corresponding fitness values
+%     PBEST         = each particle's best position
+%     PBEST_FITNESS = each particle's best fitness
+%     GBEST         = the best position ever achieved by the swarm
+%     GBEST_FITNESS = the best fitness ever achieved by the swarm
+%     TIME          = amount of time needed
+%     OPTIONS       = the options used
 % 
 %   See also PSOSET, PSOGET
 
@@ -159,9 +161,9 @@ for i = 1:OPTIONS.SWARM_SIZE,
     end
 end
 
-% initialize VELOCITIES
+% initialize velocities
 
-VELOCITIES = zeros(OPTIONS.SWARM_SIZE,NDIM,OPTIONS.MAX_ITER);
+velocities = zeros(OPTIONS.SWARM_SIZE,NDIM,OPTIONS.MAX_ITER);
 
 % initialize FITNESS, PBEST_FITNESS, GBEST_FITNESS, INDEX_PBEST, index_gbest_particle and INDEX_GBEST_ITERATION
 
@@ -184,14 +186,14 @@ if OPTIONS.COGNITIVE_ACC+OPTIONS.SOCIAL_ACC <= 4,
     % the values are adjusted so that the sum is equal to 4.1, keeping the ratio COGNITIVE_ACC/SOCIAL_ACC constant
     OPTIONS.COGNITIVE_ACC = OPTIONS.COGNITIVE_ACC*4.1/(OPTIONS.COGNITIVE_ACC+OPTIONS.SOCIAL_ACC);
     OPTIONS.SOCIAL_ACC = OPTIONS.SOCIAL_ACC*4.1/(OPTIONS.COGNITIVE_ACC+OPTIONS.SOCIAL_ACC);
-    % calculate constriction factor
-    k = 1; % k can take values between 0 and 1, but is usually set to one (Montes de Oca et al., 2006)
-    OPTIONS.ConstrictionFactor = 2*k/(abs(2-(OPTIONS.COGNITIVE_ACC+OPTIONS.SOCIAL_ACC)-sqrt((OPTIONS.COGNITIVE_ACC+OPTIONS.SOCIAL_ACC)^2-4*(OPTIONS.COGNITIVE_ACC+OPTIONS.SOCIAL_ACC))));
-else
-    % calculate constriction factor
-    k = 1; % k can take values between 0 and 1, but is usually set to one (Montes de Oca et al., 2006)
-    OPTIONS.ConstrictionFactor = 2*k/(abs(2-(OPTIONS.COGNITIVE_ACC+OPTIONS.SOCIAL_ACC)-sqrt((OPTIONS.COGNITIVE_ACC+OPTIONS.SOCIAL_ACC)^2-4*(OPTIONS.COGNITIVE_ACC+OPTIONS.SOCIAL_ACC))));
+    
+    fprintf('COGNITIVE_ACC = %2.4f\n', OPTIONS.COGNITIVE_ACC);
+    fprintf('SOCIAL_ACC = %2.4f\n\n', OPTIONS.SOCIAL_ACC);
 end
+
+% calculate constriction factor
+k = 1; % k can take values between 0 and 1, but is usually set to one (Montes de Oca et al., 2006)
+OPTIONS.ConstrictionFactor = 2*k/(abs(2-(OPTIONS.COGNITIVE_ACC+OPTIONS.SOCIAL_ACC)-sqrt((OPTIONS.COGNITIVE_ACC+OPTIONS.SOCIAL_ACC)^2-4*(OPTIONS.COGNITIVE_ACC+OPTIONS.SOCIAL_ACC))));
 
 % initialize counters
 
@@ -249,10 +251,10 @@ for i = 1:OPTIONS.MAX_ITER,
     if NDIM ~= ndim0
         error('what?');
     end
-    % update the VELOCITIES
+    % update the velocities
     
-    VELOCITIES(:,:,i+1) = OPTIONS.ConstrictionFactor.*( ...
-        VELOCITIES(:,:,i) + ...
+    velocities(:,:,i+1) = OPTIONS.ConstrictionFactor.*( ...
+        velocities(:,:,i) + ...
         OPTIONS.COGNITIVE_ACC.*rand(OPTIONS.SWARM_SIZE,NDIM).*(PBEST(:,:,i)-SWARM(:,:,i)) + ...
         OPTIONS.SOCIAL_ACC.*rand(OPTIONS.SWARM_SIZE,NDIM).*(repmat(GBEST(i,:),[OPTIONS.SWARM_SIZE 1 1],1)-SWARM(:,:,i)));
     
@@ -261,7 +263,7 @@ for i = 1:OPTIONS.MAX_ITER,
     end
     % update particle positions
     
-    SWARM(:,:,i+1) = SWARM(:,:,i)+VELOCITIES(:,:,i+1);
+    SWARM(:,:,i+1) = SWARM(:,:,i)+velocities(:,:,i+1);
     
     % to make sure that particles stay within specified bounds...
     %   (suppose that the particle's new position is outside the boundaries,
@@ -282,24 +284,24 @@ for i = 1:OPTIONS.MAX_ITER,
             if length(UB) == 1,
                 if SWARM(j,k,i+1) > UB,
                     SWARM(j,k,i+1) = UB-rand*(SWARM(j,k,i+1)-UB);
-                    VELOCITIES(j,k,i+1) = SWARM(j,k,i+1)-SWARM(j,k,i);
+                    velocities(j,k,i+1) = SWARM(j,k,i+1)-SWARM(j,k,i);
                 end
             else
                 if SWARM(j,k,i+1) > UB(k),
                     SWARM(j,k,i+1) = UB(k)-rand*(SWARM(j,k,i+1)-UB(k));
-                    VELOCITIES(j,k,i+1) = SWARM(j,k,i+1)-SWARM(j,k,i);
+                    velocities(j,k,i+1) = SWARM(j,k,i+1)-SWARM(j,k,i);
                 end
             end
             % check lower boundary
             if length(UB) == 1,
                 if SWARM(j,k,i+1) < LB,
                     SWARM(j,k,i+1) = LB+rand*(LB-SWARM(j,k,i+1));
-                    VELOCITIES(j,k,i+1) = SWARM(j,k,i+1)-SWARM(j,k,i);
+                    velocities(j,k,i+1) = SWARM(j,k,i+1)-SWARM(j,k,i);
                 end
             else
                 if SWARM(j,k,i+1) < LB(k),
                     SWARM(j,k,i+1) = LB(k)+rand*(LB(k)-SWARM(j,k,i+1));
-                    VELOCITIES(j,k,i+1) = SWARM(j,k,i+1)-SWARM(j,k,i);
+                    velocities(j,k,i+1) = SWARM(j,k,i+1)-SWARM(j,k,i);
                 end
             end
         end
@@ -379,6 +381,12 @@ for i = 1:OPTIONS.MAX_ITER,
 
 end
 
+% pch March 5, 2013: exit flag wasn't used it seems
+if EXITFLAG == -2 && i == OPTIONS.MAX_ITER
+    EXITFLAG = 0;
+end
+    
+
 % return solution
 
 X = GBEST(i,:);
@@ -404,6 +412,8 @@ OUTPUT.GBEST_FITNESS = GBEST_FITNESS(1:nITERATIONS,1);
 % store the amount of time needed in OUTPUT data structure
 
 OUTPUT.TIME = toc;
+
+assert(EXITFLAG ~= -2);
 
 return
 

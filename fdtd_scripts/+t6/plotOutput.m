@@ -16,6 +16,7 @@ X.UnitString = [];
 X.FilePattern = '';
 X.Subplots = [];
 X.Times = [];
+X.Callback = [];
 X = parseargs(X, varargin{:});
 
 if isempty(X.Colormap) && exist('orangecrush', 'file')
@@ -131,6 +132,9 @@ while frameNum <= numFrames
         ylim(X.YLim);
         legend(fieldNames{:})
         title(sprintf('Frame %i of %i', frameNum, numFrames));
+        if ~isempty(X.Callback)
+            X.Callback();
+        end
         pause(0.01);
         
         if frameNum < numFrames
@@ -271,6 +275,10 @@ for frame = 0:numFrames-1
             movieFrame = movieFrame + 1;
         end
         
+        if ~isempty(X.Callback)
+            X.Callback();
+        end
+        
         pause(0.01);
     end
 end
@@ -278,111 +286,3 @@ file.close
 
 end
 
-%{
-
-if file.numFields() == 1
-    frameNum = 1;
-    file.open();
-    data = file.readFrames('NumFrames', 1);
-
-    xyzPos = file.positions(); % size {3}
-
-    while frameNum <= numFrames
-        if (mod(frameNum, X.Period) == 0)
-            imagesc_centered(xyzPos{row}, xyzPos{col}, ...
-                transpose(squeeze(data)), imagesc_args{:});
-            axis xy image
-            shading interp
-            title(sprintf('Frame %i', frameNum));
-            xlabel(sprintf('%s%s', char('w'+row), X.UnitString));
-            ylabel(sprintf('%s%s', char('w'+col), X.UnitString));
-            colorbar;
-            pause(0.01);
-        end
-        if frameNum < numFrames
-            data = file.readFrames('NumFrames', 1);
-        end
-        frameNum = frameNum + 1;
-    end
-elseif file.numFields() == 3
-    frameNum = 1;
-    file.open
-    data = file.readFrames('NumFrames', 1);
-
-
-    while frameNum <= numFrames
-        if (mod(frameNum, X.Period) == 0)
-            datsize = size(squeeze(data(:,:,:,1)));
-            clf
-            if diff(xyzPos{row}{2}([1 end])) < ...
-                diff(xyzPos{col}{2}([1 end]))
-                subplot(131);
-                imagesc_centered(xyzPos{row}{1}, xyzPos{col}{1}, ...
-                    transpose(squeeze(data(:,:,:,1))));
-                axis image
-                set(gca, 'YDir', 'Normal');
-                colorbar;
-                title(file.Fields{1}.Name);
-                xlabel(sprintf('%s%s', char('w'+row), X.UnitString));
-                ylabel(sprintf('%s%s', char('w'+col), X.UnitString));
-
-                subplot(132)
-                imagesc_centered(xyzPos{row}{2}, xyzPos{col}{2}, ...
-                    transpose(squeeze(data(:,:,:,2))));
-                axis image
-                set(gca, 'YDir', 'Normal');
-                colorbar;
-                title(file.Fields{2}.Name);
-                xlabel(sprintf('%s%s', char('w'+row), X.UnitString));
-                ylabel(sprintf('%s%s', char('w'+col), X.UnitString));
-
-                subplot(133)
-                imagesc_centered(xyzPos{row}{3}, xyzPos{col}{3}, ...
-                    transpose(squeeze(data(:,:,:,3))));
-                axis image
-                set(gca, 'YDir', 'Normal');
-                colorbar;
-                title(file.Fields{3}.Name);
-                xlabel(sprintf('%s%s', char('w'+row), X.UnitString));
-                ylabel(sprintf('%s%s', char('w'+col), X.UnitString));
-            else
-                subplot(311)
-                imagesc_centered(xyzPos{row}{1}, xyzPos{col}{1}, ...
-                    transpose(squeeze(data(:,:,:,1))));
-                axis image
-                set(gca, 'YDir', 'Normal');
-                colorbar;
-                title(file.Fields{1}.Name);
-                xlabel(sprintf('%s%s', char('w'+row), X.UnitString));
-                ylabel(sprintf('%s%s', char('w'+col), X.UnitString));
-
-                subplot(312)
-                imagesc_centered(xyzPos{row}{2}, xyzPos{col}{2}, ...
-                    transpose(squeeze(data(:,:,:,2))));
-                axis image
-                set(gca, 'YDir', 'Normal');
-                colorbar;
-                title(file.Fields{2}.Name);
-                xlabel(sprintf('%s%s', char('w'+row), X.UnitString));
-                ylabel(sprintf('%s%s', char('w'+col), X.UnitString));
-
-                subplot(313)
-                imagesc_centered(xyzPos{row}{3}, xyzPos{col}{3}, ...
-                    transpose(squeeze(data(:,:,:,3))));
-                axis image
-                set(gca, 'YDir', 'Normal');
-                colorbar;
-                title(file.Fields{3}.Name);
-                xlabel(sprintf('%s%s', char('w'+row), X.UnitString));
-                ylabel(sprintf('%s%s', char('w'+col), X.UnitString));
-            end
-            pause(0.01);
-        end
-        if frameNum < numFrames
-            data = file.readFrames('NumFrames', 1);
-        end
-        frameNum = frameNum + 1;
-    end
-    file.close
-end
-%}

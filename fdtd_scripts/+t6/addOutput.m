@@ -37,12 +37,8 @@ function addOutput(filename, fields, varargin)
 %                       use addOutput('Timesteps', [100 100; 144 144]).
 %                       Timesteps range from 0 to numTimesteps-1.
 %                       (default: all timesteps)
-%       Stride          Spatial sampling period.  Set to [2 2 2] to save every
-%                       second cell in X, Y and Z (cutting file size by 8).  If
-%                       there are multiple rows in YeeCells, the same Stride
-%                       will be used for every region; if Stride has the same
-%                       number of rows as YeeCells, then each region will have
-%                       its own spatial sampling period.  (default: [1 1 1])
+%       Frequency       Frequency or frequencies of on-the-fly Fourier
+%                       transform (default: unused)
 %       Period          Temporal sampling period.  Set to 10 to save every tenth
 %                       timestep of each range in Timesteps.  If there are 
 %                       multiple rows in Timesteps, then each range of timesteps
@@ -76,8 +72,8 @@ sim = simulation();
 X.YeeCells = []; % [x y z x y z]
 X.Bounds = [];
 X.Timesteps = [];  % [first last]
+X.Frequency = [];
 X.Duration = []; % [first last]
-X.Stride = []; % scalar
 X.Period = []; % scalar
 X.CutoffFrequency = [];
 X.InterpolationPoint = []; % [x y z] from 0 to 1
@@ -92,6 +88,14 @@ fieldTokens = mySortTokens(tokenizeFields(fields, 'd e b h j m'));
 % If we obtained Bounds and not YeeCells, set the YeeCells appropriately
 if ~isempty(X.Bounds)
     X.YeeCells = sim.boundsToYee(X.Bounds, fieldTokens);
+end
+
+% Make sure Frequency does not coexist with Timesteps or Duration.
+% It can coexist with Period and CutoffFrequency I guess, sure, since those
+% can be used to save some computation time in FDTD.
+
+if ~isempty(X.Frequency) && (~isempty(X.Timesteps) || ~isempty(X.Duration))
+    error('Frequency option cannot coexist with Timesteps or Duration');
 end
 
 % If we obtained Duration and not Timesteps, set the Timesteps
@@ -113,15 +117,6 @@ if isempty(X.Timesteps)
     X.Timesteps = [0, sim.NumT-1];
 end
 
-if isempty(X.Stride)
-    X.Stride = ones(size(X.YeeCells, 1), 3);
-elseif size(X.Stride, 2) ~= 3
-    error('Stride must have three columns (x, y, z).');
-elseif size(X.Stride, 1) == 1
-    X.Stride = repmat(X.Stride, size(X.YeeCells, 1), 1);
-elseif size(X.Stride, 1) ~= size(X.YeeCells, 1)
-    error('Stride must have as many rows as YeeCells or Bounds.');
-end
 
 if ~isempty(X.Period) && ~isempty(X.CutoffFrequency)
     error('Period and CutoffFrequency cannot both be used');
@@ -165,8 +160,8 @@ obj.filename = filename;
 obj.yeeCells = X.YeeCells; % validated
 obj.bounds = X.Bounds; % validated
 obj.timesteps = X.Timesteps; % validated
+obj.frequency = X.Frequency;
 obj.duration = X.Duration; % validated
-obj.stride = X.Stride; % validated
 obj.period = X.Period; % validated
 obj.mode = X.Mode;
 

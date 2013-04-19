@@ -11,7 +11,16 @@ end
 %elemXML.setAttribute('file', [directory, output.filename]);
 elemXML.setAttribute('file', output.filename);
 
+
+for ff = 1:numel(output.frequency)
+    frqXML = doc.createElement('Frequency');
+    frqXML.setAttribute('frequency', num2str(output.frequency(ff)));
+    
+    elemXML.appendChild(frqXML);
+end
+
 % durations and regions.
+
 for dd = 1:size(output.timesteps, 1)
     durXML = doc.createElement('Duration');
     durXML.setAttribute('firstTimestep', num2str(output.timesteps(dd,1)));
@@ -29,7 +38,6 @@ for rr = 1:size(output.yeeCells, 1)
     regionXML = doc.createElement('Region');
     regionXML.setAttribute('yeeCells', ...
         sprintf('%i ', output.yeeCells(rr,:)));
-    regionXML.setAttribute('stride', sprintf('%i ', output.stride(rr,:)));
     
     if size(output.bounds, 1) == size(output.yeeCells, 1)
         regionXML.setAttribute('bounds', sprintf('%i ', output.bounds(rr,:)));
