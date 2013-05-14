@@ -2,7 +2,7 @@ function outStruct = solveTM(varargin)
 % propagation along z
 % parallel wavevector along y
 
-import tmm.*
+import tmm2.*
 
 X.boundaryZ = [];
 X.epsr = [];

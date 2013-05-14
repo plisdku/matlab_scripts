@@ -1,10 +1,12 @@
 %% TE tester!
 
-boundaryZ = [-100 0 200 400];
+import tmm2.*
+
+boundaryX = [-100 0 200 400];
 epsr = [1 1+0.1i 2 3 4];
 mur = [1 2 1 2 1];
-Jx = [0 0 1 0];
-My = [0 1 0 0];
+Jz = [0 0 1 0];
+Mx = [0 1 0 0];
 
 %boundaryZ = [0];
 %epsr = [1 1];
@@ -15,47 +17,47 @@ My = [0 1 0 0];
 omega = 2*pi/800;
 ky = 2*pi/12000;
 
-sourceExLeft = 0;
-sourceExRight = 0;
+sourceEzLeft = 0;
+sourceEzRight = 0;
 
-zOut = linspace(-1000, 1000, 500);
+xOut = linspace(-1000, 1000, 500);
 
 
 %%
 
-outStruct = solveTE('boundaryZ', boundaryZ, ...
+outStruct = solveTE('boundaryX', boundaryX, ...
     'epsr', epsr, 'mur', mur, 'omega', omega, 'ky', ky, ...
-    'sourceExLeft', sourceExLeft, 'sourceExRight', sourceExRight, ...
-    'Jx', Jx, 'My', My, ...
-    'Ex', zOut, 'Hy', zOut, 'Hz', zOut, ...
-    'Exz', zOut, 'Hyz', zOut, 'Hzz', zOut, ...
-    'Exy', zOut, 'Hyy', zOut, 'Hzy', zOut);
+    'sourceEzLeft', sourceEzLeft, 'sourceEzRight', sourceEzRight, ...
+    'Jz', Jz, 'Mx', Mx, ...
+    'Ez', xOut, 'Hx', xOut, 'Hy', xOut, ...
+    'Ezy', xOut, 'Hxy', xOut, 'Hyy', xOut, ...
+    'Ezx', xOut, 'Hxx', xOut, 'Hyx', xOut);
 
 %% Set up basic testing stuff
 
 relErr = @(a, b) norm(a-b)/norm(b);
 
-assert(zOut(1) < boundaryZ(1));
-assert(zOut(end) > boundaryZ(end));
-intervals = [zOut(1), boundaryZ, zOut(end)];
+assert(xOut(1) < boundaryX(1));
+assert(xOut(end) > boundaryX(end));
+intervals = [xOut(1), boundaryX, xOut(end)];
 
 numLayers = numel(epsr);
-numBoundaries = numel(boundaryZ);
+numBoundaries = numel(boundaryX);
 
 %% Check the surface-normal gradients inside the layers
 
 for nn = 1:numLayers
     
-    ii = (zOut > intervals(nn) & zOut < intervals(nn+1));
+    ii = (xOut > intervals(nn) & xOut < intervals(nn+1));
     
-    Exz = gradient(outStruct.Ex(ii), zOut(ii));
-    Hyz = gradient(outStruct.Hy(ii), zOut(ii));
-    Hzz = gradient(outStruct.Hz(ii), zOut(ii));
+    Ezx = gradient(outStruct.Ez(ii), xOut(ii));
+    Hxx = gradient(outStruct.Hx(ii), xOut(ii));
+    Hyx = gradient(outStruct.Hy(ii), xOut(ii));
     
-    assert( relErr(Exz, outStruct.Exz(ii)) < 1e-2);
-    assert( relErr(Hyz, outStruct.Hyz(ii)) < 1e-2);
-    if norm(outStruct.Hzz) ~= 0
-        assert( relErr(Hzz, outStruct.Hzz(ii)) < 1e-2);
+    assert( relErr(Ezx, outStruct.Ezx(ii)) < 1e-2);
+    assert( relErr(Hyx, outStruct.Hyx(ii)) < 1e-2);
+    if norm(outStruct.Hxx) ~= 0
+        assert( relErr(Hxx, outStruct.Hxx(ii)) < 1e-2);
     end
     
 end
@@ -65,19 +67,19 @@ fprintf('Surface normal gradients test PASSED\n');
 %% Check the surface-parallel gradients
 
 if ky ~= 0
-    Exy = 1i*ky*outStruct.Ex;
+    Ezy = 1i*ky*outStruct.Ez;
+    Hxy = 1i*ky*outStruct.Hx;
     Hyy = 1i*ky*outStruct.Hy;
-    Hzy = 1i*ky*outStruct.Hz;
 
-    assert(relErr(Exy, outStruct.Exy) < 1e-2);
-    assert(relErr(Hyy, outStruct.Hyy) < 1e-2);
-    if norm(outStruct.Hzy) ~= 0
-        assert(relErr(Hzy, outStruct.Hzy) < 1e-2);
+    assert(relErr(Ezy, outStruct.Ezy) < 1e-2);
+    assert(relErr(Hxy, outStruct.Hxy) < 1e-2);
+    if norm(outStruct.Hyy) ~= 0
+        assert(relErr(Hyy, outStruct.Hyy) < 1e-2);
     end
 else
-    assert(norm(outStruct.Exy) == 0);
+    assert(norm(outStruct.Ezy) == 0);
+    assert(norm(outStruct.Hxy) == 0);
     assert(norm(outStruct.Hyy) == 0);
-    assert(norm(outStruct.Hzy) == 0);
 end
 
 fprintf('Surface parallel gradients test PASSED\n');
@@ -86,21 +88,21 @@ fprintf('Surface parallel gradients test PASSED\n');
 
 for nn = 1:numLayers
     
-    ii = (zOut > intervals(nn) & zOut < intervals(nn+1));
+    ii = (xOut > intervals(nn) & xOut < intervals(nn+1));
     
-    % -iw*Dx = dy(Hz) - dz(Hy)
-    assert( relErr(-1i*omega*epsr(nn)*outStruct.Ex(ii), ...
-        outStruct.Hzy(ii) - outStruct.Hyz(ii)) < 1e-5 );
+    % -iw*Dz = dx(Hy) - dy(Hz)
+    assert( relErr(-1i*omega*epsr(nn)*outStruct.Ez(ii), ...
+        outStruct.Hyx(ii) - outStruct.Hxy(ii)) < 1e-5 );
     
-    % -iw*By = -dz(Ex)
-    assert( relErr(-1i*omega*mur(nn)*outStruct.Hy(ii), ...
-        -outStruct.Exz(ii)) < 1e-5 );
-    
-    % -iw*Bz = dy(Ex)
-    if norm(outStruct.Exy(ii)) ~= 0
-        assert( relErr(-1i*omega*mur(nn)*outStruct.Hz(ii), ...
-            outStruct.Exy(ii)) < 1e-5 );
+    % -iw*Bx = -dy(Ez)
+    if norm(outStruct.Ezy(ii)) ~= 0
+        assert( relErr(-1i*omega*mur(nn)*outStruct.Hx(ii), ...
+            -outStruct.Ezy(ii)) < 1e-5 );
     end
+    
+    % -iw*By = dx(Ez)
+    assert( relErr(-1i*omega*mur(nn)*outStruct.Hy(ii), ...
+        outStruct.Ezx(ii)) < 1e-5 );
 end
 
 fprintf('Maxwell equations test PASSED\n');
@@ -108,34 +110,34 @@ fprintf('Maxwell equations test PASSED\n');
 %% Check the boundary conditions.
 % For this, I'll put output positions closer to boundaries.
 
-zBdy = sort([boundaryZ - 1e-6, boundaryZ + 1e-6]);
+xBdy = sort([boundaryX - 1e-6, boundaryX + 1e-6]);
 
-outStruct = solveTE('boundaryZ', boundaryZ, ...
+outStruct = tmm2.solveTE('boundaryX', boundaryX, ...
     'epsr', epsr, 'mur', mur, 'omega', omega, 'ky', ky, ...
-    'sourceExLeft', sourceExLeft, 'sourceExRight', sourceExRight, ...
-    'Jx', Jx, 'My', My, ...
-    'Ex', zBdy, 'Hy', zBdy, 'Hz', zBdy, ...
-    'Exz', zBdy, 'Hyz', zBdy, 'Hzz', zBdy, ...
-    'Exy', zBdy, 'Hyy', zBdy, 'Hzy', zBdy);
+    'sourceEzLeft', sourceEzLeft, 'sourceEzRight', sourceEzRight, ...
+    'Jz', Jz, 'Mx', Mx, ...
+    'Ez', xBdy, 'Hx', xBdy, 'Hy', xBdy, ...
+    'Ezy', xBdy, 'Hxy', xBdy, 'Hyy', xBdy, ...
+    'Ezx', xBdy, 'Hxx', xBdy, 'Hyx', xBdy);
 
 for bb = 1:numBoundaries
     
-    iLeft = find(zBdy < boundaryZ(bb), 1, 'last');
-    iRight = find(zBdy > boundaryZ(bb), 1, 'first');
+    iLeft = find(xBdy < boundaryX(bb), 1, 'last');
+    iRight = find(xBdy > boundaryX(bb), 1, 'first');
     
-    deltaEx = diff(outStruct.Ex([iLeft, iRight]));
+    deltaEz = diff(outStruct.Ez([iLeft, iRight]));
     deltaHy = diff(outStruct.Hy([iLeft, iRight]));
     
-    deltaEH = [deltaEx; deltaHy];
-    MJ = [My(bb); Jx(bb)];
+    deltaEH = [deltaEz; deltaHy];
+    MJ = [Mx(bb); Jz(bb)];
     
     assert( norm(MJ - deltaEH) < 0.01 );
     
-    deltaBz = mur(bb+1)*outStruct.Hz(iRight) - ...
-        mur(bb)*outStruct.Hz(iLeft);
+    deltaBx = mur(bb+1)*outStruct.Hx(iRight) - ...
+        mur(bb)*outStruct.Hx(iLeft);
     
-    if My(bb) == 0
-        assert(norm(deltaBz) < 1e-6); % otherwise it should jump with Ex
+    if Mx(bb) == 0
+        assert(norm(deltaBx) < 1e-6); % otherwise it should jump with Ex
     end
     
 end

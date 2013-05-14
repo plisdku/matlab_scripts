@@ -6,7 +6,7 @@ function outStruct = solveTM_fast(boundaryZ, epsr, mur, omega, ky, ...
     posEz, posEzy, posEzz, ...
     forceBoundModes)
 
-import tmm.*;
+import tmm2.*;
 
 numLayers = length(epsr);
 numBoundaries = numLayers-1;

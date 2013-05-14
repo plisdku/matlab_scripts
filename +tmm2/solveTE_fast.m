@@ -1,18 +1,18 @@
-function outStruct = solveTE_fast(boundaryZ, epsr, mur, omega, ky, ...
-    sourceExLeft, sourceExRight, ...
-    Jx, My, ...
-    posEx, posExy, posExz, ...
-    posHy, posHyy, posHyz, ...
-    posHz, posHzy, posHzz, ...
+function outStruct = solveTE_fast(boundaryX, epsr, mur, omega, ky, ...
+    sourceEzLeft, sourceEzRight, ...
+    Jz, Mx, ...
+    posEz, posEzx, posEzy, ...
+    posHx, posHxx, posHxy, ...
+    posHy, posHyx, posHyy, ...
     forceBoundModes)
 
-import tmm.*;
+import tmm2.*;
 
 numLayers = length(epsr);
 numBoundaries = numLayers-1;
 
 rowVec = @(A) reshape(A, 1, []);
-MJ = [rowVec(My); rowVec(Jx)];
+MJ = [rowVec(Mx); rowVec(Jz)];
 
 n = sqrt(epsr.*mur);
 
@@ -28,16 +28,16 @@ ks(imag(ks) < 0) = -ks(imag(ks) < 0); % decay goes the right way now
 % E(n+1) = forwardMatrix{n}*E(n) + sourceMatrix{n}*MJ(n)
 % E(n) = backwardMatrix{n}*E(n+1) - sourceMatrix{n}*MJ(n)
 
-forwardMatrix = cell(length(boundaryZ), 1);
+forwardMatrix = cell(length(boundaryX), 1);
 sourceMatrix = forwardMatrix;
 
 for nLayer = 1:numBoundaries
     forwardMatrix{nLayer} = ...
-        matrixEH2EE(omega, ks(nLayer+1), boundaryZ(nLayer), mur(nLayer+1)) * ...
-        matrixEE2EH(omega, ks(nLayer), boundaryZ(nLayer), mur(nLayer));
+        matrixEH2EE(omega, ks(nLayer+1), boundaryX(nLayer), mur(nLayer+1)) * ...
+        matrixEE2EH(omega, ks(nLayer), boundaryX(nLayer), mur(nLayer));
     
     sourceMatrix{nLayer} = ...
-        matrixEH2EE(omega, ks(nLayer+1), boundaryZ(nLayer), mur(nLayer+1));
+        matrixEH2EE(omega, ks(nLayer+1), boundaryX(nLayer), mur(nLayer+1));
 end
 
 % The total source matrices are what we multiply source J and M by to get
@@ -48,11 +48,11 @@ totalMJ = [0; 0];
 if numBoundaries > 0
     totalSourceMatrix = cell(numBoundaries, 1);
     totalSourceMatrix{numBoundaries} = ...
-        matrixEH2EE(omega, ks(numLayers), boundaryZ(numLayers-1), mur(numLayers));
+        matrixEH2EE(omega, ks(numLayers), boundaryX(numLayers-1), mur(numLayers));
     for nLayer = numBoundaries-1:-1:1
         totalSourceMatrix{nLayer} = totalSourceMatrix{nLayer+1} * ...
-            matrixEE2EH(omega, ks(nLayer+1), boundaryZ(nLayer+1), mur(nLayer+1)) * ...
-            matrixEH2EE(omega, ks(nLayer+1), boundaryZ(nLayer), mur(nLayer+1));
+            matrixEE2EH(omega, ks(nLayer+1), boundaryX(nLayer+1), mur(nLayer+1)) * ...
+            matrixEH2EE(omega, ks(nLayer+1), boundaryX(nLayer), mur(nLayer+1));
     end
 
     for nLayer = 1:numBoundaries
@@ -67,7 +67,7 @@ end
 transferEE = eye(2);
 
 % E_N = transferLayer{N}*E_first;
-transferLayer = cell(length(boundaryZ)+1, 1); % for intermediate layers
+transferLayer = cell(length(boundaryX)+1, 1); % for intermediate layers
 
 transferLayer{1} = transferEE;
 for nLayer = 1:length(forwardMatrix)
@@ -84,9 +84,9 @@ B = [0, -transferEE(1,1); 1, -transferEE(2,1)];
 % E_outward = [EN+; E1-]
 % E_inward = [EN-; E1+]
 
-E_outward = A \ (totalMJ - B*[sourceExRight; sourceExLeft]);
+E_outward = A \ (totalMJ - B*[sourceEzRight; sourceEzLeft]);
 
-E0 = [ sourceExLeft; E_outward(2) ];
+E0 = [ sourceEzLeft; E_outward(2) ];
 
 %% For mode solutions:
 
@@ -98,7 +98,7 @@ end
 
 outStruct = struct;
 
-intervals = [-inf, boundaryZ(:)', inf];
+intervals = [-inf, boundaryX(:)', inf];
 
 %% Forward/backward coefficients.  Get them all...
 E = zeros(2, numLayers);
@@ -111,122 +111,122 @@ end
 %% Outputs!
 % First allocate them (YAWN)
 
-if ~isempty(posEx) outStruct.Ex = 0*posEx; end
-if ~isempty(posExz) outStruct.Exz = 0*posExz; end
-if ~isempty(posExy) outStruct.Exy = 0*posExy; end
+if ~isempty(posEz) outStruct.Ez = 0*posEz; end
+if ~isempty(posEzy) outStruct.Ezy = 0*posEzy; end
+if ~isempty(posEzx) outStruct.Ezx = 0*posEzx; end
+if ~isempty(posHx) outStruct.Hx = 0*posHx; end
+if ~isempty(posHxy) outStruct.Hxy = 0*posHxy; end
+if ~isempty(posHxx) outStruct.Hxx = 0*posHxx; end
 if ~isempty(posHy) outStruct.Hy = 0*posHy; end
-if ~isempty(posHyz) outStruct.Hyz = 0*posHyz; end
 if ~isempty(posHyy) outStruct.Hyy = 0*posHyy; end
-if ~isempty(posHz) outStruct.Hz = 0*posHz; end
-if ~isempty(posHzz) outStruct.Hzz = 0*posHzz; end
-if ~isempty(posHzy) outStruct.Hzy = 0*posHzy; end
+if ~isempty(posHyx) outStruct.Hyx = 0*posHyx; end
 
 %ddy = diag([1i*ky, 1i*ky]);
 ddy = 1i*ky;
-            
+
 for nLayer = 1:numLayers
     
-    ddz = diag([1i*ks(nLayer), -1i*ks(nLayer)]);
+    ddx = diag([1i*ks(nLayer), -1i*ks(nLayer)]);
     
-    if ~isempty(posEx)
-        indices = find( posEx > intervals(nLayer) & ...
-            posEx <= intervals(nLayer+1));
+    if ~isempty(posEz)
+        indices = find( posEz > intervals(nLayer) & ...
+            posEz <= intervals(nLayer+1));
         
         for ii = indices
-            z = posEx(ii);
-            ee2eh = matrixEE2EH(omega, ks(nLayer), z, mur(nLayer));
+            x = posEz(ii);
+            ee2eh = matrixEE2EH(omega, ks(nLayer), x, mur(nLayer));
             EH = ee2eh*E(:,nLayer);
-            outStruct.Ex(ii) = EH(1);
+            outStruct.Ez(ii) = EH(1);
         end
     end
-    if ~isempty(posExz)
-        indices = find( posExz > intervals(nLayer) & ...
-            posExz <= intervals(nLayer+1));
+    if ~isempty(posEzy)
+        indices = find( posEzy > intervals(nLayer) & ...
+            posEzy <= intervals(nLayer+1));
         
         for ii = indices
-            z = posExz(ii);
-            ee2eh = matrixEE2EH(omega, ks(nLayer), z, mur(nLayer));
-            EH = ee2eh*ddz*E(:,nLayer);
-            outStruct.Exz(ii) = EH(1);
-        end
-    end
-    if ~isempty(posExy)
-        indices = find( posExy > intervals(nLayer) & ...
-            posExy <= intervals(nLayer+1));
-        
-        for ii = indices
-            z = posExy(ii);
-            ee2eh = matrixEE2EH(omega, ks(nLayer), z, mur(nLayer));
+            x = posEzy(ii);
+            ee2eh = matrixEE2EH(omega, ks(nLayer), x, mur(nLayer));
             EH = ee2eh*ddy*E(:,nLayer);
-            outStruct.Exy(ii) = EH(1);
+            outStruct.Ezy(ii) = EH(1);
+        end
+    end
+    if ~isempty(posEzx)
+        indices = find( posEzx > intervals(nLayer) & ...
+            posEzx <= intervals(nLayer+1));
+        
+        for ii = indices
+            x = posEzx(ii);
+            ee2eh = matrixEE2EH(omega, ks(nLayer), x, mur(nLayer));
+            EH = ee2eh*ddx*E(:,nLayer);
+            outStruct.Ezx(ii) = EH(1);
+        end
+    end
+    
+    if ~isempty(posHx)
+        indices = find(posHx > intervals(nLayer) & ...
+         posHx <= intervals(nLayer+1));
+    
+        for ii = indices
+            x = posHx(ii);
+            ee2eh = matrixEE2EH(omega, ks(nLayer), x, mur(nLayer));
+            EH = ee2eh*E(:,nLayer);
+            outStruct.Hx(ii) = EH(1)*ky/omega/mur(nLayer);
+        end
+    end
+    if ~isempty(posHxy)
+        indices = find(posHxy > intervals(nLayer) & ...
+         posHxy <= intervals(nLayer+1));
+    
+        for ii = indices
+            x = posHxy(ii);
+            ee2eh = matrixEE2EH(omega, ks(nLayer), x, mur(nLayer));
+            EH = ee2eh*ddy*E(:,nLayer);
+            outStruct.Hxy(ii) = EH(1)*ky/omega/mur(nLayer);
+        end
+    end
+    if ~isempty(posHxx)
+        indices = find(posHxx > intervals(nLayer) & ...
+         posHxx <= intervals(nLayer+1));
+    
+        for ii = indices
+            x = posHxx(ii);
+            ee2eh = matrixEE2EH(omega, ks(nLayer), x, mur(nLayer));
+            EH = ee2eh*ddx*E(:,nLayer);
+            outStruct.Hxx(ii) = EH(1)*ky/omega/mur(nLayer);
         end
     end
     
     if ~isempty(posHy)
         indices = find(posHy > intervals(nLayer) & ...
          posHy <= intervals(nLayer+1));
-    
+     
         for ii = indices
-            z = posHy(ii);
-            ee2eh = matrixEE2EH(omega, ks(nLayer), z, mur(nLayer));
+            x = posHy(ii);
+            ee2eh = matrixEE2EH(omega, ks(nLayer), x, mur(nLayer));
             EH = ee2eh*E(:,nLayer);
             outStruct.Hy(ii) = EH(2);
-        end
-    end
-    if ~isempty(posHyz)
-        indices = find(posHyz > intervals(nLayer) & ...
-         posHyz <= intervals(nLayer+1));
-    
-        for ii = indices
-            z = posHyz(ii);
-            ee2eh = matrixEE2EH(omega, ks(nLayer), z, mur(nLayer));
-            EH = ee2eh*ddz*E(:,nLayer);
-            outStruct.Hyz(ii) = EH(2);
         end
     end
     if ~isempty(posHyy)
         indices = find(posHyy > intervals(nLayer) & ...
          posHyy <= intervals(nLayer+1));
-    
+     
         for ii = indices
-            z = posHyy(ii);
-            ee2eh = matrixEE2EH(omega, ks(nLayer), z, mur(nLayer));
+            x = posHyy(ii);
+            ee2eh = matrixEE2EH(omega, ks(nLayer), x, mur(nLayer));
             EH = ee2eh*ddy*E(:,nLayer);
             outStruct.Hyy(ii) = EH(2);
         end
     end
-    
-    if ~isempty(posHz)
-        indices = find(posHz > intervals(nLayer) & ...
-         posHz <= intervals(nLayer+1));
+    if ~isempty(posHyx)
+        indices = find(posHyx > intervals(nLayer) & ...
+         posHyx <= intervals(nLayer+1));
      
         for ii = indices
-            z = posHz(ii);
-            ee2eh = matrixEE2EH(omega, ks(nLayer), z, mur(nLayer));
-            EH = ee2eh*E(:,nLayer);
-            outStruct.Hz(ii) = -EH(1)*ky/omega/mur(nLayer);
-        end
-    end
-    if ~isempty(posHzz)
-        indices = find(posHzz > intervals(nLayer) & ...
-         posHzz <= intervals(nLayer+1));
-     
-        for ii = indices
-            z = posHzz(ii);
-            ee2eh = matrixEE2EH(omega, ks(nLayer), z, mur(nLayer));
-            EH = ee2eh*ddz*E(:,nLayer);
-            outStruct.Hzz(ii) = -EH(1)*ky/omega/mur(nLayer);
-        end
-    end
-    if ~isempty(posHzy)
-        indices = find(posHzy > intervals(nLayer) & ...
-         posHzy <= intervals(nLayer+1));
-     
-        for ii = indices
-            z = posHzy(ii);
-            ee2eh = matrixEE2EH(omega, ks(nLayer), z, mur(nLayer));
-            EH = ee2eh*ddy*E(:,nLayer);
-            outStruct.Hzy(ii) = -EH(1)*ky/omega/mur(nLayer);
+            x = posHyx(ii);
+            ee2eh = matrixEE2EH(omega, ks(nLayer), x, mur(nLayer));
+            EH = ee2eh*ddx*E(:,nLayer);
+            outStruct.Hyx(ii) = EH(2);
         end
     end
     
