@@ -1,43 +1,43 @@
 function outStruct = solveTM(varargin)
-% propagation along z
+% propagation along x
 % parallel wavevector along y
 
 import tmm2.*
 
-X.boundaryZ = [];
+X.boundaryX = [];
 X.epsr = [];
 X.mur = [];
 X.omega = [];
 X.ky = [];
-X.sourceHxLeft = 0;
-X.sourceHxRight = 0;
-X.Mx = []; % Source currents at each boundary position
+X.sourceHzLeft = 0;
+X.sourceHzRight = 0;
+X.Mz = []; % Source currents at each boundary position
 X.Jy = []; % Source currents at each boundary position
-X.Hx = []; % Output positions for Hx etc.
-X.Hxy = []; % dHx/dy positions
-X.Hxz = []; % dHx/dz positions
+X.Hz = []; % Output positions for Hx etc.
+X.Hzx = []; % dHx/dy positions
+X.Hzy = []; % dHx/dz positions
+X.Ex = [];
+X.Exx = [];
+X.Exy = [];
 X.Ey = [];
+X.Eyx = [];
 X.Eyy = [];
-X.Eyz = [];
-X.Ez = [];
-X.Ezy = [];
-X.Ezz = [];
 X.forceBoundModes = false;
 X = parseargs(X, varargin{:});
 
-if isempty(X.Mx)
-    X.Mx = zeros(1, numel(X.boundaryZ));
+if isempty(X.Mz)
+    X.Mz = zeros(1, numel(X.boundaryX));
 end
 
 if isempty(X.Jy)
-    X.Jy = zeros(1, numel(X.boundaryZ));
+    X.Jy = zeros(1, numel(X.boundaryX));
 end
 
-outStruct = solveTM_fast(X.boundaryZ, X.epsr, X.mur, X.omega, X.ky, ...
-    X.sourceHxLeft, X.sourceHxRight, ...
-    X.Mx, X.Jy, ...
-    X.Hx, X.Hxy, X.Hxz, ...
-    X.Ey, X.Eyy, X.Eyz, ...
-    X.Ez, X.Ezy, X.Ezz, ...
+outStruct = solveTM_fast(X.boundaryX, X.epsr, X.mur, X.omega, X.ky, ...
+    X.sourceHzLeft, X.sourceHzRight, ...
+    X.Mz, X.Jy, ...
+    X.Hz, X.Hzx, X.Hzy, ...
+    X.Ex, X.Exx, X.Exy, ...
+    X.Ey, X.Eyx, X.Eyy, ...
     X.forceBoundModes);
 
