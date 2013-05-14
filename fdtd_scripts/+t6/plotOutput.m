@@ -128,6 +128,7 @@ while frameNum <= numFrames
     
     if (mod(frameNum, X.Period) == 0)
         
+        clf
         plot(squeeze(data(:,:,:,:)));
         ylim(X.YLim);
         legend(fieldNames{:})
@@ -241,6 +242,7 @@ for frame = 0:numFrames-1
     data = file.readFrames('NumFrames', 1);
     
     if mod(frame, X.Period) == 0
+        clf
         for ff = 1:file.numFields
             
             if prod(nxny) > 1
