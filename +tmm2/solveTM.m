@@ -22,6 +22,9 @@ X.Exy = [];
 X.Ey = [];
 X.Eyx = [];
 X.Eyy = [];
+X.Bz = [];
+X.Dx = [];
+X.Dy = [];
 X.forceBoundModes = false;
 X = parseargs(X, varargin{:});
 
@@ -39,5 +42,6 @@ outStruct = solveTM_fast(X.boundaryX, X.epsr, X.mur, X.omega, X.ky, ...
     X.Hz, X.Hzx, X.Hzy, ...
     X.Ex, X.Exx, X.Exy, ...
     X.Ey, X.Eyx, X.Eyy, ...
+    X.Bz, X.Dx, X.Dy, ...
     X.forceBoundModes);
 

@@ -29,7 +29,8 @@ outStruct = tmm2.solveTM('boundaryX', boundaryX, ...
     'Mz', Mz, 'Jy', Jy, ...
     'Hz', xOut, 'Ex', xOut, 'Ey', xOut, ...
     'Hzy', xOut, 'Exy', xOut, 'Eyy', xOut, ...
-    'Hzx', xOut, 'Exx', xOut, 'Eyx', xOut);
+    'Hzx', xOut, 'Exx', xOut, 'Eyx', xOut, ...
+    'Bz', xOut, 'Dx', xOut, 'Dy', xOut);
 
 %% Set up basic testing stuff
 
@@ -104,6 +105,16 @@ for nn = 1:numLayers
 end
 
 fprintf('Maxwell equations test PASSED\n');
+
+%% Check the constitutive relations
+
+for nn = 1:numLayers
+    ii = (xOut > intervals(nn) & xOut < intervals(nn+1));
+    
+    assert(relErr(epsr(nn)*outStruct.Ex(ii), outStruct.Dx(ii)) < 1e-5);
+    assert(relErr(epsr(nn)*outStruct.Ey(ii), outStruct.Dy(ii)) < 1e-5);
+    assert(relErr(mur(nn)*outStruct.Hz(ii), outStruct.Bz(ii)) < 1e-5);
+end
 
 %% Check the boundary conditions.
 % For this, I'll put output positions closer to boundaries.

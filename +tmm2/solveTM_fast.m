@@ -4,6 +4,7 @@ function outStruct = solveTM_fast(boundaryX, epsr, mur, omega, ky, ...
     posHz, posHzx, posHzy, ...
     posEx, posExx, posExy, ...
     posEy, posEyx, posEyy, ...
+    posBz, posDx, posDy, ...
     forceBoundModes)
 
 import tmm2.*;
@@ -120,6 +121,9 @@ if ~isempty(posExx) outStruct.Exx = 0*posExx; end
 if ~isempty(posEy) outStruct.Ey = 0*posEy; end
 if ~isempty(posEyy) outStruct.Eyy = 0*posEyy; end
 if ~isempty(posEyx) outStruct.Eyx = 0*posEyx; end
+if ~isempty(posBz) outStruct.Bz = 0*posBz; end
+if ~isempty(posDx) outStruct.Dx = 0*posDx; end
+if ~isempty(posDy) outStruct.Dy = 0*posDy; end
 
 %ddy = diag([1i*ky, 1i*ky]);
 ddy = 1i*ky;
@@ -227,6 +231,39 @@ for nLayer = 1:numLayers
             hh2he = matrixHH2HE(omega, ks(nLayer), x, epsr(nLayer));
             HE = hh2he*ddx*H(:,nLayer);
             outStruct.Eyx(ii) = HE(2);
+        end
+    end
+    if ~isempty(posBz)
+        indices = find( posBz > intervals(nLayer) & ...
+            posBz <= intervals(nLayer+1));
+        
+        for ii = indices
+            x = posBz(ii);
+            hh2he = matrixHH2HE(omega, ks(nLayer), x, epsr(nLayer));
+            HE = hh2he*H(:,nLayer);
+            outStruct.Bz(ii) = HE(1)*mur(nLayer);
+        end
+    end
+    if ~isempty(posDx)
+        indices = find(posDx > intervals(nLayer) & ...
+         posDx <= intervals(nLayer+1));
+    
+        for ii = indices
+            x = posDx(ii);
+            hh2he = matrixHH2HE(omega, ks(nLayer), x, epsr(nLayer));
+            HE = hh2he*H(:,nLayer);
+            outStruct.Dx(ii) = -HE(1)*ky/omega;
+        end
+    end
+    if ~isempty(posDy)
+        indices = find(posDy > intervals(nLayer) & ...
+         posDy <= intervals(nLayer+1));
+     
+        for ii = indices
+            x = posDy(ii);
+            hh2he = matrixHH2HE(omega, ks(nLayer), x, epsr(nLayer));
+            HE = hh2he*H(:,nLayer);
+            outStruct.Dy(ii) = HE(2)*epsr(nLayer);
         end
     end
     
