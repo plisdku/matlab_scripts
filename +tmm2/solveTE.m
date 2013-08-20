@@ -1,5 +1,5 @@
 function outStruct = solveTE(varargin)
-% propagation along z
+% propagation along x
 % parallel wavevector along y
 
 import tmm2.*
@@ -8,7 +8,7 @@ X.boundaryX = [];
 X.epsr = [];
 X.mur = [];
 X.omega = [];
-X.ky = [];
+X.ky = 0;
 X.sourceEzLeft = 0;
 X.sourceEzRight = 0;
 X.Jz = []; % Source currents at each boundary position
