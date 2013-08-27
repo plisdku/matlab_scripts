@@ -5,7 +5,7 @@ localVertices = vertices(uniqueGlobal,:);
 
 outerContour = localContours{1};
 
-nv = facetNormal(localVertices, outerContour);
+nv = neflab.facetNormal(localVertices, outerContour);
 
 flatVertices = flatten(localVertices, nv);
 %{
