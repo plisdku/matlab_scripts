@@ -11,8 +11,10 @@ function [vertices faces] = nefDifference(v1, f1, v2, f2)
 fname = 'nefTemp.txt';
 
 fh = fopen(fname, 'w');
-neflab.writePolyhedron(v1, f1, fh);
-neflab.writePolyhedron(v2, f2, fh);
+neflab.writeMultiOFF(fh, v1, f1);
+neflab.writeMultiOFF(fh, v2, f2);
+%neflab.writePolyhedron(v1, f1, fh);
+%neflab.writePolyhedron(v2, f2, fh);
 fclose(fh);
 
 [status, stdout] = ...
