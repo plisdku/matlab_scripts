@@ -6,13 +6,13 @@ else
     fh = fid_or_fname;
 end
 
-shellFaces = divideIntoShells(faces);
+shellFaces = neflab.divideIntoShells(faces);
 
 numShells = numel(shellFaces);
 shellVolumes = zeros(numShells,1);
 
 for ss = 1:numShells
-    shellVolumes(ss) = polyhedronVolume(vertices, shellFaces{ss});
+    shellVolumes(ss) = neflab.polyhedronVolume(vertices, shellFaces{ss});
 end
 
 numPositiveShells = sum(shellVolumes > 0);
