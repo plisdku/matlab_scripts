@@ -106,7 +106,7 @@ classdef Ellipsoid < t6.model.Node
                 phi = vPhis(vv);
                 myJacobian(row,:) = Dc(1,:) + Dr(1,:)*sin(theta)*cos(phi);
                 myJacobian(row+1,:) = Dc(2,:) + Dr(2,:)*sin(theta)*sin(phi);
-                myJacobian(row+2,:) = Dc(3,:) + Dc(3,:)*cos(theta);
+                myJacobian(row+2,:) = Dc(3,:) + Dr(3,:)*cos(theta);
             end
             
             %% ---- Work out the triangular faces
