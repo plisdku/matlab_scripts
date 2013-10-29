@@ -16,7 +16,7 @@ neflab.writePolyhedron(v2, f2, fh);
 fclose(fh);
 
 [status, stdout] = ...
-    unix('NefLab intersection < nefTemp.txt > nefOut.txt');
+    unix('env -u LD_LIBRARY_PATH NefLab intersection < nefTemp.txt > nefOut.txt');
 
 fh = fopen('nefOut.txt', 'r');
 [vertices faces] = neflab.readNefPolyhedron(fh);
