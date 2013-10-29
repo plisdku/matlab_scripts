@@ -7,6 +7,7 @@ function outStruct = solveTE_fast(boundaryX, epsr, mur, omega, ky, ...
     forceBoundModes)
 
 import tmm2.*;
+outStruct = struct;
 
 numLayers = length(epsr);
 numBoundaries = numLayers-1;
@@ -18,6 +19,7 @@ n = sqrt(epsr.*mur);
 
 ks = sqrt(omega^2*n.^2 - ky^2);
 ks(imag(ks) < 0) = -ks(imag(ks) < 0); % decay goes the right way now
+outStruct.kx = ks;
 
 % Make matrices to convert [E+, E-] in layer n to [E+, E-] in layer n+1,
 % and vice-versa.
@@ -95,8 +97,6 @@ if forceBoundModes
 end
 
 %% Get the forward and backward E in each layer (use transferLayer)
-
-outStruct = struct;
 
 intervals = [-inf, boundaryX(:)', inf];
 

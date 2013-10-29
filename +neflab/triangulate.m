@@ -49,6 +49,10 @@ localTris = dt.Triangulation(inside,:);
 %pause
 tris = local2global(localTris);
 
+if size(tris,2) ~= 3
+    tris = tris';
+end
+
 
 
 % Convert global vertex indices to local facet indices.

@@ -52,10 +52,11 @@ for ff = 1:numFacets
         contours{cc} = loopVerts;
         
         %disp(vertices)
-        %figure(1); clf
+        %figure(11); clf
         %patch('Vertices', vertices, 'Faces', loopVerts', 'FaceColor', 'r');
         %view(3)
-        %axis vis3d
+        %axis([-100 1100 -100 1100 -100 1100]);
+        %pause
     end
     
     % To perform the triangulation I need to translate all the vertex

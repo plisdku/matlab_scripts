@@ -3,7 +3,7 @@
 import tmm2.*
 
 boundaryX = [-100 0 200 400];
-epsr = [1 1+0.1i 2 3 4];
+epsr = [1 1+1i 2-1i 3 4];
 mur = [1 2 1 2 1];
 Jz = [0 0 1 0];
 Mx = [0 1 0 0];
@@ -35,7 +35,7 @@ outStruct = solveTE('boundaryX', boundaryX, ...
 
 %% Set up basic testing stuff
 
-relErr = @(a, b) norm(a-b)/norm(b);
+relErr = @(a, b) norm(a(2:end-1)-b(2:end-1))/norm(b(2:end-1));
 
 assert(xOut(1) < boundaryX(1));
 assert(xOut(end) > boundaryX(end));
