@@ -49,7 +49,7 @@ numEdges = countEdges(vertices, faces);
 
 fprintf(fh, '%i %i %i\n', numVertices, numFaces, numEdges);
 
-fprintf(fh, '%2.8f %2.8f %2.8f\n', vertices');
+fprintf(fh, '%2.15f %2.15f %2.15f\n', vertices');
 fprintf(fh, '3 %i %i %i\n', faces' - 1);
 
 
