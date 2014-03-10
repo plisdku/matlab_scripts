@@ -17,7 +17,7 @@ end
 inFile = [tempdir 'nefTemp.txt'];
 outFile = [tempdir 'nefOut.txt'];
 
-fh = fopen(fname, 'w');
+fh = fopen(inFile, 'w');
 neflab.writeMultiOFF(fh, v1, f1);
 neflab.writeMultiOFF(fh, v2, f2);
 fclose(fh);
