@@ -14,7 +14,8 @@ if neflab.disjointHulls(v1, v2)
     return;
 end
 
-fname = 'nefTemp.txt';
+inFile = [tempdir 'nefTemp.txt'];
+outFile = [tempdir 'nefOut.txt'];
 
 fh = fopen(fname, 'w');
 neflab.writeMultiOFF(fh, v1, f1);
@@ -22,9 +23,9 @@ neflab.writeMultiOFF(fh, v2, f2);
 fclose(fh);
 
 [status, stdout] = ...
-    unix('NefLab intersection < nefTemp.txt > nefOut.txt');
+    unix(sprintf('NefLab intersection < %s > %s', inFile, outFile));
 
-fh = fopen('nefOut.txt', 'r');
+fh = fopen(outFile, 'r');
 [vertices faces] = neflab.readNefPolyhedron(fh);
 fclose(fh);
 

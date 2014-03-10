@@ -15,6 +15,7 @@ X.FaceColor = [];
 X.FaceAlpha = [];
 X.EdgeColor = [];
 X.EdgeAlpha = [];
+X.FaceVertexCData = [];
 X = parseargs(X, varargin{:});
 
 allFields = fieldnames(X);
