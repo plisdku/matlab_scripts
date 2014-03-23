@@ -29,14 +29,14 @@ X.FaceAlpha = [];
 X.EdgeColor = [];
 X.EdgeAlpha = [];
 X.FaceVertexCData = [];
-%X.AllVertices = [];
-%X.AnyVertex = [];
 X.FaceFilter = [];
+X.Disconnect = true;
 X = parseargs(X, varargin{:});
 
-%allVertices = X.AllVertices; X.AllVertices = [];
-%anyVertex = X.AnyVertex; X.AnyVertex = [];
-faceFilter = X.FaceFilter; X.FaceFilter = [];
+faceFilter = X.FaceFilter;
+X.FaceFilter = [];
+doDisconnect = X.Disconnect;
+X.Disconnect = [];
 
 allFields = fieldnames(X);
 for ff = 1:length(allFields)
@@ -60,30 +60,12 @@ if isa(faceFilter, 'function_handle')
     X.Faces = X.Faces(faceFlags,:);
 end
 
-%{
-if isa(allVertices, 'function_handle')
-    
-    for ff = 1:numel(faceFlags)
-        faceFlags(ff) = faceFlags(ff) & ...
-            allVertices(X.Vertices(X.Faces(ff,1),:)) & ...
-            allVertices(X.Vertices(X.Faces(ff,2),:)) & ...
-            allVertices(X.Vertices(X.Faces(ff,3),:));
-    end
-    
+if doDisconnect
+    [v f] = disconnect(X.Vertices, X.Faces);
+else
+    v = X.Vertices;
+    f = X.Faces;
 end
-
-if isa(anyVertex, 'function_handle')
-    
-    for ff = 1:numel(faceFlags)
-        faceFlags(ff) = faceFlags(ff) & ( ...
-            anyVertex(X.Vertices(X.Faces(ff,1),:)) | ...
-            anyVertex(X.Vertices(X.Faces(ff,2),:)) | ...
-            anyVertex(X.Vertices(X.Faces(ff,3),:)) );
-    end
-end
-%}
-
-[v f] = disconnect(X.Vertices, X.Faces);
 
 X.Vertices = v;
 X.Faces = f;
