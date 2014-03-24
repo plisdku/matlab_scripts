@@ -8,6 +8,19 @@ function flatPatch(varargin)
 %
 % See the help for patch() for details.  :-D
 %
+% Extra options:
+%
+% FaceFilter    a function @(vert1, vert2, vert3) that must be true for the
+%               face to be rendered
+
+% turned off...
+
+% AllVertices   a function @(vertex) that must be true for all vertices to
+%               display a face, otherwise it's culled.
+%
+% AnyVertex     a function @(vertex) that must be true for any vertex in a
+%               face for it to be rendered, otherwise it's culled
+%
 
 X.Faces = [];
 X.Vertices = [];
@@ -15,10 +28,17 @@ X.FaceColor = [];
 X.FaceAlpha = [];
 X.EdgeColor = [];
 X.EdgeAlpha = [];
+X.FaceVertexCData = [];
+X.FaceFilter = [];
+X.Disconnect = true;
 X = parseargs(X, varargin{:});
 
-allFields = fieldnames(X);
+faceFilter = X.FaceFilter;
+X.FaceFilter = [];
+doDisconnect = X.Disconnect;
+X.Disconnect = [];
 
+allFields = fieldnames(X);
 for ff = 1:length(allFields)
     
     if isempty(X.(allFields{ff}))
@@ -26,7 +46,26 @@ for ff = 1:length(allFields)
     end
 end
 
-[v f] = disconnect(X.Vertices, X.Faces);
+% Filter the faces:
+
+if isa(faceFilter, 'function_handle')
+    
+    faceFlags = true(size(X.Faces,1),1);
+    for ff = 1:numel(faceFlags)
+        faceFlags(ff) = faceFilter(X.Vertices(X.Faces(ff,1),:), ...
+            X.Vertices(X.Faces(ff,2),:), ...
+            X.Vertices(X.Faces(ff,3),:));
+    end
+    
+    X.Faces = X.Faces(faceFlags,:);
+end
+
+if doDisconnect
+    [v f] = disconnect(X.Vertices, X.Faces);
+else
+    v = X.Vertices;
+    f = X.Faces;
+end
 
 X.Vertices = v;
 X.Faces = f;

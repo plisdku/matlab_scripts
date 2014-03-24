@@ -8,19 +8,22 @@ function [vertices faces] = nefUnion(v1, f1, v2, f2)
 % Call NefLab
 % Get polyhedron back out
 
-fname = 'nefTemp.txt';
+inFile = [tempdir 'nefTemp.txt'];
+outFile = [tempdir 'nefOut.txt'];
 
-fh = fopen(fname, 'w');
+fh = fopen(inFile, 'w');
 neflab.writeMultiOFF(fh, v1, f1);
 neflab.writeMultiOFF(fh, v2, f2);
-%neflab.writePolyhedron(v1, f1, fh);
-%neflab.writePolyhedron(v2, f2, fh);
 fclose(fh);
 
-[status, stdout] = ...
-    unix('env -u LD_LIBRARY_PATH NefLab union < nefTemp.txt > nefOut.txt');
+if ~ismac
+    cmd = sprintf('env -u LD_LIBRARY_PATH NefLab union < %s > %s', ...
+        inFile, outFile);
+else
+    cmd = sprintf('NefLab union < %s > %s', inFile, outFile);
+end
 
-fh = fopen('nefOut.txt', 'r');
+fh = fopen(outFile, 'r');
 [vertices faces] = neflab.readNefPolyhedron(fh);
 fclose(fh);
 
