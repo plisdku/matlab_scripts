@@ -230,21 +230,21 @@ fprintf('Got to the STEP file.\n');
 
 totalChunks = numel(disjointFaces) + numel(pmlChunkVertices);
 
-chunkFiles = arrayfun(@(ii) sprintf('chunk%i.stl',ii), ...
+chunkFiles = arrayfun(@(ii) sprintf('importMeshes/chunk%i.stl',ii), ...
     1:totalChunks, 'UniformOutput', false);
 
 curChunk = 1;
 
 for iIn = 1:numel(disjointFaces)
     fpath = [pwd filesep chunkFiles{curChunk}];
-    ll.writeSTL(interiorStructureVertices{iIn}, ...
+    writeSTL(interiorStructureVertices{iIn}, ...
         interiorStructureFaces{iIn}, fpath);
     curChunk = curChunk + 1;
 end
 
 for iOut = 1:numel(pmlChunkVertices)
     fpath = [pwd filesep chunkFiles{curChunk}];
-    ll.writeSTL(pmlChunkVertices{iOut}, pmlChunkFaces{iOut}, fpath);
+    writeSTL(pmlChunkVertices{iOut}, pmlChunkFaces{iOut}, fpath);
     curChunk = curChunk + 1;
 end
 
