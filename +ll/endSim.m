@@ -75,10 +75,12 @@ for mm = 1:numMeshes
     v = LL_MODEL.meshes{mm}.vertices;
     f = LL_MODEL.meshes{mm}.faces;
     
+    %{
     figure(3); clf
     quickPatch(v, f);
     axis image; view(3);
     title(sprintf('Begin with mesh %i', mm));
+    %}
     
     listOfDifferences = [];
     
@@ -88,6 +90,7 @@ for mm = 1:numMeshes
             LL_MODEL.meshes{nn}.vertices, ...
             LL_MODEL.meshes{nn}.faces)
             
+            %{
             figure(1); clf
             myPatch(v, f, 'r');
             hold on
@@ -96,6 +99,7 @@ for mm = 1:numMeshes
             title(sprintf('Current (%i, red) - (%i, green)', mm, nn));
             axis image vis3d
             keyboard
+            %}
             
             [v2 f2] = neflab.nefDifference(v, f, ...
                 LL_MODEL.meshes{nn}.vertices, ...
@@ -114,11 +118,13 @@ for mm = 1:numMeshes
     disjointVertices{mm} = v;
     disjointFaces{mm} = f;
     
+    %{
     figure(2); clf
     quickPatch(v, f);
     axis image; view(3);
     title(sprintf('Final %i', mm))
     pause
+    %}
     
     if numel(f) > 0
         disjointStructureIndices(end+1) = mm;
