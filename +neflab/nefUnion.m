@@ -23,6 +23,9 @@ else
     cmd = sprintf('NefLab union < %s > %s', inFile, outFile);
 end
 
+[status stdout] = unix(cmd);
+
+
 fh = fopen(outFile, 'r');
 [vertices faces] = neflab.readNefPolyhedron(fh);
 fclose(fh);
