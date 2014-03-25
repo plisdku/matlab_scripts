@@ -565,21 +565,48 @@ if ~isempty(LL_MODEL.hmax)
     sz.set('hmax', LL_MODEL.hmax);
 end
 
-warning('Ignoring per-object mesh size settings.');
 %{
+for mm = 1:numMeshes
+        
+    bbox = calcBoundingBox(interiorStructureVertices{ss});
+    domainNum = identifyByBounds(model, bbox);
+    materialByDomain(domainNum) = LL_MODEL.meshes{ss}.material;
+    
+    % while we're at it, find and mark boundaries...
+    if any(LL_MODEL.meshes{ss}.jacobian(:))
+        if numel(domainNum) == 1
+            boundaryDomains = mphgetadj(model, 'geom1', 'boundary', ...
+                'domain', domainNum);
+            movableMeshDomains = [movableMeshDomains boundaryDomains];
+        end
+    end
+end
+%}
+
+%warning('Ignoring per-object mesh size settings.');
+
+
 for mm = 1:numMeshes
 if ~isempty(LL_MODEL.meshes{mm}.hmax)
     
+    bbox = calcBoundingBox(interiorStructureVertices{mm});
+    domainNum = identifyByBounds(model, bbox);
+    assert(numel(domainNum) == 1);
+    
+    boundaryDomains = mphgetadj(model, 'geom1', 'boundary', ...
+        'domain', domainNum);
+    
     szName = sprintf('size%i', mm);
     sz = model.mesh('mesh1').feature.create(szName, 'Size');
-    sz.selection.named(sprintf('geom1_%s_bnd', comsolStructureName(mm)));
+    %sz.selection.named(sprintf('geom1_%s_bnd', comsolStructureName(mm)));
+    sz.selection.geom('geom1', 2);
+    sz.selection.set(boundaryDomains);
     sz.set('custom', 'on');
     sz.set('hmaxactive', 'on');
     sz.set('hmax', LL_MODEL.meshes{mm}.hmax);
     
 end 
 end
-%}
 
 % Change mesh size for measurement.
 sz = model.mesh('mesh1').feature.create('measSize', 'Size');
