@@ -11,6 +11,8 @@ classdef Translate < t6.model.Node
             if nargin > 0
                 obj.children = varargin;
                 obj.dist = distance;
+                
+                assert(isa(obj.dist, 'function_handle'));
             end
         end
         

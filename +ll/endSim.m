@@ -618,6 +618,7 @@ sz.set('hmax', 30);
 
 model.mesh('mesh1').feature.create('ftet1', 'FreeTet');
 
+model.save([pwd filesep 'premesh-' X.MPH]);
 model.mesh('mesh1').run;
 
 model.save([pwd filesep X.MPH]);
