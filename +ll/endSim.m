@@ -203,27 +203,14 @@ end
 
 calcBoundingBox = @(A) [min(A) max(A)];
 
-movableMeshDomains = [];
-
 materialByDomain = zeros(geom.getNDomains, 1);
 
-warning('Cannot mark moving boundaries at present');
 for ss = 1:numel(nonPMLChunks)
     
     bbox = calcBoundingBox(nonPMLChunks{ss}.vertices);
     domainNum = identifyByBounds(model, bbox);
     materialByDomain(domainNum) = nonPMLChunks{ss}.material;
     
-    %{
-    % while we're at it, find and mark boundaries...
-    if any(LL_MODEL.meshes{ss}.jacobian(:))
-        if numel(domainNum) == 1
-            boundaryDomains = mphgetadj(model, 'geom1', 'boundary', ...
-                'domain', domainNum);
-            movableMeshDomains = [movableMeshDomains boundaryDomains];
-        end
-    end
-    %}
 end
 
 for cc = 1:numPMLChunks
@@ -245,13 +232,28 @@ end
 
 %% Make selection of movable meshes
 
-warning('Not selecting movable meshes');
-%{
+movableMeshDomains = [];
+
+for mm = 1:numel(LL_MODEL.meshes)    
+if any(LL_MODEL.meshes{mm}.jacobian(:))
+    
+    bbox = calcBoundingBox(LL_MODEL.meshes{mm}.vertices) + ...
+        [-1 -1 -1 1 1 1];
+    
+    comsolIndices = [1 4; 2 5; 3 6];
+    
+    boundaryDomains = mphselectbox(model, 'geom1', bbox(comsolIndices),...
+        'boundary');
+    
+    movableMeshDomains = [movableMeshDomains boundaryDomains];
+    
+end
+end
+
 sel = model.selection.create('movableMeshes', 'Explicit');
 sel.name('Movable meshes');
 sel.geom('geom1', 2);
 sel.set(movableMeshDomains);
-%}
 
 %% Mark PML!
 
@@ -582,10 +584,10 @@ model.variable('var1').set('DF', 'mod1.DF_E+mod1.DF_H');
 
 %% Plots
 
-%model.result.dataset.create('dset2', 'Solution');
-%model.result.dataset('dset2').name('Movable meshes');
+model.result.dataset.create('dset2', 'Solution');
+model.result.dataset('dset2').name('Movable meshes');
 %model.result.dataset('dset2').selection.geom('geom1', 2);
-%model.result.dataset('dset2').selection.named('movableMeshes');
+model.result.dataset('dset2').selection.named('movableMeshes');
 
 
 model.result.create('pg1', 'PlotGroup3D');
