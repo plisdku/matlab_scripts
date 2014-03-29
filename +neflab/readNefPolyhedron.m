@@ -1,14 +1,14 @@
 function [vertices, faces] = readNefPolyhedron(fid)
 
-l = fgetl(fid);
-[numVertices count] = sscanf(l, 'numVertices %i');
+l = fgets(fid);
+[numVertices, count] = sscanf(l, 'numVertices %i');
 assert(count == 1);
 
 vertices = zeros(numVertices,3);
 
 %fprintf('%i vertices...\n', numVertices);
 for vv = 1:numVertices
-    l = fgetl(fid);
+    l = fgets(fid);
     [a, count] = sscanf(l, '%f %f %f %f');
     assert(count == 4);
     
@@ -17,8 +17,8 @@ end
 
 %disp(vertices);
 
-l = fgetl(fid);
-[numFacets count] = sscanf(l, 'numFacets %i');
+l = fgets(fid);
+[numFacets, count] = sscanf(l, 'numFacets %i');
 assert(count == 1);
 
 %fprintf('%i facets...\n', numFacets);
@@ -26,22 +26,22 @@ assert(count == 1);
 faces = [];
 for ff = 1:numFacets
     
-    l = fgetl(fid);
-    [numContours count] = sscanf(l, '\tnumContours %i');
+    l = fgets(fid);
+    [numContours, count] = sscanf(l, '\tnumContours %i');
     assert(count == 1);
     
     %fprintf('\tFacet %i has %i contours\n', ff, numContours);
     
     contours = cell(numContours,1);
     for cc = 1:numContours
-        l = fgetl(fid);
-        [numContourVerts count] = sscanf(l, '\tnumVertices %i');
+        l = fgets(fid);
+        [numContourVerts, count] = sscanf(l, '\tnumVertices %i');
         assert(count == 1);
         
         %fprintf('\t\tContour %i has %i vertices\n', cc, numContourVerts);
         
         loopVerts = zeros(numContourVerts,1);
-        l = fgetl(fid);
+        l = fgets(fid);
         
         loopVerts = sscanf(l, '%i');
         assert(numel(loopVerts) == numContourVerts);

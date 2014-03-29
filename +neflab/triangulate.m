@@ -1,67 +1,76 @@
 function tris = triangulate(vertices, varargin)
 
-[localContours local2global uniqueGlobal] = localIndices(varargin{:});
-localVertices = vertices(uniqueGlobal,:);
+numContours = numel(varargin);
 
-outerContour = localContours{1};
+if numContours == 1 && numel(varargin{1}) == 3
+    % It's already a triangle, just accept it as-is.
+    tris = reshape(varargin{1}, 1, 3);
+    return
+else
+    % It's not a triangle.  It has more vertices and might have holes.
+    [localContours, local2global, uniqueGlobal] = localIndices(varargin{:});
+    localVertices = vertices(uniqueGlobal,:);
 
-nv = neflab.facetNormal(localVertices, outerContour);
+    outerContour = localContours{1};
 
-flatVertices = flatten(localVertices, nv);
-%{
-figure(10); clf
-subplot(211)
-plot3(localVertices(:,1), localVertices(:,2), localVertices(:,3), 'bo-');
-subplot(212)
-plot(flatVertices(:,1), flatVertices(:,2), 'bo-');
-pause
-%}
+    nv = neflab.facetNormal(localVertices, outerContour);
 
-%[~, mainAxis] = max(abs(nv));
-%flatVertices = localVertices(:,[1:mainAxis-1, mainAxis+1:3]);
+    flatVertices = flatten(localVertices, nv);
 
-colVec = @(A) reshape(A, [], 1);
+    colVec = @(A) reshape(A, [], 1);
 
-constraints = [colVec(outerContour(1:end)),...
-    colVec(outerContour([2:end,1]))];
+    constraints = [colVec(outerContour(1:end)),...
+        colVec(outerContour([2:end,1]))];
 
-for innerLoop = 2:length(localContours)
-    
-    loop = localContours{innerLoop};
-    
-    constraints = [constraints; ...
-        [colVec(loop(1:end)), colVec(loop([2:end,1]))] ];
-        %[colVec(loop(1:end)), colVec(loop(1:end-1))] ];
-%        [colVec(loop(1:end-1)), colVec(loop(2:end))] ];
-end
+    for innerLoop = 2:length(localContours)
 
-dt = DelaunayTri(flatVertices, constraints);
-inside = inOutStatus(dt);
+        loop = localContours{innerLoop};
 
-localTris = dt.Triangulation(inside,:);
+        constraints = [constraints; ...
+            [colVec(loop(1:end)), colVec(loop([2:end,1]))] ];
+    end
 
-%if numel(localContours) > 1
-%    fprintf('Complicated.\n');
-%end
+    dt = DelaunayTri(flatVertices, constraints);
+    inside = inOutStatus(dt);
 
-% Go back to global vertex indices
-%disp(local2global)
-%pause
-tris = local2global(localTris);
+    localTris = dt.Triangulation(inside,:);
 
-if size(tris,2) ~= 3
-    tris = tris';
+    tris = local2global(localTris);
+
+    if size(tris,2) ~= 3
+        tris = tris';
+    end
 end
 
 
 
+
+end
 % Convert global vertex indices to local facet indices.
 % localContours will take on values from 1 to numVerts (in facet).
 % local2global gives back the global indices.
 function [localContours, local2global, uniqueGlobal] = localIndices(varargin)
 
 numContours = numel(varargin);
+localContours = varargin;
 
+numVerts = sum(cellfun(@numel, varargin));
+local2global = cat(1, varargin{:});
+uniqueGlobal = local2global;
+
+iVert = 0;
+for cc = 1:numContours
+    contourLength = numel(varargin{cc});
+    localContours{cc} = iVert + (1:contourLength)';
+    iVert = iVert + contourLength;
+end
+
+%assert(numel(uniqueGlobal) == numel(unique(local2global)));
+
+
+% The old way that could handle repeated vertices.  I want no part of that
+% silliness.  It was slow.  :-)
+%{
 % concatenate all global vertices
 globalVerts = [];
 for cc = 1:numContours
@@ -87,11 +96,40 @@ for cc = 1:numContours
     localContours{cc} = localIndices(iVert:(iVert + contourLength - 1));
     iVert = iVert + contourLength;
 end
+%}
+
+end
 
 % I need to create a right-handed coordinate system in which normalVector
 % is "up", then project vIn onto this perpspace of normalVector.
+%
+% fast method from Jeppe Revall Frisvad.  Yay Denmark!!  :-)
 function vOut = flatten(vIn, normalVector)
 
+% normalVector should be unit length already!
+
+    if normalVector(3) < -0.9999999
+        b1 = [0; -1; 0];
+        b2 = [-1; 0; 0];
+    else
+        a = 1.0/(1.0 + normalVector(3));
+        b = -normalVector(1) * normalVector(2) * a;
+        b1 = [1.0 - normalVector(1)^2*a; b; -normalVector(1)];
+        b2 = [b; 1.0 - normalVector(2)^2*a; -normalVector(2)];
+    end
+    
+    perpSpace = [b1 b2];
+    % make sure it's a right-handed coordinate system, and has
+    % determinant 1-ish.
+    assert(abs(det([perpSpace, reshape(normalVector, [], 1)]) - 1.0) < 1e-4);
+    
+    % project everything!
+    vOut = vIn * perpSpace;
+end
+
+
+% This is the old, grossly slow method.
+%{
 colVec = @(A) reshape(A, [], 1);
 rowVec = @(A) reshape(A, 1, []);
 
@@ -109,7 +147,7 @@ end
 %projectionMatrix = perpSpace';
 
 vOut = vIn * perpSpace;
-
+%}
 
 
 

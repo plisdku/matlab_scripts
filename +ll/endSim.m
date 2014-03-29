@@ -390,9 +390,8 @@ end
 globalHmax = 200;
 if ~isempty(LL_MODEL.hmax)
     globalHmax = LL_MODEL.hmax;
-else
-    globalSize.set('hmax', globalHmax);
 end
+globalSize.set('hmax', globalHmax);
 
 for mm = 1:numel(LL_MODEL.meshes)
 if ~isempty(LL_MODEL.meshes{mm}.hmax)
@@ -427,19 +426,22 @@ sz.set('hmax', 30);
 
 model.mesh('mesh1').feature.create('ftet1', 'FreeTet');
 
-model.save([pwd filesep 'premesh-' X.MPH]);
+fprintf('Mesh size purportedly %i\n', globalSize.getDouble('hmax'));
 
 meshingSucceeded = false;
 attempts = 1;
+hmax = globalHmax;
 while ~meshingSucceeded
     try
         attempts = attempts + 1;
+        globalSize.set('hmax', hmax);
+        model.save([pwd filesep 'premesh-' X.MPH]);
+        fprintf('Attempting with hmax %i\n', globalSize.getDouble('hmax'));
         model.mesh('mesh1').run;
         meshingSucceeded = true;
     catch exc
         warning('Meshing attempt %i failed!\n');
         hmax = globalHmax + ((-1)^attempts)*ceil(attempts/2);
-        globalSize.set('hmax', hmax);
         fprintf('Trying again at size %i\n', hmax);
     end
 end
