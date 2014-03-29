@@ -35,7 +35,7 @@ iter = 0;
 while ~done
     fprintf('# %i\n', iter);
     iter = iter + 1;
-    [f Df] = fn(x);
+    [f, Df] = fn(x);
     
     if (-f) > goalF || iter > 100
         fval = f;

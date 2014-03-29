@@ -379,35 +379,34 @@ hide1.named('pmlSel');
 fprintf('Meshing\n');
 
 mesh1 = model.mesh.create('mesh1', 'geom1');
-sz = mesh1.feature('size');
-sz.set('custom', 'on');
-%sz.set('hgradactive', 'on');
-sz.set('hgrad', '2.5');
-%sz.set('hgrad', '2.5');
+globalSize = mesh1.feature('size');
+globalSize.set('custom', 'on');
+globalSize.set('hgrad', '2.5');
 
 if ~isempty(LL_MODEL.hmin)
-    sz.set('hmin', LL_MODEL.hmin);
+    globalSize.set('hmin', LL_MODEL.hmin);
 end
 
+globalHmax = 200;
 if ~isempty(LL_MODEL.hmax)
-    sz.set('hmax', LL_MODEL.hmax);
+    globalHmax = LL_MODEL.hmax;
+else
+    globalSize.set('hmax', globalHmax);
 end
 
-warning('Not sizing meshes separately');
-%{
-for mm = 1:numel(nonPMLChunks)
+for mm = 1:numel(LL_MODEL.meshes)
 if ~isempty(LL_MODEL.meshes{mm}.hmax)
     
-    bbox = calcBoundingBox(nonPMLChunks{mm});
-    domainNum = identifyByBounds(model, bbox);
-    assert(numel(domainNum) == 1);
+    bbox = calcBoundingBox(LL_MODEL.meshes{mm}.vertices) + ...
+        [-1 -1 -1 1 1 1];
     
-    boundaryDomains = mphgetadj(model, 'geom1', 'boundary', ...
-        'domain', domainNum);
+    comsolIndices = [1 4; 2 5; 3 6];
+    
+    boundaryDomains = mphselectbox(model, 'geom1', bbox(comsolIndices),...
+        'boundary');
     
     szName = sprintf('size%i', mm);
     sz = model.mesh('mesh1').feature.create(szName, 'Size');
-    %sz.selection.named(sprintf('geom1_%s_bnd', comsolStructureName(mm)));
     sz.selection.geom('geom1', 2);
     sz.selection.set(boundaryDomains);
     sz.set('custom', 'on');
@@ -416,7 +415,7 @@ if ~isempty(LL_MODEL.meshes{mm}.hmax)
     
 end 
 end
-%}
+
 
 % Change mesh size for measurement.
 sz = model.mesh('mesh1').feature.create('measSize', 'Size');
@@ -429,7 +428,21 @@ sz.set('hmax', 30);
 model.mesh('mesh1').feature.create('ftet1', 'FreeTet');
 
 model.save([pwd filesep 'premesh-' X.MPH]);
-model.mesh('mesh1').run;
+
+meshingSucceeded = false;
+attempts = 1;
+while ~meshingSucceeded
+    try
+        attempts = attempts + 1;
+        model.mesh('mesh1').run;
+        meshingSucceeded = true;
+    catch exc
+        warning('Meshing attempt %i failed!\n');
+        hmax = globalHmax + ((-1)^attempts)*ceil(attempts/2);
+        globalSize.set('hmax', hmax);
+        fprintf('Trying again at size %i\n', hmax);
+    end
+end
 
 model.save([pwd filesep X.MPH]);
 
