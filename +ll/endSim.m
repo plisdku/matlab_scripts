@@ -101,6 +101,7 @@ for mm = 1:numMeshes
             keyboard
             %}
             
+            
             [v2 f2] = neflab.nefDifference(v, f, ...
                 LL_MODEL.meshes{nn}.vertices, ...
                 LL_MODEL.meshes{nn}.faces);
@@ -125,6 +126,7 @@ for mm = 1:numMeshes
     title(sprintf('Final %i', mm))
     pause
     %}
+    
     
     if numel(f) > 0
         disjointStructureIndices(end+1) = mm;
@@ -196,11 +198,12 @@ for pmlIndex = 1:numPMLs
             disjointVertices{ss}, disjointFaces{ss},...
             pmlVertices{pmlIndex}, pmlFaces{pmlIndex});
         
-%         figure(3); clf
-%         quickPatch(pmlVertices{pmlIndex+1}, pmlFaces{pmlIndex+1});
-%         quickPatch(disjointVertices{ss}, disjointFaces{ss}, ...
-%             'g');
-%         axis([-100 1100 -100 1100 -100 1100])
+         %figure(3); clf
+         %quickPatch(pmlVertices{pmlIndex+1}, pmlFaces{pmlIndex+1});
+         %quickPatch(disjointVertices{ss}, disjointFaces{ss}, ...
+         %    'g');
+         %axis([-100 1100 -100 1100 -100 1100])
+         %pause
         
         if numel(chunkFaces) > 0
             
