@@ -13,7 +13,7 @@ import com.comsol.model.util.*
 
 model = ModelUtil.create('Model');
 
-bounds = LL_MODEL.bounds;
+nonPMLBounds = LL_MODEL.bounds;
 pmlBounds = LL_MODEL.PMLBounds;
 pmlThickness = LL_MODEL.PMLThickness;
 
@@ -58,231 +58,49 @@ materialIndex = zeros(1, numMeshes);
 
 % Each mesh subtracts off all previous meshes.
 
-disjointVertices = cell(numMeshes,1);
-disjointFaces = cell(numMeshes,1);
-
-disjointStructureIndices = [];
-
-fprintf('Got to the disjoint meshes.\n');
-%%
-
-myPatch = @(v,f,c) patch('Vertices', v, 'Faces', f, 'FaceColor', 'c',...
-    'EdgeAlpha', 0.1, 'FaceAlpha', 0.3);
-
-% now figure out the disjointeries
-for mm = 1:numMeshes
-    
-    v = LL_MODEL.meshes{mm}.vertices;
-    f = LL_MODEL.meshes{mm}.faces;
-    
-    %{
-    figure(3); clf
-    quickPatch(v, f);
-    axis image; view(3);
-    title(sprintf('Begin with mesh %i', mm));
-    %}
-    
-    listOfDifferences = [];
-    
-    for nn = (mm+1):numMeshes
-        
-        if neflab.nefTestIntersection(v, f, ...
-            LL_MODEL.meshes{nn}.vertices, ...
-            LL_MODEL.meshes{nn}.faces)
-            
-            %{
-            figure(1); clf
-            myPatch(v, f, 'r');
-            hold on
-            myPatch(LL_MODEL.meshes{nn}.vertices, ...
-                LL_MODEL.meshes{nn}.faces, 'g');
-            title(sprintf('Current (%i, red) - (%i, green)', mm, nn));
-            axis image vis3d
-            keyboard
-            %}
-            
-            
-            [v2 f2] = neflab.nefDifference(v, f, ...
-                LL_MODEL.meshes{nn}.vertices, ...
-                LL_MODEL.meshes{nn}.faces);
-            
-            %fprintf('MIRROR: append difference for COMSOL\n');
-            
-            listOfDifferences(end+1) = nn;
-            
-            v = v2;
-            f = f2;
-            
-        
-        end
-    end
-    disjointVertices{mm} = v;
-    disjointFaces{mm} = f;
-    
-    %{
-    figure(2); clf
-    quickPatch(v, f);
-    axis image; view(3);
-    title(sprintf('Final %i', mm))
-    pause
-    %}
-    
-    
-    if numel(f) > 0
-        disjointStructureIndices(end+1) = mm;
-        
-        %addImport(geom, v, f, comsolStructureName(mm), comsolStructureName(mm));
-        materialIndex(mm) = LL_MODEL.meshes{mm}.material;
-    else
-        %fprintf('MIRROR: do not add differences to COMSOL\n');
-    end
-end
-
+disjointMeshes = makeDisjointInputs(LL_MODEL.meshes);
 fprintf('Done with the difference operations.\n');
 
-%% Create suitable PML meshes!
+% Make similar disjoint meshes but skip everything that does not reach PML.
+% This will really speed things up when intersecting every PML block with every
+% material block.
 
-pml = pmlBounds;
-boundsX = [pml(1) bounds(1) bounds(4) pml(4)];
-boundsY = [pml(2) bounds(2) bounds(5) pml(5)];
-boundsZ = [pml(3) bounds(3) bounds(6) pml(6)];
+disjointMeshesInPML = makeDisjointInputs(LL_MODEL.meshes, nonPMLBounds);
+pl = @(mesh) flatPatch('Vertices', mesh.vertices, 'Faces', mesh.faces, 'FaceColor', 'g', ...
+    'EdgeAlpha', 0.1, 'FaceAlpha', 0.2);
+%% Create a mesh for each material region
 
-numPMLs = 0;
+% Each element of materialMeshes is the union of ALL input meshes with a
+% given material.
+materialMeshes = uniteMaterials(disjointMeshes);
 
-pmlVertices = {};
-pmlFaces = {};
+% Each element of materialMeshesInPML is the union of ALL input meshes with a
+% given material that *also* intersect the PML.
+materialMeshesInPML = uniteMaterials(disjointMeshesInPML);
 
-for xx = 1:3
-for yy = 1:3
-for zz = 1:3
-if xx ~= 2 || yy ~= 2 || zz ~= 2
-    
-    rectBounds = [boundsX(xx) boundsY(yy) boundsZ(zz) ...
-            boundsX(xx+1) boundsY(yy+1) boundsZ(zz+1)];
-    
-    rectSize = rectBounds(4:6) - rectBounds(1:3);
-    
-    if all(rectSize > 0)
-        numPMLs = numPMLs + 1;
+%% Create a mesh for each PML block.
 
-        r = t6.model.Rect(@(p) rectBounds);
+pmlMeshes = makePMLMeshes(pmlBounds, nonPMLBounds);
+fprintf('Done making PML blocks.\n');
 
-        m = r.meshes;
-        
-        pmlVertices{numPMLs} = m{1}.patchVertices;
-        pmlFaces{numPMLs} = m{1}.faces;
-    end
-    
-end
-end
-end
-end
-
-%% Structure in PML!
+%% Create all the separate chunks of material that intersect the PML
 
 fprintf('Intersecting with PML.\n');
-
-pmlIndex = 0;
-
-pmlChunkIndex = 0;
-pmlChunkMaterials = [];
-pmlChunkVertices = {};
-pmlChunkFaces = {};
-
-maxTotalChunks = 26*numMeshes;
-
-for pmlIndex = 1:numPMLs
-    
-    for ss = 1:numMeshes
-        [chunkVertices chunkFaces] = neflab.nefIntersection(...
-            disjointVertices{ss}, disjointFaces{ss},...
-            pmlVertices{pmlIndex}, pmlFaces{pmlIndex});
-        
-         %figure(3); clf
-         %quickPatch(pmlVertices{pmlIndex+1}, pmlFaces{pmlIndex+1});
-         %quickPatch(disjointVertices{ss}, disjointFaces{ss}, ...
-         %    'g');
-         %axis([-100 1100 -100 1100 -100 1100])
-         %pause
-        
-        if numel(chunkFaces) > 0
-            
-            pmlChunkIndex = pmlChunkIndex + 1;
-            
-            pmlChunkVertices{pmlChunkIndex} = chunkVertices;
-            pmlChunkFaces{pmlChunkIndex} = chunkFaces;
-            pmlChunkMaterials(pmlChunkIndex) = ...
-                LL_MODEL.meshes{ss}.material;
-            
-%             figure(3);
-%             quickPatch(chunkVertices, chunkFaces, 'b');
-            
-%            addPMLIntersection(geom, ss, pmlIndex, pmlChunkIndex);
-            
-            %fprintf('MIRROR: perform PML intersection\n');
-            % make sure to append material to material list
-            % also increment COMSOL PML block counter I guess
-            
-        end
-        %pause
-    end
-    
-end
-
-numPMLChunks = numel(pmlChunkVertices);
-
+pmlChunks = makePMLPieces(pmlMeshes, materialMeshesInPML);
+%pmlChunks = makePMLPieces(pmlMeshes, materialMeshes);
+numPMLChunks = numel(pmlChunks);
 
 %% Structure not in PML!
 
-r = t6.model.Rect(@(p) bounds);
-m = r.meshes;
-nonPMLVertices = m{1}.patchVertices;
-nonPMLFaces = m{1}.faces;
-
-interiorStructureVertices = {};
-interiorStructureFaces = {};
-
-fprintf('Intersecting with non-PML.\n');
-
-for mm = 1:numMeshes
-    [interiorStructureVertices{mm} interiorStructureFaces{mm}] = ...
-        neflab.nefIntersection(disjointVertices{mm}, disjointFaces{mm},...
-        nonPMLVertices, nonPMLFaces);
-    
-    fracDone = mm/numMeshes;
-end
+nonPMLChunks = makeNonPMLPieces(materialMeshes, nonPMLBounds);
 
 %% Create the STEP file.
+% this creates a file called outStep.step.
 
 fprintf('Got to the STEP file.\n');
+writeSTEP([nonPMLChunks, pmlChunks]);
 
-totalChunks = numel(disjointFaces) + numel(pmlChunkVertices);
-
-chunkFiles = arrayfun(@(ii) sprintf('importMeshes/chunk%i.stl',ii), ...
-    1:totalChunks, 'UniformOutput', false);
-
-curChunk = 1;
-
-for iIn = 1:numel(disjointFaces)
-    fpath = [pwd filesep chunkFiles{curChunk}];
-    writeSTL(interiorStructureVertices{iIn}, ...
-        interiorStructureFaces{iIn}, fpath);
-    curChunk = curChunk + 1;
-end
-
-for iOut = 1:numel(pmlChunkVertices)
-    fpath = [pwd filesep chunkFiles{curChunk}];
-    writeSTL(pmlChunkVertices{iOut}, pmlChunkFaces{iOut}, fpath);
-    curChunk = curChunk + 1;
-end
-
-catCell = @(A) A{:};
-
-spacedNames = cellfun(@(A) [A ' '], chunkFiles, 'UniformOutput', false);
-
-callMerge = ['mergeSTP -unit mm ', spacedNames{:}];
-unix(callMerge);
-% this created a file called outStep.step.
+%% Create STEP import in MPH file
 
 stepImport = geom.feature.create('impSTEP', 'Import');
 stepImport.set('createselection', true);
@@ -318,22 +136,22 @@ outputsSources = {LL_MODEL.outputs{:} LL_MODEL.sources{:} ...
 planeNames = {outPlaneNames{:} srcPlaneNames{:} measPlaneNames{:}};
 
 for pp = 1:numel(planeNames)
-    bounds = outputsSources{pp}.bounds;
-    if bounds(1) == bounds(4)
+    nonPMLBounds = outputsSources{pp}.bounds;
+    if nonPMLBounds(1) == nonPMLBounds(4)
         plane = 'yz'; quickPlane = 'quickx';
-        sz = bounds([5 6]) - bounds([2 3]);
-        center = 0.5*(bounds([5 6]) + bounds([2 3]));
-        quickPlaneCoord = bounds(1);
-    elseif bounds(2) == bounds(5)
+        sz = nonPMLBounds([5 6]) - nonPMLBounds([2 3]);
+        center = 0.5*(nonPMLBounds([5 6]) + nonPMLBounds([2 3]));
+        quickPlaneCoord = nonPMLBounds(1);
+    elseif nonPMLBounds(2) == nonPMLBounds(5)
         plane = 'zx'; quickPlane = 'quicky';
-        sz = bounds([6 4]) - bounds([3 1]);
-        center = 0.5*(bounds([6 4]) + bounds([3 1]));
-        quickPlaneCoord = bounds(2);
-    elseif bounds(3) == bounds(6)
+        sz = nonPMLBounds([6 4]) - nonPMLBounds([3 1]);
+        center = 0.5*(nonPMLBounds([6 4]) + nonPMLBounds([3 1]));
+        quickPlaneCoord = nonPMLBounds(2);
+    elseif nonPMLBounds(3) == nonPMLBounds(6)
         plane = 'xy'; quickPlane = 'quickz';
-        sz = bounds([4 5]) - bounds([1 2]);
-        center = 0.5*(bounds([4 5]) + bounds([1 2]));
-        quickPlaneCoord = bounds(3);
+        sz = nonPMLBounds([4 5]) - nonPMLBounds([1 2]);
+        center = 0.5*(nonPMLBounds([4 5]) + nonPMLBounds([1 2]));
+        quickPlaneCoord = nonPMLBounds(3);
     end
     
     wp = geom.feature.create(planeNames{pp}, 'WorkPlane');
@@ -365,7 +183,7 @@ tensorElems = @(T) arrayfun(@(a) sprintf('%2.8f+%2.8fi',real(a),imag(a)), T(:), 
 
 fprintf('Creating materials.\n');
 
-numMaterials = numel(LL_MODEL.materials);
+numMaterials = numel(materialMeshes);
 
 for mm = 1:numMaterials
     
@@ -380,36 +198,25 @@ for mm = 1:numMaterials
         tensorElems(LL_MODEL.materials{mm}.sigma * eye(3)));
     
 end
-%    mat.selection.named(sprintf('geom1_imp%i_dom', nn));
 
 %% Figure out which materials go where
 
 calcBoundingBox = @(A) [min(A) max(A)];
 
-movableMeshDomains = [];
-
 materialByDomain = zeros(geom.getNDomains, 1);
 
-for ss = 1:numMeshes
-        
-    bbox = calcBoundingBox(interiorStructureVertices{ss});
-    domainNum = identifyByBounds(model, bbox);
-    materialByDomain(domainNum) = LL_MODEL.meshes{ss}.material;
+for ss = 1:numel(nonPMLChunks)
     
-    % while we're at it, find and mark boundaries...
-    if any(LL_MODEL.meshes{ss}.jacobian(:))
-        if numel(domainNum) == 1
-            boundaryDomains = mphgetadj(model, 'geom1', 'boundary', ...
-                'domain', domainNum);
-            movableMeshDomains = [movableMeshDomains boundaryDomains];
-        end
-    end
+    bbox = calcBoundingBox(nonPMLChunks{ss}.vertices);
+    domainNum = identifyByBounds(model, bbox);
+    materialByDomain(domainNum) = nonPMLChunks{ss}.material;
+    
 end
 
 for cc = 1:numPMLChunks
-    bbox = calcBoundingBox(pmlChunkVertices{cc});
+    bbox = calcBoundingBox(pmlChunks{cc}.vertices);
     domainNum = identifyByBounds(model, bbox);
-    materialByDomain(domainNum) = pmlChunkMaterials(cc);
+    materialByDomain(domainNum) = pmlChunks{cc}.material;
 end
 
 
@@ -424,6 +231,24 @@ for mm = 1:numMaterials
 end
 
 %% Make selection of movable meshes
+
+movableMeshDomains = [];
+
+for mm = 1:numel(LL_MODEL.meshes)    
+if any(LL_MODEL.meshes{mm}.jacobian(:))
+    
+    bbox = calcBoundingBox(LL_MODEL.meshes{mm}.vertices) + ...
+        [-1 -1 -1 1 1 1];
+    
+    comsolIndices = [1 4; 2 5; 3 6];
+    
+    boundaryDomains = mphselectbox(model, 'geom1', bbox(comsolIndices),...
+        'boundary');
+    
+    movableMeshDomains = [movableMeshDomains boundaryDomains];
+    
+end
+end
 
 sel = model.selection.create('movableMeshes', 'Explicit');
 sel.name('Movable meshes');
@@ -554,54 +379,33 @@ hide1.named('pmlSel');
 fprintf('Meshing\n');
 
 mesh1 = model.mesh.create('mesh1', 'geom1');
-sz = mesh1.feature('size');
-sz.set('custom', 'on');
-%sz.set('hgradactive', 'on');
-sz.set('hgrad', '2.5');
-%sz.set('hgrad', '2.5');
+globalSize = mesh1.feature('size');
+globalSize.set('custom', 'on');
+globalSize.set('hgrad', '2.5');
 
 if ~isempty(LL_MODEL.hmin)
-    sz.set('hmin', LL_MODEL.hmin);
+    globalSize.set('hmin', LL_MODEL.hmin);
 end
 
+globalHmax = 200;
 if ~isempty(LL_MODEL.hmax)
-    sz.set('hmax', LL_MODEL.hmax);
+    globalHmax = LL_MODEL.hmax;
 end
+globalSize.set('hmax', globalHmax);
 
-%{
-for mm = 1:numMeshes
-        
-    bbox = calcBoundingBox(interiorStructureVertices{ss});
-    domainNum = identifyByBounds(model, bbox);
-    materialByDomain(domainNum) = LL_MODEL.meshes{ss}.material;
-    
-    % while we're at it, find and mark boundaries...
-    if any(LL_MODEL.meshes{ss}.jacobian(:))
-        if numel(domainNum) == 1
-            boundaryDomains = mphgetadj(model, 'geom1', 'boundary', ...
-                'domain', domainNum);
-            movableMeshDomains = [movableMeshDomains boundaryDomains];
-        end
-    end
-end
-%}
-
-%warning('Ignoring per-object mesh size settings.');
-
-
-for mm = 1:numMeshes
+for mm = 1:numel(LL_MODEL.meshes)
 if ~isempty(LL_MODEL.meshes{mm}.hmax)
     
-    bbox = calcBoundingBox(interiorStructureVertices{mm});
-    domainNum = identifyByBounds(model, bbox);
-    assert(numel(domainNum) == 1);
+    bbox = calcBoundingBox(LL_MODEL.meshes{mm}.vertices) + ...
+        [-1 -1 -1 1 1 1];
     
-    boundaryDomains = mphgetadj(model, 'geom1', 'boundary', ...
-        'domain', domainNum);
+    comsolIndices = [1 4; 2 5; 3 6];
+    
+    boundaryDomains = mphselectbox(model, 'geom1', bbox(comsolIndices),...
+        'boundary');
     
     szName = sprintf('size%i', mm);
     sz = model.mesh('mesh1').feature.create(szName, 'Size');
-    %sz.selection.named(sprintf('geom1_%s_bnd', comsolStructureName(mm)));
     sz.selection.geom('geom1', 2);
     sz.selection.set(boundaryDomains);
     sz.set('custom', 'on');
@@ -610,6 +414,7 @@ if ~isempty(LL_MODEL.meshes{mm}.hmax)
     
 end 
 end
+
 
 % Change mesh size for measurement.
 sz = model.mesh('mesh1').feature.create('measSize', 'Size');
@@ -621,7 +426,25 @@ sz.set('hmax', 30);
 
 model.mesh('mesh1').feature.create('ftet1', 'FreeTet');
 
-model.mesh('mesh1').run;
+fprintf('Mesh size purportedly %i\n', globalSize.getDouble('hmax'));
+
+meshingSucceeded = false;
+attempts = 1;
+hmax = globalHmax;
+while ~meshingSucceeded
+    try
+        attempts = attempts + 1;
+        globalSize.set('hmax', hmax);
+        model.save([pwd filesep 'premesh-' X.MPH]);
+        fprintf('Attempting with hmax %i\n', globalSize.getDouble('hmax'));
+        model.mesh('mesh1').run;
+        meshingSucceeded = true;
+    catch exc
+        warning('Meshing attempt %i failed!\n');
+        hmax = globalHmax + ((-1)^attempts)*ceil(attempts/2);
+        fprintf('Trying again at size %i\n', hmax);
+    end
+end
 
 model.save([pwd filesep X.MPH]);
 
@@ -803,11 +626,11 @@ model.result('pg3').set('data', 'dset2');
 model.result('pg3').feature('surf1').set('expr', 'DF');
 model.result('pg3').feature('surf1').set('unit', 'W/m^3');
 model.result('pg3').feature('surf1').set('descr', '');
-model.result('pg3').feature('arws1').set('expr', {'nx*DF*(DF>0)' 'ny*DF*(DF>0)' 'nz*DF*(DF>0)'});
+model.result('pg3').feature('arws1').set('expr', {'nx*DF*(DF<0)' 'ny*DF*(DF<0)' 'nz*DF*(DF<0)'});
 %model.result('pg3').feature('arws1').set('scale', '3.2787942186813154E-10');
 model.result('pg3').feature('arws1').set('arrowbase', 'head');
 %model.result('pg3').feature('arws1').set('scaleactive', false);
-model.result('pg3').feature('arws2').set('expr', {'nx*DF*(DF<0)' 'ny*DF*(DF<0)' 'nz*DF*(DF<0)'});
+model.result('pg3').feature('arws2').set('expr', {'nx*DF*(DF>0)' 'ny*DF*(DF>0)' 'nz*DF*(DF>0)'});
 model.result('pg3').feature('arws2').set('color', 'blue');
 %model.result('pg3').feature('arws2').set('scale', '4.240512841916214E-10');
 %model.result('pg3').feature('arws2').set('scaleactive', false);
@@ -875,6 +698,194 @@ figure(4); clf
 mphplot(model, 'pg4', 'rangenum', 1);
 
 end
+
+
+% For each mesh in meshes, return a mesh that is also disjoint to all the meshes
+% after it:
+%
+% disjointMeshes{N} = meshes{N}
+% disjointMeshes{N-1} = meshes{N-1} - meshes{N};
+% disjointMeshes{N-2} = meshes{N-2} - meshes{N-1} - meshes{N};
+% . . .
+%
+% An optional bounding box argument may be specified as well.  Any mesh that is
+% contained in the bounding box will be excluded from these operations.  The
+% use of this is to allow the huge number of PML intersections that are
+% calculated later to be done without involving geometry that's never going to
+% touch the PML anywhere.
+function disjointMeshes = makeDisjointInputs(meshes, excludeBounds)
+    
+    myPatch = @(v,f,c) patch('Vertices', v, 'Faces', f, 'FaceColor', 'c',...
+        'EdgeAlpha', 0.1, 'FaceAlpha', 0.3);
+    
+    bbox = @(vertArray) [min(vertArray) max(vertArray)];
+    rectInRect = @(r1, r2) all(r1(1:3) >= r2(1:3)) && all(r1(4:6) <= r2(4:6));
+        
+    if nargin < 2
+        % Make a bounding box that EVERYTHING reaches outside.
+        nullBounds = [Inf Inf Inf -Inf -Inf -Inf];
+        excludeBounds = nullBounds;
+    end
+        
+    numMeshes = numel(meshes);
+    disjointMeshes = cell(size(meshes));
+    
+    % now figure out the disjointeries
+    for mm = 1:numMeshes
+    if ~rectInRect(bbox(meshes{mm}.vertices), excludeBounds)
+    
+        v = meshes{mm}.vertices;
+        f = meshes{mm}.faces;
+        
+        for nn = (mm+1):numMeshes
+        if ~rectInRect(bbox(meshes{nn}.vertices), excludeBounds)
+            
+            v2 = meshes{nn}.vertices;
+            f2 = meshes{nn}.faces;
+            
+            [v, f] = neflab.nefDifference(v, f, v2, f2);
+        end
+        end
+        
+        disjointMeshes{mm}.vertices = v;
+        disjointMeshes{mm}.faces = f;
+        disjointMeshes{mm}.material = meshes{mm}.material;
+        
+    end
+    end
+end
+
+
+function pmlMeshes = makePMLMeshes(pmlBounds, bounds)
+
+    boundsX = [pmlBounds(1) bounds(1) bounds(4) pmlBounds(4)];
+    boundsY = [pmlBounds(2) bounds(2) bounds(5) pmlBounds(5)];
+    boundsZ = [pmlBounds(3) bounds(3) bounds(6) pmlBounds(6)];
+
+    numPMLs = 0;
+
+    pmlMeshes = {};
+
+    for xx = 1:3
+    for yy = 1:3
+    for zz = 1:3
+    if xx ~= 2 || yy ~= 2 || zz ~= 2
+    
+        rectBounds = [boundsX(xx) boundsY(yy) boundsZ(zz) ...
+                boundsX(xx+1) boundsY(yy+1) boundsZ(zz+1)];
+    
+        rectSize = rectBounds(4:6) - rectBounds(1:3);
+    
+        if all(rectSize > 0)
+            numPMLs = numPMLs + 1;
+
+            r = t6.model.Rect(@(p) rectBounds);
+
+            m = r.meshes;
+        
+            pmlMeshes{numPMLs}.vertices = m{1}.patchVertices;
+            pmlMeshes{numPMLs}.faces = m{1}.faces;
+        end
+    
+    end
+    end
+    end
+    end
+end
+
+function meshes = uniteMaterials(inMeshes)
+    
+    meshes = {};
+    
+    numInputs = numel(inMeshes);
+    for mm = 1:numInputs
+    if ~isempty(inMeshes{mm})
+        
+        iMat = inMeshes{mm}.material;
+        
+        if iMat <= numel(meshes) && isfield(meshes{iMat}, 'vertices')
+            [meshes{iMat}.vertices, meshes{iMat}.faces] = neflab.nefUnion(...
+                inMeshes{mm}.vertices, inMeshes{mm}.faces, ...
+                meshes{iMat}.vertices, meshes{iMat}.faces);
+        else
+            meshes{iMat}.vertices = inMeshes{mm}.vertices;
+            meshes{iMat}.faces = inMeshes{iMat}.faces;
+        end
+        
+    end
+    end
+    
+end
+
+
+function pmlChunks = makePMLPieces(pmlMeshes, meshes)
+    
+    pmlIndex = 0;
+    pmlChunkIndex = 0;
+    
+    pmlChunks = {};
+    
+    numPMLs = numel(pmlMeshes);
+    numMeshes = numel(meshes);
+    maxTotalChunks = 26*numMeshes;
+    
+    for pmlIndex = 1:numPMLs
+    for ss = 1:numMeshes
+        [chunkVertices, chunkFaces] = neflab.nefIntersection(...
+            meshes{ss}.vertices, meshes{ss}.faces,...
+            pmlMeshes{pmlIndex}.vertices, pmlMeshes{pmlIndex}.faces);
+    
+        if numel(chunkFaces) > 0
+            pmlChunkIndex = pmlChunkIndex + 1;
+            
+            pmlChunks{pmlChunkIndex}.vertices = chunkVertices;
+            pmlChunks{pmlChunkIndex}.faces = chunkFaces;
+            pmlChunks{pmlChunkIndex}.material = ss;
+        end
+    end    
+    end
+
+end
+
+function nonPMLChunks = makeNonPMLPieces(meshes, bounds)
+    
+    r = t6.model.Rect(@(p) bounds);
+    m = r.meshes;
+    nonPMLVertices = m{1}.patchVertices;
+    nonPMLFaces = m{1}.faces;
+    
+    nonPMLChunks = cell(size(meshes));
+
+    fprintf('Intersecting with non-PML.\n');
+
+    numMeshes = numel(meshes);
+    for mm = 1:numMeshes
+        [nonPMLChunks{mm}.vertices, nonPMLChunks{mm}.faces] = ...
+            neflab.nefIntersection(meshes{mm}.vertices, ...
+            meshes{mm}.faces, ...
+            nonPMLVertices, nonPMLFaces);
+        nonPMLChunks{mm}.material = mm;
+    end
+end
+
+
+function chunkFiles = writeSTEP(chunks)
+    
+    chunkFiles = arrayfun(@(ii) sprintf('importMeshes/chunk%i.stl',ii), ...
+        1:numel(chunks), 'UniformOutput', false);
+    
+    for curChunk = 1:numel(chunks)
+        fpath = [pwd filesep chunkFiles{curChunk}];
+        writeSTL(chunks{curChunk}.vertices, chunks{curChunk}.faces, fpath);
+    end
+    
+    spacedNames = cellfun(@(A) [A ' '], chunkFiles, 'UniformOutput', false);
+
+    callMerge = ['mergeSTP -unit mm ', spacedNames{:}];
+    unix(callMerge);
+    
+end
+
 
 function onOff = onOffString(boolval)
 
