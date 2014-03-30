@@ -15,10 +15,26 @@ model = ModelUtil.create('Model');
 
 nonPMLBounds = LL_MODEL.bounds;
 pmlBounds = LL_MODEL.PMLBounds;
-pmlThickness = LL_MODEL.PMLThickness;
 
 if ~exist('importMeshes', 'dir')
     mkdir('importMeshes');
+end
+
+%% Figure out whether we can read things out of a file or not.
+
+checksum = geometryChecksum(LL_MODEL.meshes, nonPMLBounds, pmlBounds);
+assert(isa(checksum, 'uint16'));
+
+stepFile = sprintf('structure_%.4x.step', checksum);
+movableDomainsFile = sprintf('movableDomains_%.4x.txt', checksum);
+domainMaterialsFile = sprintf('domainMaterials_%.4x.txt', checksum);
+
+cacheExists = false;
+if exist(stepFile, 'file') && exist(movableDomainsFile, 'file') ...
+    && exist(domainMaterialsFile, 'file')
+    
+    fprintf('Using cached geometry data.\n');
+    cacheExists = true;
 end
 
 %%
@@ -29,83 +45,18 @@ model.modelNode.create('mod1');
 geom = model.geom.create('geom1', 3);
 geom.lengthUnit('nm');
 
-%%
-% The new way I need to do this is to mirror all the Boolean operations
-% that COMSOL carries out, and based on expected answers I can then
-% determine whether or not to do anything explicitly in COMSOL.
-%
-% So I guess it's like this:
-%
-%   Create the structures (inputs).  User must provide background rect.
-%   Make them mutually disjoint.
-%       for each input structure, take all appropriate differences
-%       if the end result is non-null, implement all non-null differences
-%   Calculate non-PML components
-%       take intersection with non-PML
-%       if non-null, mirror in COMSOL
-%   Calculate PML rects
-%       for each PML rect, take all appropriate intersections
-%           implement each non-null intersection
-%
-% "Mirroring" means do it in COMSOL and make a note of the material to
-% apply.
-
-%% Create suitable input meshes!
-% Make sure they're all mutually disjoint, yo.
-
-numMeshes = numel(LL_MODEL.meshes);
-materialIndex = zeros(1, numMeshes);
-
-% Each mesh subtracts off all previous meshes.
-
-disjointMeshes = makeDisjointInputs(LL_MODEL.meshes);
-fprintf('Done with the difference operations.\n');
-
-% Make similar disjoint meshes but skip everything that does not reach PML.
-% This will really speed things up when intersecting every PML block with every
-% material block.
-
-disjointMeshesInPML = makeDisjointInputs(LL_MODEL.meshes, nonPMLBounds);
-pl = @(mesh) flatPatch('Vertices', mesh.vertices, 'Faces', mesh.faces, 'FaceColor', 'g', ...
-    'EdgeAlpha', 0.1, 'FaceAlpha', 0.2);
-%% Create a mesh for each material region
-
-% Each element of materialMeshes is the union of ALL input meshes with a
-% given material.
-materialMeshes = uniteMaterials(disjointMeshes);
-
-% Each element of materialMeshesInPML is the union of ALL input meshes with a
-% given material that *also* intersect the PML.
-materialMeshesInPML = uniteMaterials(disjointMeshesInPML);
-
-%% Create a mesh for each PML block.
-
-pmlMeshes = makePMLMeshes(pmlBounds, nonPMLBounds);
-fprintf('Done making PML blocks.\n');
-
-%% Create all the separate chunks of material that intersect the PML
-
-fprintf('Intersecting with PML.\n');
-pmlChunks = makePMLPieces(pmlMeshes, materialMeshesInPML);
-%pmlChunks = makePMLPieces(pmlMeshes, materialMeshes);
-numPMLChunks = numel(pmlChunks);
-
-%% Structure not in PML!
-
-nonPMLChunks = makeNonPMLPieces(materialMeshes, nonPMLBounds);
-
-%% Create the STEP file.
-% this creates a file called outStep.step.
-
-fprintf('Got to the STEP file.\n');
-writeSTEP([nonPMLChunks, pmlChunks]);
-
-%% Create STEP import in MPH file
+if cacheExists
+    fprintf('Using cached STEP file!\n');
+else
+    fprintf('Processing geometry to create STEP file.\n');
+    [nonPMLChunks, pmlChunks] = processGeometry(LL_MODEL.meshes, ...
+        nonPMLBounds, pmlBounds, stepFile);
+end
 
 stepImport = geom.feature.create('impSTEP', 'Import');
 stepImport.set('createselection', true);
 stepImport.set('type', 'cad');
-stepImport.set('filename', [pwd filesep 'outStep.step']);
+stepImport.set('filename', [pwd filesep stepFile]);
 %stepImport.set('unit', 'source');
 
 % The STEP file will be in millimeters.  STEP can't do nanometers.
@@ -166,15 +117,13 @@ for pp = 1:numel(planeNames)
     %waitbar(pp/numel(planeNames), h, 'Creating source and output planes');
 end
 
-%% run that geom
+%% Run the geometry and pray that it works.
 
-model.save([pwd filesep 'intermediate.mph']);
 fprintf('Running the geometry!\n');
+model.save([pwd filesep 'preRunGeometry.mph']);
 geom.run;
-
-%%
-fprintf('Got to the intermediate spot.\n');
-model.save([pwd filesep 'intermediate.mph']);
+fprintf('Geometry ran successfully.\n');
+model.save([pwd filesep 'postRunGeometry.mph']);
 
 %% Materials!
 
@@ -183,7 +132,7 @@ tensorElems = @(T) arrayfun(@(a) sprintf('%2.8f+%2.8fi',real(a),imag(a)), T(:), 
 
 fprintf('Creating materials.\n');
 
-numMaterials = numel(materialMeshes);
+numMaterials = numel(unique(cellfun(@(x) x.material, LL_MODEL.meshes)));
 
 for mm = 1:numMaterials
     
@@ -201,24 +150,13 @@ end
 
 %% Figure out which materials go where
 
-calcBoundingBox = @(A) [min(A) max(A)];
-
-materialByDomain = zeros(geom.getNDomains, 1);
-
-for ss = 1:numel(nonPMLChunks)
-    
-    bbox = calcBoundingBox(nonPMLChunks{ss}.vertices);
-    domainNum = identifyByBounds(model, bbox);
-    materialByDomain(domainNum) = nonPMLChunks{ss}.material;
-    
+if cacheExists
+    fprintf('Using cached domain materials file.\n');
+    domainMaterial = dlmread(domainMaterialsFile);
+else
+    domainMaterial = findDomainMaterials(model, geom, nonPMLChunks, pmlChunks);
+    dlmwrite(domainMaterialsFile, domainMaterial);
 end
-
-for cc = 1:numPMLChunks
-    bbox = calcBoundingBox(pmlChunks{cc}.vertices);
-    domainNum = identifyByBounds(model, bbox);
-    materialByDomain(domainNum) = pmlChunks{cc}.material;
-end
-
 
 %% Assign domains to materials
 
@@ -226,28 +164,18 @@ for mm = 1:numMaterials
     matTag = sprintf('mat%i', mm);
     selTag = sprintf('selMat%i', mm);
     sel = model.selection.create(selTag, 'Explicit');
-    sel.set(find(materialByDomain == mm));
+    sel.set(find(domainMaterial == mm));
     model.material(matTag).selection.named(selTag);
 end
 
 %% Make selection of movable meshes
 
-movableMeshDomains = [];
-
-for mm = 1:numel(LL_MODEL.meshes)    
-if any(LL_MODEL.meshes{mm}.jacobian(:))
-    
-    bbox = calcBoundingBox(LL_MODEL.meshes{mm}.vertices) + ...
-        [-1 -1 -1 1 1 1];
-    
-    comsolIndices = [1 4; 2 5; 3 6];
-    
-    boundaryDomains = mphselectbox(model, 'geom1', bbox(comsolIndices),...
-        'boundary');
-    
-    movableMeshDomains = [movableMeshDomains boundaryDomains];
-    
-end
+if cacheExists
+    fprintf('Using cached movable domains file.\n');
+    movableMeshDomains = dlmread(movableDomainsFile);
+else
+    movableMeshDomains = findMovableBoundaries(model, LL_MODEL.meshes);
+    dlmwrite(movableDomainsFile, movableMeshDomains);
 end
 
 sel = model.selection.create('movableMeshes', 'Explicit');
@@ -282,9 +210,7 @@ pml.selection.named('pmlSel');
 
 %% Assembly!  Yarr!
 
-model.save([pwd filesep 'foobar.mph']);
-%warning('Quitting early, hardcoded.\n');
-%return
+model.save([pwd filesep 'postPML.mph']);
 
 %% Forward physics!
 
@@ -868,8 +794,97 @@ function nonPMLChunks = makeNonPMLPieces(meshes, bounds)
     end
 end
 
+function movableMeshDomains = findMovableBoundaries(model, meshes)
+    movableMeshDomains = [];
 
-function chunkFiles = writeSTEP(chunks)
+    calcBoundingBox = @(A) [min(A) max(A)];
+    
+    for mm = 1:numel(meshes)    
+    if any(meshes{mm}.jacobian(:))
+    
+        bbox = calcBoundingBox(meshes{mm}.vertices) + [-1 -1 -1 1 1 1];
+    
+        comsolIndices = [1 4; 2 5; 3 6];
+    
+        boundaryDomains = mphselectbox(model, 'geom1', bbox(comsolIndices),...
+            'boundary');
+    
+        movableMeshDomains = [movableMeshDomains boundaryDomains];
+    
+    end
+    end
+end
+
+function domainMaterial = findDomainMaterials(model, geom, nonPMLChunks, pmlChunks)
+
+    calcBoundingBox = @(A) [min(A) max(A)];
+
+    domainMaterial = zeros(geom.getNDomains, 1);
+
+    for ss = 1:numel(nonPMLChunks)
+        bbox = calcBoundingBox(nonPMLChunks{ss}.vertices);
+        domainNum = identifyByBounds(model, bbox);
+        domainMaterial(domainNum) = nonPMLChunks{ss}.material;    
+    end
+    
+    for cc = 1:numel(pmlChunks)
+        bbox = calcBoundingBox(pmlChunks{cc}.vertices);
+        domainNum = identifyByBounds(model, bbox);
+        domainMaterial(domainNum) = pmlChunks{cc}.material;
+    end
+end
+
+function [nonPMLChunks, pmlChunks] = processGeometry(meshes, ...
+    nonPMLBounds, pmlBounds, stepFile)
+    
+    %% Create mutually disjoint input meshes!
+    % Each mesh subtracts off all previous meshes.
+
+    disjointMeshes = makeDisjointInputs(meshes);
+    fprintf('Done with the difference operations.\n');
+
+    % Make similar disjoint meshes but skip everything that does not reach PML.
+    % This will really speed things up when intersecting every PML block with every
+    % material block.
+
+    disjointMeshesInPML = makeDisjointInputs(meshes, nonPMLBounds);
+    pl = @(mesh) flatPatch('Vertices', mesh.vertices, 'Faces', mesh.faces, 'FaceColor', 'g', ...
+        'EdgeAlpha', 0.1, 'FaceAlpha', 0.2);
+    %% Create a mesh for each material region
+
+    % Each element of materialMeshes is the union of ALL input meshes with a
+    % given material.
+    materialMeshes = uniteMaterials(disjointMeshes);
+
+    % Each element of materialMeshesInPML is the union of ALL input meshes with a
+    % given material that *also* intersect the PML.
+    materialMeshesInPML = uniteMaterials(disjointMeshesInPML);
+
+    %% Create a mesh for each PML block.
+
+    pmlMeshes = makePMLMeshes(pmlBounds, nonPMLBounds);
+    fprintf('Done making PML blocks.\n');
+
+    %% Create all the separate chunks of material that intersect the PML
+
+    fprintf('Intersecting with PML.\n');
+    pmlChunks = makePMLPieces(pmlMeshes, materialMeshesInPML);
+    %pmlChunks = makePMLPieces(pmlMeshes, materialMeshes);
+    numPMLChunks = numel(pmlChunks);
+
+    %% Structure not in PML!
+
+    nonPMLChunks = makeNonPMLPieces(materialMeshes, nonPMLBounds);
+
+    %% Create the STEP file and set up STEP import.
+
+    fprintf('Got to the STEP file.\n');
+    writeSTEP([nonPMLChunks, pmlChunks], stepFile);
+    
+end
+
+
+function chunkFiles = writeSTEP(chunks, stepFile)
     
     chunkFiles = arrayfun(@(ii) sprintf('importMeshes/chunk%i.stl',ii), ...
         1:numel(chunks), 'UniformOutput', false);
@@ -883,256 +898,60 @@ function chunkFiles = writeSTEP(chunks)
 
     callMerge = ['mergeSTP -unit mm ', spacedNames{:}];
     unix(callMerge);
+    unix(sprintf('mv outStep.step %s', stepFile));
     
 end
 
-
-function onOff = onOffString(boolval)
-
-if boolval
-    onOff = 'on';
-else
-    onOff = 'off';
-end
-end
-
-function addRect(geom, rectBounds, impName)
-
-fprintf('Making %s\n', impName);
-
-rectCorner = rectBounds(1:3);
-rectSize = rectBounds(4:6) - rectBounds(1:3);
-
-cornerCell = rect2cell(rectCorner);
-sizeCell = rect2cell(rectSize);
-
-b = geom.feature.create(impName, 'Block');
-b.name(impName);
-b.set('pos', cornerCell);
-b.set('size', sizeCell);
-b.set('createselection', true);
-
-end
-
-function addImport(geom, v, f, impFileName, impName)
-
-fprintf('Making %s\n', impName);
-fname = [impFileName '.stl'];
-fpath = [pwd filesep 'importMeshes' filesep fname];
-
-ll.writeSTL(v, f, fpath);
-
-%importSTL = geom.feature.create([impName '_imp'], 'Import');
-importSTL = geom.feature.create(impName, 'Import');
-
-importSTL.set('neighangle', '2.0');
-importSTL.set('filename', fpath);
-importSTL.set('facecurv', '10');
-importSTL.set('type', 'stlvrml');
-importSTL.set('curvedface', 'manual');
-importSTL.set('facepartition', 'manual');
-importSTL.set('createselection', true);
-importSTL.set('faceangle', '1');
-importSTL.set('facecleanup', '0');
-%model.geom('geom1').feature('import_1').set('faceangle', '20');
-
-%makeSolid = geom.feature.create(impName, 'ConvertToSolid');
-%makeSolid.selection('input').named([impName '_imp']);
-%makeSolid.set('createselection', true);
-
-end
-
-function addImportDifferences(geom, mm, listOfDifferences)
-
-if ~isempty(listOfDifferences)
-
-    subtractStructures = arrayfun(@comsolImportName,...
-        listOfDifferences, 'UniformOutput', false);
-
-    d = geom.feature.create(comsolStructureName(mm), 'Difference');
-    d.name(sprintf('Disjoint chunk %i', mm));
-    d.set('keep', true);
-    d.selection('input').set(comsolImportName(mm));
-    d.selection('input2').set(subtractStructures);
-    d.set('createselection', true);
-else
-    % do nothing...
-    d = geom.feature.create(comsolStructureName(mm), 'Union');
-    d.name(sprintf('Original chunk %i', mm));
-    d.set('keep', true);
-    d.selection('input').set(comsolImportName(mm));
-    d.set('createselection', true);
-end
-
-end
-
-function addRawPML(geom, rectBounds, pmlIndex)
-
-pmlCorner = rectBounds(1:3);
-pmlSize = rectBounds(4:6) - rectBounds(1:3);
-
-pmlCornerCell = rect2cell(pmlCorner);
-pmlSizeCell = rect2cell(pmlSize);
-
-pmlName = comsolPMLName(pmlIndex);
-b = geom.feature.create(pmlName, 'Block');
-b.name(pmlName);
-b.set('pos', pmlCornerCell);
-b.set('size', pmlSizeCell);
-b.set('createselection', true);
-
-end
-
-function addNonPML(geom, bounds)
-
-nonPMLPos = bounds(1:3);
-nonPMLSize = bounds(4:6) - bounds(1:3);
-
-b = geom.feature.create(comsolNonPMLName(), 'Block');
-b.name('Non-PML');
-b.set('pos', rect2cell(nonPMLPos));
-b.set('size', rect2cell(nonPMLSize));
-
-
-end
-
-function itDoes = rectContains(verts, bounds)
-
-p1 = repmat(bounds(1:3), [size(verts, 1) 1]);
-p2 = repmat(bounds(4:6), [size(verts, 1) 1]);
-
-itDoes = all(all(p1 <= verts & p2 >= verts));
-
-end
-
-function addNonPMLStructure(geom, mm)
-
-intName = comsolNonPMLPartName(mm);
-
-ii = geom.feature.create(intName, 'Intersection');
-ii.name(intName);
-ii.set('createselection', true);
-ii.set('keep', true);
-ii.selection('input').set({comsolNonPMLName(), comsolStructureName(mm)});
-
-end
-
-function copyNonPMLStructure(geom, mm)
-
-intName = comsolNonPMLPartName(mm);
-
-d = geom.feature.create(intName, 'Union');
-d.name(sprintf('Original non-PML chunk %i', mm));
-d.set('keep', true);
-d.selection('input').set(comsolStructureName(mm));
-d.set('createselection', true);
-
-%{
-ii = geom.feature.create(intName, 'Intersection');
-ii.name(intName);
-ii.set('createselection', true);
-ii.set('keep', true);
-ii.selection('input').set({comsolNonPMLName(), comsolStructureName(mm)});
-%}
-
-end
-
-function addPMLIntersection(geom, ss, pmlIndex, pmlChunkIndex)
-
-structureName = comsolStructureName(ss);
-pmlName = comsolPMLName(pmlIndex);
-pmlBitName = comsolPMLChunkName(pmlChunkIndex);
-
-ii = geom.feature.create(pmlBitName, 'Intersection');
-ii.name(sprintf('PML %s', pmlBitName));
-ii.set('keep', true);
-ii.selection('input').set({pmlName, structureName});
-ii.set('createselection', true);
-
-end
-
-function deleteImports(geom, numImports)
-
-d = geom.feature.create('deleteImports', 'Delete');
-d.name('Delete imports');
-d.selection('input').init;
-importStructures = arrayfun(@comsolImportName, 1:numImports, ...
-    'UniformOutput', false);
-d.selection('input').set(importStructures);
-
-end
-
-function deleteDisjointStructures(geom, disjointStructureIndices)
-
-d = geom.feature.create('deleteDisjointImports', 'Delete');
-d.name('Delete disjoint structures');
-d.selection('input').init;
-disjointStructures = arrayfun(@comsolStructureName, disjointStructureIndices, ...
-    'UniformOutput', false);
-d.selection('input').set(disjointStructures);
-
-end
-
-function deleteNonPML(geom)
-
-d = geom.feature.create('deleteNonPML', 'Delete');
-d.name('Delete non-PML');
-d.selection('input').init;
-d.selection('input').set(comsolNonPMLName());
-
-end
-
-function deleteRawPML(geom, numPMLs)
-
-d = geom.feature.create('deletePMLInputs', 'Delete');
-d.name('Delete PML inputs');
-d.selection('input').init;
-d.selection('input').set(arrayfun(@comsolPMLName, 1:numPMLs, ...
-    'UniformOutput', false));
-
+% Get a checksum for the whole geometry including PML, bounds, and materials.
+% If I've already done all the hard work before, intersections and all, I don't
+% need to do it again.
+function checksum = geometryChecksum(meshes, bounds, pmlBounds)
+    
+    ll.fletcher16(bounds);
+    
+    for mm = 1:numel(meshes)
+        ll.fletcher16(meshes{mm}.vertices, true);
+        ll.fletcher16(meshes{mm}.faces, true);
+        ll.fletcher16(meshes{mm}.material, true);
+    end
+    
+    checksum = ll.fletcher16(pmlBounds, true);
+    
 end
 
 function domainNumber = identifyByBounds(model, bbox)
 
-domainNumber = selectBoxHelper(model, bbox + [-1 -1 -1 1 1 1]);
-if numel(domainNumber) == 1
-    return
-end
-
-% Now start trying to trim off everything that's not in those bounds
-
-pushIn = diag([1 1 1 -1 -1 -1]);
-
-for ii = 1:6
-    removeThese = selectBoxHelper(model, bbox + pushIn(ii,:));
-    domainNumber = setdiff(domainNumber, removeThese);
-    if numel(domainNumber) < 2
-        return;
+    domainNumber = selectBoxHelper(model, bbox + [-1 -1 -1 1 1 1]);
+    if numel(domainNumber) == 1
+        return
     end
-end
 
-warning('There are still %i matching domains!', numel(domainNumber));
+    % Now start trying to trim off everything that's not in those bounds
 
-end
+    pushIn = diag([1 1 1 -1 -1 -1]);
 
-function selections = selectBoxHelper(model, bbox)
+    for ii = 1:6
+        removeThese = selectBoxHelper(model, bbox + pushIn(ii,:));
+        domainNumber = setdiff(domainNumber, removeThese);
+        if numel(domainNumber) < 2
+            return;
+        end
+    end
 
-indexer = [1 4; 2 5; 3 6];
+    warning('There are still %i matching domains!', numel(domainNumber));
 
-selections = mphselectbox(model, 'geom1', bbox(indexer), 'domain');
+    end
 
-end
+    function selections = selectBoxHelper(model, bbox)
 
-%% 
+    indexer = [1 4; 2 5; 3 6];
 
-%% Utility function
+    selections = mphselectbox(model, 'geom1', bbox(indexer), 'domain');
 
-function r = rect2cell(A)
-r = arrayfun(@(aa) sprintf('%i', aa), A, 'UniformOutput', false);
 end
 
 %% Strings needed for COMSOL
-
+%{
 function nom = comsolImportName(mm)
 nom = sprintf('import_%i', mm);
 end
@@ -1157,4 +976,5 @@ function nom = comsolPMLChunkName(cc)
 nom = sprintf('intPML_%i', cc);
 end
 
+%}
 
