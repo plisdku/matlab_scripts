@@ -43,10 +43,12 @@ B = A;
 %indicesAll = repmat({':'}, 1, numdim); % useful variable factored from loop
 indicesAll = {':',':',':',':',':',':',':',':',':',':'};
 
+rowVec = @(A) reshape(A, 1, []);
+
 for dim = 1:numdim
 if size(A,dim) > 1 && ~isempty(x{dim})
-    xIn = x{dim};
-    xOut = y{dim};
+    xIn = rowVec(x{dim});
+    xOut = rowVec(y{dim});
     
     % Clamp the output positions to not exceed the provided input
     % positions.  Extrapolation to outside values will consequently be by
