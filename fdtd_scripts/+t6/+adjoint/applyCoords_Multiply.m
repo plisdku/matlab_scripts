@@ -1,4 +1,12 @@
 function UU = applyCoords_Multiply(U, whichCoords, xs, ys, zs, ts)
+% UU = applyCoords_Multiply(U, whichCoords, xs, ys, zs, ts)
+%
+% Evaluate U at the points in xs, ys, zs, ts.
+% whichCoords selects arguments for U from xs, ys, zs ts.  For instance:
+%  if U = U(y), then whichCoords = [2].
+%  if U = U(x,y), then whichCoords = [1 2].
+% UU will still be the appropriate size from xs, ys, zs, ts.
+
 % How does the user signal that U is separately evaluated for each field?
 % Well, if U returns four fields, that's a signal.
 % If U depends on t, that's a signal too.
@@ -95,16 +103,20 @@ fieldCoords = @(ff) {cellOrNot(xs,ff), cellOrNot(ys, ff), ...
 
 %args = fieldCoords(1); % any field would do here, 1 is arbitrary
 
-xyzft = fieldCoords(1);
-nxyzft = cellfun(@numel, xyzft);
-xyzftBig = cell(numel(whichCoords),1);
+xyzft = fieldCoords(1); % cell array containing xs, ys, zs, fields, ts
+nxyzft = cellfun(@numel, xyzft); % the sizes of xs, ys, zs, fields, ts
+xyzftBig = cell(numel(whichCoords),1); % container for ndgrid(xs,ys...)
 [xyzftBig{:}] = ndgrid(xyzft{whichCoords});
+
+% The only complication now is that U may return several fields at once...
+% we need to be field-agnostic!
 
 Uvals = U(xyzftBig{:});
 szOut = [1 1 1 1 1];
 szOut(whichCoords) = nxyzft(whichCoords);
 
-UU = reshape(Uvals, szOut);
+% here we let the field dimension be whatever size it has to be.
+UU = reshape(Uvals, szOut(1), szOut(2), szOut(3), [], szOut(5));
 
 %UU = U(args{whichCoords});
 
