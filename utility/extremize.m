@@ -11,6 +11,20 @@ function [x, fval, iter, xHist, fHist, DfHist] = extremize(fn, x0, varargin)
 %
 % [x fval iter xHist fHist DfHist] = extremize(fn, x0, varargin)
 % 
+%
+% Named parameters:
+%
+% Direction     'Minimize' or 'Maximize'
+% Bounds        N x 2 array [minX, maxX] (search bounds)
+% Deltas        [smallDelta bigDelta], relative change considered small/big
+% GrowthFactors [decel accel], step size factors
+% GoalF         value of F at which extremize will terminate
+% MaxIter       maximum number of iterations
+% MaxStep       Nx1 or scalar, maximum step size
+% Silent        true or false, governs what gets written to stdout
+% TolF          absolute change in F for termination
+% RelTolF       relative change in F for termination
+%
 
     X.Direction = 'Minimize';
     X.Bounds = [];
