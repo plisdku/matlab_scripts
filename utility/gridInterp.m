@@ -50,6 +50,10 @@ if size(A,dim) > 1 && ~isempty(x{dim})
     xIn = rowVec(x{dim});
     xOut = rowVec(y{dim});
     
+    if xIn(1) > xIn(end)
+        error('X1, X2, etc. must be ascending');
+    end
+    
     % Clamp the output positions to not exceed the provided input
     % positions.  Extrapolation to outside values will consequently be by
     % clamping of course.  I don't need anything else right now.
