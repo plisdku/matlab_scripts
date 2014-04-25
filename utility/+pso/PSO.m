@@ -25,7 +25,7 @@ function [X,FVAL,EXITFLAG,OUTPUT] = PSO(FUN,X0,LB,UB,OPTIONS,varargin)
 %   parameters replaced by values in the structure OPTIONS, an argument 
 %   created with the PSOSET function. See PSOSET for details. 
 %   Used options are SWARM_SIZE, COGNITIVE_ACC, SOCIAL_ACC, MAX_ITER,
-%   MAX_TIME, MAX_FUN_EVALS, TOLX, TOLFUN, DISPLAY and OUTPUT_FCN.
+%   MAX_TIME (min), MAX_FUN_EVALS, TOLX, TOLFUN, DISPLAY and OUTPUT_FCN.
 %   Use OPTIONS = [] as a place holder if no options are set.
 %   
 %   X=PSO(FUN,X0,LB,UB,OPTIONS,varargin) is used to supply a variable 
@@ -264,7 +264,7 @@ for i = 1:OPTIONS.MAX_ITER,
     velocities(:,:,i+1) = OPTIONS.ConstrictionFactor.*( ...
         velocities(:,:,i) + ...
         OPTIONS.COGNITIVE_ACC.*rand(OPTIONS.SWARM_SIZE,NDIM).*(PBEST(:,:,i)-SWARM(:,:,i)) + ...
-        OPTIONS.SOCIAL_ACC.*rand(OPTIONS.SWARM_SIZE,NDIM).*(repmat(GBEST(i,:),[OPTIONS.SWARM_SIZE 1 1],1)-SWARM(:,:,i)));
+        OPTIONS.SOCIAL_ACC.*rand(OPTIONS.SWARM_SIZE,NDIM).*(repmat(GBEST(i,:),[OPTIONS.SWARM_SIZE 1 1 1])-SWARM(:,:,i)));
     
     if NDIM ~= ndim0
         error('what?');
@@ -365,7 +365,10 @@ for i = 1:OPTIONS.MAX_ITER,
     if NDIM ~= ndim0
         error('what?');
     end
-    if (i >= OPTIONS.MAX_ITER*NDIM) || (i*OPTIONS.SWARM_SIZE >= OPTIONS.MAX_FUN_EVALS*NDIM*(NDIM+1)),
+    % pch 14.04.25 even if there's a reason for it, it was lying about
+    % what MAX_ITER and MAX_FUN_EVALS mean.  WTF.
+%    if (i >= OPTIONS.MAX_ITER*NDIM) || (i*OPTIONS.SWARM_SIZE >= OPTIONS.MAX_FUN_EVALS*NDIM*(NDIM+1)),
+    if (i >= OPTIONS.MAX_ITER) || (i*OPTIONS.SWARM_SIZE >= OPTIONS.MAX_FUN_EVALS),
         if strcmp(OPTIONS.DISPLAY,'iter'),
             disp('Maximum number of function evaluations or iterations reached.');
         end
