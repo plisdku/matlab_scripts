@@ -226,7 +226,8 @@ for i = 1:OPTIONS.MAX_ITER,
     % PCH 14.04.24: using parfor!!!
     iterationFitness = zeros(OPTIONS.SWARM_SIZE,1);
     
-    parfor j = 1:OPTIONS.SWARM_SIZE,
+    %parfor j = 1:OPTIONS.SWARM_SIZE,
+    for j = 1:OPTIONS.SWARM_SIZE
         iterationFitness(j) = CALCULATE_COST(FUN,SWARM(j,:,i),LB,UB,NDIM,varargin{:});
         %FITNESS(j,i) = CALCULATE_COST(FUN,SWARM(j,:,i),LB,UB,NDIM,varargin{:});
     end

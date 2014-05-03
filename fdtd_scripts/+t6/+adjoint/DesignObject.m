@@ -7,11 +7,22 @@ classdef DesignObject < handle
     
     
     methods
-        function obj = DesignObject(sim)
+        function obj = DesignObject(sim, tag)
+            
+            if ~exist('tag', 'var')
+                tag = '';
+            end
+            
+            if ~isempty(tag)
+                obj.Sim.Directory = ['sim_', tag];
+                obj.Sim.OutputDirectory = ['output_', tag];
+            else
+                obj.Sim.Directory = 'sim';
+                obj.Sim.OutputDirectory = 'output';
+            end
+            
             obj.Sim = sim;
             obj.XML = 'params.xml';
-            obj.Sim.Directory = 'sim';
-            obj.Sim.OutputDirectory = 'output';
         end
         
         function writeSimulation(obj, designParameters, mode)
