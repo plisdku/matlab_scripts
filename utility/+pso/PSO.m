@@ -139,7 +139,8 @@ DEFAULT_OPTIONS = PSOSET('SWARM_SIZE',25,... % number of particles in swarm for 
              'TOLX',1e-6,...                 % maximum difference between best and worst function evaluation in simplex
              'TOLFUN',1e-3,...               % maximum difference between the coordinates of the vertices
              'DISPLAY','none',...            % 'iter' or 'none' indicating whether user wants feedback
-             'OUTPUT_FCN',[]);               % string with output function name
+             'OUTPUT_FCN',[],...             % string with output function name
+             'NUM_THREADS',1);               % number of parallel threads
 
 % update default options with supplied options
 
@@ -226,9 +227,15 @@ for i = 1:OPTIONS.MAX_ITER,
     % PCH 14.04.24: using parfor!!!
     iterationFitness = zeros(OPTIONS.SWARM_SIZE,1);
     
-    parfor j = 1:OPTIONS.SWARM_SIZE,
-        iterationFitness(j) = CALCULATE_COST(FUN,SWARM(j,:,i),LB,UB,NDIM,varargin{:});
-        %FITNESS(j,i) = CALCULATE_COST(FUN,SWARM(j,:,i),LB,UB,NDIM,varargin{:});
+    if OPTIONS.NUM_THREADS > 1
+        parfor (j = 1:OPTIONS.SWARM_SIZE, OPTIONS.NUM_THREADS)
+            iterationFitness(j) = CALCULATE_COST(FUN,SWARM(j,:,i),LB,UB,NDIM,varargin{:});
+        end
+    else
+        for j = 1:OPTIONS.SWARM_SIZE,
+            iterationFitness(j) = CALCULATE_COST(FUN,SWARM(j,:,i),LB,UB,NDIM,varargin{:});
+            %FITNESS(j,i) = CALCULATE_COST(FUN,SWARM(j,:,i),LB,UB,NDIM,varargin{:});
+        end
     end
     
     FITNESS(:,i) = iterationFitness;

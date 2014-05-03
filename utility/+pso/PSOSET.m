@@ -62,6 +62,7 @@ if (nargin == 0) && (nargout == 0)
     fprintf('                      TOLFUN: [ positive scalar {1e-6} ]\n');
     fprintf('                     DISPLAY: [ ''iter'' or ''none'' {''iter''} ]\n');
     fprintf('                  OUTPUT_FCN: [ function_handle ]\n');
+    fprintf('                 NUM_THREADS: [ positive scalar {1} ]\n');
     fprintf('\n');
 return;
 end
@@ -77,6 +78,7 @@ Names = [
     'TOLFUN        '
     'DISPLAY       '
     'OUTPUT_FCN    '
+    'NUM_THREADS   '
     ];
 
 m = size(Names,1);
