@@ -13,7 +13,11 @@ else
     snapdragon = 'snapdragon';
 end
 
-exitval = unix([snapdragon, ' --geometry --sensitivity --outputDirectory output sim/params.xml > out.txt']);
+unixCall = sprintf('%s --geometry --sensitivity --outputDirectory %s %s/params.xml > out.txt', ...
+    snapdragon, designObject.Sim.OutputDirectory, ...
+    designObject.Sim.Directory);
+
+exitval = unix(unixCall);
 
 if exitval
     warning('Unix is unhappy with forward sim');
@@ -25,7 +29,11 @@ if exitval
 end
 
 designObject.writeSimulation(parameters, 'adjoint');
-exitval = unix([snapdragon, ' --adjoint --sensitivity --outputDirectory output sim/params.xml > out.txt']);
+
+unixCall = sprintf('%s --adjoint --sensitivity --outputDirectory %s %s/params.xml > out.txt', ...
+    snapdragon, designObject.Sim.OutputDirectory, ...
+    designObject.Sim.Directory);
+exitval = unix(unixCall);
 
 if exitval
     warning('Unix is unhappy with adjoint sim');
