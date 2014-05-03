@@ -165,8 +165,9 @@ Df = dd;
 % Now dd = U'*K*U*x.  Twice its real part is the sensitivity, I guess.
 % Df = 2*real(dd);
 
-%{
+
 function y = shape(x, sz, dims)
+% make x 
 
 allCoords = 1:numel(sz);
 
@@ -179,5 +180,5 @@ xSize = size(x);
 ySize(dims) = size(x);
 
 y = reshape(x, ySize);
-%}
+
 

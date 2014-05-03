@@ -12,6 +12,7 @@ classdef DesignObject < handle
             if ~exist('tag', 'var')
                 tag = '';
             end
+            obj.Sim = sim;
             
             if ~isempty(tag)
                 obj.Sim.Directory = ['sim_', tag];
@@ -21,7 +22,6 @@ classdef DesignObject < handle
                 obj.Sim.OutputDirectory = 'output';
             end
             
-            obj.Sim = sim;
             obj.XML = 'params.xml';
         end
         

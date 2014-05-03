@@ -1,4 +1,4 @@
-function [f dfdp dfdv] = designSensitivity(designObject, parameters, callback)
+function [f, dfdp, dfdv] = designSensitivity(designObject, parameters, callback)
 % [f dfdp dfdv] = designSensitivity(designObject, parameters, callback)
 
 %global fs;
@@ -36,7 +36,7 @@ if exitval
     return;
 end
 
-[f dfdp dfdv] = designObject.evaluate(parameters);
+[f, dfdp, dfdv] = designObject.evaluate(parameters);
 
 if isnan(f) || any(isnan(dfdp)) || any(isnan(dfdv))
     keyboard

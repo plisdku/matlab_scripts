@@ -105,13 +105,22 @@ fieldCoords = @(ff) {cellOrNot(xs,ff), cellOrNot(ys, ff), ...
 
 xyzft = fieldCoords(1); % cell array containing xs, ys, zs, fields, ts
 nxyzft = cellfun(@numel, xyzft); % the sizes of xs, ys, zs, fields, ts
-xyzftBig = cell(numel(whichCoords),1); % container for ndgrid(xs,ys...)
-[xyzftBig{:}] = ndgrid(xyzft{whichCoords});
+
+% This little kludge just allows me to use two incompatible behaviors to
+% solve problems for my thesis.  :-D
+doUseNDGRID = 0;
+
+if doUseNDGRID
+    xyzftBig = cell(numel(whichCoords),1); % container for ndgrid(xs,ys...)
+    [xyzftBig{:}] = ndgrid(xyzft{whichCoords});
+    Uvals = U(xyzftBig{:});
+else
+    Uvals = U(xyzft{whichCoords});
+end
 
 % The only complication now is that U may return several fields at once...
 % we need to be field-agnostic!
 
-Uvals = U(xyzftBig{:});
 szOut = [1 1 1 1 1];
 szOut(whichCoords) = nxyzft(whichCoords);
 
