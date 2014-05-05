@@ -20,7 +20,7 @@ if strcmpi(mode, 'forward')
     
 elseif strcmpi(mode, 'adjoint')
     
-    fname = ['output' filesep meas.filename];
+    fname = [sim.OutputDirectory filesep meas.filename];
     [f Df] = adjoint.evalQuadraticFormFile(fname, meas.filters, meas.kernel);
     [adjCurrents permutedFields] = adjoint.adjointCurrentNames(fname);
     of = OutputFile(fname);

@@ -82,10 +82,11 @@ classdef DesignObject < handle
             end
         end
         
-        function [f dfdp dfdv dvdp] = evaluate(obj, designParameters)
+        function [f, dfdp, dfdv, dvdp] = evaluate(obj, designParameters)
             
-            [dfdp dfdv dvdp] = t6.adjoint.calculateAdjointSensitivity(...
-                obj.Sim.Grid.NodeGroup, designParameters);
+            [dfdp, dfdv, dvdp] = t6.adjoint.calculateAdjointSensitivity(...
+                obj.Sim.Grid.NodeGroup, designParameters, ...
+                obj.Sim.OutputDirectory);
                 
             for mm = 1:numel(obj.Sim.Grid.Measurements)
                 meas = obj.Sim.Grid.Measurements{mm};

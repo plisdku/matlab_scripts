@@ -1,4 +1,5 @@
-function [dfdp, dfdv, dvdp] = calculateAdjointSensitivity(node, parameters)
+function [dfdp, dfdv, dvdp] = calculateAdjointSensitivity(node, parameters,...
+    outDir)
 
 import t6.*
 import t6.adjoint.*
@@ -9,7 +10,12 @@ adjFileNames = {'boundary_adjoint_exx', 'boundary_adjoint_eyy', ...
 adjRevFileNames = {'boundary_adjoint_exx.rev', 'boundary_adjoint_eyy.rev',...
     'boundary_adjoint_ezz.rev'};
 
-[coeffs, verts] = readDeps('output/Depsilon');
+if ~exist('outDir')
+    outDir = 'output';
+end
+out = @(str) sprintf('%s/%s', outDir, str);
+
+[coeffs, verts] = readDeps(out('Depsilon'));
 
 bigJacobian = node.jacobian(parameters);
 vertices = node.vertices(parameters);
@@ -21,9 +27,9 @@ for fieldXYZ = 1:3
 
 fprintf('Reversing file, field %i of 3\n', fieldXYZ);
 
-fwdDE = OutputFile(['output/', fwdFileNames{fieldXYZ}]);
-adjoint.reverseFile(['output/', adjFileNames{fieldXYZ}]);
-adjDE = OutputFile(['output/', adjRevFileNames{fieldXYZ}]);
+fwdDE = OutputFile(out(fwdFileNames{fieldXYZ}));
+adjoint.reverseFile(out(adjFileNames{fieldXYZ}));
+adjDE = OutputFile(out(adjRevFileNames{fieldXYZ}));
 
 assert(fwdDE.numFramesAvailable() == adjDE.numFramesAvailable());
 numT = fwdDE.numFramesAvailable();
