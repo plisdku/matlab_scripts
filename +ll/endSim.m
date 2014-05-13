@@ -794,10 +794,14 @@ function nonPMLChunks = makeNonPMLPieces(meshes, bounds)
     end
 end
 
+function r = calcBoundingBox(A)
+    r = [min(A) max(A)];
+end
+
 function movableMeshDomains = findMovableBoundaries(model, meshes)
     movableMeshDomains = [];
 
-    calcBoundingBox = @(A) [min(A) max(A)];
+    %calcBoundingBox = @(A) [min(A) max(A)];
     
     for mm = 1:numel(meshes)    
     if any(meshes{mm}.jacobian(:))
@@ -817,7 +821,7 @@ end
 
 function domainMaterial = findDomainMaterials(model, geom, nonPMLChunks, pmlChunks)
 
-    calcBoundingBox = @(A) [min(A) max(A)];
+    %calcBoundingBox = @(A) [min(A) max(A)];
 
     domainMaterial = zeros(geom.getNDomains, 1);
 
