@@ -15,8 +15,8 @@ function [vertices faces] = nefIntersection(v1, f1, v2, f2)
     end
 
 
-    inFile = [tempdir 'nefTemp.txt'];
-    outFile = [tempdir 'nefOut.txt'];
+    inFile = [tempdir sprintf('nefTemp%1.4f.txt', now)];
+    outFile = [tempdir sprintf('nefOut%1.4f.txt', now)];
 
     fh = fopen(inFile, 'w');
     neflab.writeMultiOFF(fh, v1, f1);
