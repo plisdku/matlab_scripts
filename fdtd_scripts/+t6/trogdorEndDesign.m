@@ -1,4 +1,7 @@
 function designObject = trogdorEndDesign(varargin)
+% designObject = trogdorEndDesign(varargin)
+%
+% Tag     simulation tag for output and sim directories
 
 X.Tag = '';
 X = parseargs(X, varargin{:});

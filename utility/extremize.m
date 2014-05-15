@@ -24,6 +24,7 @@ function [x, fval, iter, xHist, fHist, DfHist] = extremize(fn, x0, varargin)
 % Silent        true or false, governs what gets written to stdout
 % TolF          absolute change in F for termination
 % RelTolF       relative change in F for termination
+% Callback      a function f(xHistory, fHistory, DfHistory)
 %
 
     X.Direction = 'Minimize';
@@ -36,6 +37,7 @@ function [x, fval, iter, xHist, fHist, DfHist] = extremize(fn, x0, varargin)
     X.Silent = false;
     X.TolF = 1e-10;
     X.RelTolF = 1e-6;
+    X.Callback = @(xHist, fHist, DfHist) pause(0);
 
     X = parseargs(X, varargin{:});
     
@@ -61,7 +63,6 @@ function [x, fval, iter, xHist, fHist, DfHist] = extremize(fn, x0, varargin)
     fHist = [];
     DfHist = [];
     xHist = [];
-    xPrev = x0;
     xBest = x0;
     fBest = Inf;
     stepSizes = 0.1*X.MaxStep;
@@ -82,6 +83,8 @@ function [x, fval, iter, xHist, fHist, DfHist] = extremize(fn, x0, varargin)
         fHist(end+1) = f;
         DfHist(end+1,:) = Df;
         xHist(:,end+1) = x;
+        
+        X.Callback(xHist, fHist, DfHist);
         
         % Check if we've reached the goal value.
         if (fSign < 0 && f_eval > X.GoalF) || ...

@@ -39,6 +39,7 @@ function [eps, lambdas] = getPermittivity(matName, varargin)
 
     if ~isempty(X.Wavelengths)
         eps = spline(lambdas, eps, X.Wavelengths);
+        lambdas = X.Wavelengths;
     else
         if length(X.WavelengthRange) ~= 2
             error('Wavelength range must be a 2-element vector.');

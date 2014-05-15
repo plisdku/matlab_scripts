@@ -38,7 +38,7 @@ return
 function path_ = xpdf_path
 % Return a valid path
 % Start with the currently set path
-path_ = user_string('pdftops');
+path_ = export_fig.user_string('pdftops');
 % Check the path works
 if check_xpdf_path(path_)
     return
