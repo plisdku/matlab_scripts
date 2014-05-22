@@ -77,8 +77,8 @@ function [x, fval, iter, xHist, fHist, DfHist] = extremize(fn, x0, varargin)
         % ... and flip the sign if we're maximizing instead of minimizing.
         [f_eval, Df_eval] = fn(x);
         
-        fHist(end+1) = f;
-        DfHist(end+1,:) = Df;
+        fHist(end+1) = f_eval;
+        DfHist(end+1,:) = Df_eval;
         xHist(:,end+1) = x;
         
         f = fSign*f_eval;
