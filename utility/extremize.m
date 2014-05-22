@@ -187,6 +187,7 @@ function [x, fval, iter, xHist, fHist, DfHist] = extremize(fn, x0, varargin)
         unitGrad(isnan(unitGrad) | isinf(unitGrad)) = 0;
     
         step = -stepSizes .* unitGrad';
+        step(activeConstraints) = 0;
     
         xPrev = x;
         x(:) = x(:) + step(:);

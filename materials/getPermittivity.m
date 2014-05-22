@@ -7,6 +7,9 @@ function [eps, lambdas] = getPermittivity(matName, varargin)
 % lambdaRange = [lambdaMin, lambdaMax] will truncate the returned data to a
 % given wavelength range.
 %
+% [epsilon, lambda] = getPermittivity(materialName, 'Wavelengths', lams)
+% will return the permittivity interpolated to the desired wavelengths (m).
+%
 % Available materials include
 %   Ag
 %   Al
