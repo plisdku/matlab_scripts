@@ -84,7 +84,6 @@ function [x, fval, iter, xHist, fHist, DfHist] = extremize(fn, x0, varargin)
         f = fSign*f_eval;
         Df = fSign*Df_eval;
         
-        
         X.Callback(xHist, fHist, DfHist);
         
         % Check if we've reached the goal value.
@@ -137,14 +136,14 @@ function [x, fval, iter, xHist, fHist, DfHist] = extremize(fn, x0, varargin)
         end
     
         if iter >= 2
-            isBetter = (fHist(end) < fHist(end-1));
+            isBetter = (fSign*fHist(end) < fSign*fHist(end-1));
         
             if ~isBetter % step halfway across and average the gradients.  uh yeah.
                 stepSizes = stepSizes * shrinkFactor;
                 x = 0.5*(xBest + x);
                 %DfHist(end,:) = DfHist(end-1,:);
             
-                Df = 0.5*(DfHist(end-1,:) + Df);
+                Df = 0.5*(fSign*DfHist(end-1,:) + Df);
             
                 report('\tregressed and averaging\n');
             
@@ -189,7 +188,7 @@ function [x, fval, iter, xHist, fHist, DfHist] = extremize(fn, x0, varargin)
     
         step = -stepSizes .* unitGrad';
         step(activeConstraints) = 0;
-    
+        
         xPrev = x;
         x(:) = x(:) + step(:);
     
