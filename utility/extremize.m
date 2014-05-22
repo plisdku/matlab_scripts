@@ -77,12 +77,13 @@ function [x, fval, iter, xHist, fHist, DfHist] = extremize(fn, x0, varargin)
         % ... and flip the sign if we're maximizing instead of minimizing.
         [f_eval, Df_eval] = fn(x);
         
-        f = fSign*f_eval;
-        Df = fSign*Df_eval;
-        
         fHist(end+1) = f;
         DfHist(end+1,:) = Df;
         xHist(:,end+1) = x;
+        
+        f = fSign*f_eval;
+        Df = fSign*Df_eval;
+        
         
         X.Callback(xHist, fHist, DfHist);
         
