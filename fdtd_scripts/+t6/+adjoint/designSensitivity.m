@@ -58,5 +58,5 @@ if nargin > 2
 end
 
 % Change the signs here to increase rather than decrease the objective function
-dfdp = -dfdp;
-f = -f;
+%dfdp = -dfdp;
+%f = -f;
