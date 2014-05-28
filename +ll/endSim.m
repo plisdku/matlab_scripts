@@ -735,7 +735,7 @@ function meshes = uniteMaterials(inMeshes)
                 meshes{iMat}.vertices, meshes{iMat}.faces);
         else
             meshes{iMat}.vertices = inMeshes{mm}.vertices;
-            meshes{iMat}.faces = inMeshes{iMat}.faces;
+            meshes{iMat}.faces = inMeshes{mm}.faces;
         end
         
     end
@@ -757,6 +757,7 @@ function pmlChunks = makePMLPieces(pmlMeshes, meshes)
     
     for pmlIndex = 1:numPMLs
     for ss = 1:numMeshes
+    if ~isempty(meshes{ss})
         [chunkVertices, chunkFaces] = neflab.nefIntersection(...
             meshes{ss}.vertices, meshes{ss}.faces,...
             pmlMeshes{pmlIndex}.vertices, pmlMeshes{pmlIndex}.faces);
@@ -768,6 +769,7 @@ function pmlChunks = makePMLPieces(pmlMeshes, meshes)
             pmlChunks{pmlChunkIndex}.faces = chunkFaces;
             pmlChunks{pmlChunkIndex}.material = ss;
         end
+    end
     end    
     end
 
@@ -786,11 +788,13 @@ function nonPMLChunks = makeNonPMLPieces(meshes, bounds)
 
     numMeshes = numel(meshes);
     for mm = 1:numMeshes
+    if ~isempty(meshes{mm})
         [nonPMLChunks{mm}.vertices, nonPMLChunks{mm}.faces] = ...
             neflab.nefIntersection(meshes{mm}.vertices, ...
             meshes{mm}.faces, ...
             nonPMLVertices, nonPMLFaces);
         nonPMLChunks{mm}.material = mm;
+    end
     end
 end
 
