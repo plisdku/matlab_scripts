@@ -19,4 +19,17 @@ function c = allWords(numSymbols, wordLength)
 %          1     1     1
 %
 
-c = dec2base(0:numSymbols^wordLength-1, numSymbols) - '0';
+% slow, limited, built-in way...
+%c = dec2base(0:numSymbols^wordLength-1, numSymbols) - '0';
+
+numWords = numSymbols^wordLength;
+
+c = zeros(numSymbols^wordLength, wordLength);
+
+sequence = (0:numWords-1)';
+
+divisor = 1;
+for dim = wordLength:-1:1
+    c(:,dim) = floor(rem(sequence/divisor, numSymbols));
+    divisor = divisor * numSymbols;
+end

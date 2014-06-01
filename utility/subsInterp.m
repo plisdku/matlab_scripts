@@ -9,7 +9,11 @@ if nargin == 2
     interpDims = 1:ndims(A);
     keepDims = [];
 else
-    keepDims = setdiff(1:ndims(A), interpDims);
+    % setdiff is so bloody slow!
+    %keepDims = setdiff(1:ndims(A), interpDims);
+    keepDims = true(1, ndims(A));
+    keepDims(interpDims) = false;
+    keepDims = find(keepDims);
 end
 
 nInterp = numel(interpDims);
@@ -31,12 +35,12 @@ end
 lowerSubscript = floor(samplePoints);
 upperSubscript = ceil(samplePoints);
 subscripts = permute(cat(3, lowerSubscript, upperSubscript), [1 3 2]);
-assert(equalSize(size(subscripts), [nSamples 2 nInterp]));
+%assert(equalSize(size(subscripts), [nSamples 2 nInterp]));
 
 % Weight combinations
 upperWeight = permute(samplePoints - lowerSubscript, [1 3 2]);
 weights = cat(2, 1 - upperWeight, upperWeight);
-assert(equalSize(size(weights), [nSamples 2 nInterp]));
+%assert(equalSize(size(weights), [nSamples 2 nInterp]));
 
 % What I have now:
 %
@@ -66,10 +70,10 @@ assert(equalSize(size(weights), [nSamples 2 nInterp]));
 
 words = allWords(2, nInterp) + 1;
 nWords = size(words,1);
-assert(equalSize(size(words), [2^nInterp, nInterp]));
+%assert(equalSize(size(words), [2^nInterp, nInterp]));
 
 ll = sub2ind([2 nInterp], words, repmat(1:nInterp, nWords, 1));
-assert(equalSize(size(ll), size(words)));
+%assert(equalSize(size(ll), size(words)));
 
 % Now ll are linear indices into the arrays of 
 % 1) index combinations, [x0 y0; x1 y1], and
@@ -81,7 +85,7 @@ assert(equalSize(size(ll), size(words)));
 %
 
 sampleSubscripts = reshape(subscripts(:,ll), nSamples, [], nInterp);
-assert(equalSize(size(sampleSubscripts), [nSamples, nWords, nInterp]));
+%assert(equalSize(size(sampleSubscripts), [nSamples, nWords, nInterp]));
 % for each sample:
 % sampleSubscripts(n,:,:) = [x0 y0
 %                            x0 y1
@@ -89,23 +93,24 @@ assert(equalSize(size(sampleSubscripts), [nSamples, nWords, nInterp]));
 %                            x1 y1]
 
 sampleCoordWeights = reshape(weights(:,ll), nSamples, [], nInterp);
-assert(equalSize(size(sampleCoordWeights), [nSamples, nWords, nInterp]));
+%assert(equalSize(size(sampleCoordWeights), [nSamples, nWords, nInterp]));
 % for each sample:
 % sampleCoordWeights(n,:,:) = [wx0 wy0
 %                              wx0 wy1
 %                              wx1 wy0
 %                              wx1 wy1]
 
-sampleIndices = reshape(...
-    vecSub2Ind(szInterp, reshape(sampleSubscripts, [], nInterp)), ...
-    nSamples, []);
-assert(equalSize(size(sampleIndices), [nSamples nWords]));
+ind = vecSub2Ind(szInterp, reshape(sampleSubscripts, [], nInterp));
+sampleIndices = reshape(ind, nSamples, []);
+%assert(equalSize(size(sampleIndices), [nSamples nWords]));
 % for each sample:
 % sampleIndices(n,:) = [ indexOf(x0,y0) indexOf(x0, y1) ... ]
 % where indexOf() is from sub2ind
 
-sampleWeights = reshape(prod(sampleCoordWeights,3), nSamples, []);
-assert(equalSize(size(sampleWeights), [nSamples nWords]));
+sampleWeights = reshape(prod(sampleCoordWeights,3), ...
+    [ones(1,nKeep), nSamples, nWords]);
+% the ones(1,nKeep) is so I don't need to shiftdim it later.
+%assert(equalSize(size(sampleWeights), [nSamples nWords]));
 % for each sample:
 % sampleWeights(n,:) = [ wx0*wy0 wx0*wy1 wx1*wy0 wx1*wy1 ]
 
@@ -113,24 +118,46 @@ assert(equalSize(size(sampleWeights), [nSamples nWords]));
 % pointIndices is the right size now, and we need to get the corresponding
 % values of B.
 
+%% Create a sparse matrix to do this operation.
+
+numInterpElements = prod(szInterp);
+numKeepElements = prod(szKeep);
+
+rows = repmat((1:1000)', 1, 8);
+interpMatrix = sparse(rows(:), sampleIndices(:), sampleWeights(:), ...
+    nSamples, prod(szInterp));
+
+C = permute(A, [interpDims keepDims nDims+1]);
+C = reshape(C, numInterpElements, []);
+
+B = interpMatrix*C;
+B = reshape(B, [nSamples szKeep 1]);
+
+%{
 B = permute(A, [keepDims interpDims nDims+1]);
 
-indicesB = repmat({':'}, 1, numel(keepDims)+1);
-indicesB{end} = sampleIndices;
-B = reshape(B(indicesB{:}), [szKeep, size(sampleIndices)]);
+%indicesB = repmat({':'}, 1, numel(keepDims)+1);
+%indicesB{end} = sampleIndices;
+indicesB = {':',':',':',':',':',':',':',':',':',':'};
+indicesB{nKeep+1} = sampleIndices;
+
+Bsubs = B(indicesB{1:nKeep+1});
+B = reshape(Bsubs, [szKeep, size(sampleIndices)]);
+%B = reshape(B(indicesB{1:nKeep+1}), [szKeep, size(sampleIndices)]);
 
 % Size of B is now [szKeep nSamples nWords].  Sum over the nWords.
 szB = size(B);
 if nKeep > 0
     assert(isequal(szB(1:nKeep), szKeep));
 end
-assert(isequal(szB(nKeep+1), nSamples));
-assert(isequal(szB(nKeep+2), size(sampleIndices,2)));
+%assert(isequal(szB(nKeep+1), nSamples));
+%assert(isequal(szB(nKeep+2), size(sampleIndices,2)));
 
-B_addends = bsxfun(@times, B, shiftdim(sampleWeights, -nKeep));
+B_addends = bsxfun(@times, B, sampleWeights); %shiftdim(sampleWeights, -nKeep));
 
 B = sum(B_addends, nKeep+2);
 B = permute(B, [ndims(B), 1:ndims(B)-1]); % put interpolation at the front
+%}
 
 end
 

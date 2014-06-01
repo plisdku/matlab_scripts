@@ -17,4 +17,5 @@ assert(size(ijk,2) == numdims);
 
 sliceSize = [1 cumprod(sz(1:end-1))];
 
-ii = 1 + (ijk-1)*sliceSize';
+%ii = 1 + (ijk-1)*sliceSize';
+ii = 1 + ijk*sliceSize' - sum(sliceSize); % subtle, faster!
