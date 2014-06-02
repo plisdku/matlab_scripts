@@ -104,7 +104,14 @@ subscripts = bsxfun(@times, distance, 1./dx(1:nInterp)) + 1;
 if nKeep > 0
     B = subsInterp(A, subscripts, interpDims(1:nInterp));
 else
-    gridMonster = griddedInterpolant(A);
+    % I tried using a persistent variable here but it didn't seem to help.
+    %persistent gridMonster;
+    %if isempty(gridMonster) || ~isequal(size(gridMonster.Values), size(A))
+        gridMonster = griddedInterpolant(A);
+    %else
+    %    gridMonster.Values = A;
+    %end
+    
     subsCell = num2cell(subscripts,1);
     B = gridMonster(subsCell{:});
 end
