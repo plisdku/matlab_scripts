@@ -123,7 +123,7 @@ sampleWeights = reshape(prod(sampleCoordWeights,3), ...
 numInterpElements = prod(szInterp);
 numKeepElements = prod(szKeep);
 
-rows = repmat((1:1000)', 1, 8);
+rows = repmat((1:nSamples)', 1, 8);
 interpMatrix = sparse(rows(:), sampleIndices(:), sampleWeights(:), ...
     nSamples, prod(szInterp));
 

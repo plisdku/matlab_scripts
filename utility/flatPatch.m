@@ -56,7 +56,6 @@ if isa(faceFilter, 'function_handle')
             X.Vertices(X.Faces(ff,2),:), ...
             X.Vertices(X.Faces(ff,3),:));
     end
-    
     X.Faces = X.Faces(faceFlags,:);
 end
 
