@@ -5,6 +5,18 @@ function plotOutput(fileName, varargin)
 %   without pause.  Use getOutputFrames or openOutputFile and
 %   getOutputFrame to work with the data.
 %
+% Named arguments:
+%
+%   Period
+%   Ylim
+%   CLim
+%   Colormap
+%   UnitString
+%   FilePattern
+%   Subplots
+%   Times
+%   Callback
+%
 
 import t6.*
 
