@@ -25,7 +25,7 @@ vertJacobian = sparse(size(vertices, 1), 1);
 
 for fieldXYZ = 1:3
 
-fprintf('Reversing file, field %i of 3\n', fieldXYZ);
+%fprintf('Reversing file, field %i of 3\n', fieldXYZ);
 
 fwdDE = OutputFile(out(fwdFileNames{fieldXYZ}));
 adjoint.reverseFile(out(adjFileNames{fieldXYZ}));
@@ -68,8 +68,8 @@ adjBuffer(:,bufferIndex(tAdjFirst:tAdjLast)) = adjDE.readFrames(...
 tBeginChunk = 1;
 
 while tBeginChunk <= numT
-    fprintf('Processing chunks %i to %i\n', tBeginChunk, ...
-        tBeginChunk+chunkFrames-1);
+    %fprintf('Processing chunks %i to %i\n', tBeginChunk, ...
+    %    tBeginChunk+chunkFrames-1);
     tEndChunk = min(numT, tBeginChunk + chunkFrames - 1);
     
     % First we load the next frame into the buffer.

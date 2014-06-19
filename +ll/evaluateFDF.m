@@ -43,7 +43,7 @@ maxDF = max(abs(DF(:)));
 numFaces = size(faces, 1);
 integrals = zeros(numParams, numFaces);
 for ff = 1:numFaces
-    fprintf('Face %i of %i\n', ff, numFaces);
+    %fprintf('Face %i of %i\n', ff, numFaces);
     % Obtain the three corners of the triangle
     vx = verts(faces(ff,:),1);
     vy = verts(faces(ff,:),2);
