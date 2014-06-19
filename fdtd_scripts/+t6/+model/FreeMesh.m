@@ -6,6 +6,7 @@ classdef FreeMesh < t6.model.Node
         freeDirections = [];
         permittivity = 'none';
         permeability = 'none';
+        matrix = [];
     end
     
     
@@ -15,6 +16,7 @@ classdef FreeMesh < t6.model.Node
             if nargin > 0
                 X.Vertices = [];
                 X.FreeDirections = [];
+                X.Matrix = [];
                 X.Faces = [];
                 X.Permittivity = [];
                 X.Permeability = [];
@@ -23,6 +25,11 @@ classdef FreeMesh < t6.model.Node
                 obj.permittivity = X.Permittivity;
                 obj.permeability = X.Permeability;
                 obj.vertices = X.Vertices;
+                obj.matrix = X.Matrix;
+                
+                if ~isempty(X.Matrix)
+                    X.FreeDirections = reshape(any(X.Matrix,2), 3, [])';
+                end
                 
                 if ~isempty(X.FreeDirections)
                     obj.freeDirections = logical(X.FreeDirections);
@@ -45,10 +52,25 @@ classdef FreeMesh < t6.model.Node
                 params = zeros(nnz(obj.freeDirections), 1);
             end
             
+            if ~isempty(obj.matrix)
+                [myVerts, ~, myJacobian] = obj.matrixMesh(params);
+            else
+                [myVerts, ~, myJacobian] = obj.defaultMesh(params);
+            end
+            
+            m = { Mesh(myVerts, obj.faces, myJacobian, obj.permittivity, ...
+                obj.permeability) };
+            
+        end
+        
+        function [myVerts, myFreeDirs, myJacobian] = defaultMesh(obj, params)
+            
             numParams = numel(params);
             if nnz(obj.freeDirections)
                 assert(numParams == nnz(obj.freeDirections));
             end
+            
+            
             
             % All x first, then all y, then all z.
             movedVerts = obj.vertices;
@@ -80,8 +102,14 @@ classdef FreeMesh < t6.model.Node
             myJacobian = sparse(coord, param, ones(numParams,1), ...
                 3*numVertices, numParams);
             
-            m = { Mesh(myVerts, obj.faces, myJacobian, obj.permittivity, ...
-                obj.permeability) };
+        end
+        
+        function [myVerts, myFreeDirs, myJacobian] = matrixMesh(obj, params)
+            
+            v0 = transpose(obj.vertices);
+            myVerts = v0(:) + obj.matrix * params;
+            myFreeDirs = any(obj.matrix, 2);
+            myJacobian = obj.matrix;
             
         end
         
