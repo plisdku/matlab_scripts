@@ -11,17 +11,18 @@ import t5.*
 
 climCell = {};
 
+X.CLim = [];
+X.Period = 1;
+X.Callback = [];
+if exist('orangecrush', 'file')
+    X.Colormap = 'orangecrush';
+else
+    X.Colormap = [];
+end
+
 if nargin == 2
     period = varargin{1};
 else
-    X.CLim = [];
-    X.Period = 1;
-    X.Callback = [];
-    if exist('orangecrush', 'file')
-        X.Colormap = 'orangecrush';
-    else
-        X.Colormap = [];
-    end
     X = parseargs(X, varargin{:});
     
     period = X.Period;

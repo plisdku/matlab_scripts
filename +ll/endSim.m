@@ -357,7 +357,7 @@ fprintf('Mesh size purportedly %i\n', globalSize.getDouble('hmax'));
 meshingSucceeded = false;
 attempts = 1;
 hmax = globalHmax;
-while ~meshingSucceeded
+while ~meshingSucceeded && attempts < 10
     try
         attempts = attempts + 1;
         globalSize.set('hmax', hmax);
@@ -370,6 +370,10 @@ while ~meshingSucceeded
         hmax = globalHmax + ((-1)^attempts)*ceil(attempts/2);
         fprintf('Trying again at size %i\n', hmax);
     end
+end
+
+if ~meshingSucceeded
+    error('Meshing failed!');
 end
 
 model.save([pwd filesep X.MPH]);

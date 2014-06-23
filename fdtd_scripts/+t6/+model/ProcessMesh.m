@@ -25,7 +25,7 @@ classdef ProcessMesh < t6.model.Node
             obj.permeability = child.permeability;
         end
         
-        function [m T_total] = meshes(obj, varargin)
+        function [m, T_total] = meshes(obj, varargin)
             
             if nargin > 1
                 params = varargin{1};
@@ -74,6 +74,7 @@ classdef ProcessMesh < t6.model.Node
                     % Use: 'Subdivide'
                     % Use: 'Subdivide', vertexPredicate
                     
+                    %fprintf('Subdivide (#%i)\n', iCur);
                     if iCur+1 <= numInstructions && ...
                         ~ischar(obj.instructions{iCur+1})
                         predicate = obj.instructions{iCur+1};

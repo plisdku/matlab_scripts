@@ -30,10 +30,14 @@ function [vertices faces] = nefIntersection(v1, f1, v2, f2)
         cmd = sprintf('NefLab intersection < %s > %s', inFile, outFile);
     end
 
-    [status stdout] = unix(cmd);
+    [status, stdout] = unix(cmd);
+
+    if status
+        keyboard;
+    end
 
     fh = fopen(outFile, 'r');
-    [vertices faces] = neflab.readNefPolyhedron(fh);
+    [vertices, faces] = neflab.readNefPolyhedron(fh);
     fclose(fh);
 
 

@@ -1,4 +1,4 @@
-function [vertices faces] = nefDifference(v1, f1, v2, f2)
+function [vertices, faces] = nefDifference(v1, f1, v2, f2)
 % nefDifference    Calculate difference of two polyhedra
 %
 % [vertices faces] = nefDifference(v1, f1, v2, f2)
@@ -29,8 +29,11 @@ else
     cmd = sprintf('NefLab difference < %s > %s', inFile, outFile);
 end
 
-[status stdout] = unix(cmd);
+[status, stdout] = unix(cmd);
 
+if status
+    keyboard;
+end
 
 fh = fopen(outFile, 'r');
 [vertices faces] = neflab.readNefPolyhedron(fh);
