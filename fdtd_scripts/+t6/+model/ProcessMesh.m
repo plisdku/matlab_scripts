@@ -108,8 +108,13 @@ classdef ProcessMesh < t6.model.Node
                 
             end
             
+            
             % Transform the Jacobian!
             j0 = mChild{1}.jacobian;
+            
+            if isempty(T_total)
+                T_total = speye(size(j0,1)/3);
+            end
             
             jx = T_total*j0(1:3:end,:);
             jy = T_total*j0(2:3:end,:);

@@ -4,6 +4,7 @@ function endSim(varargin)
 X.MPH = 'fromMatlab.mph';
 X.StopEarly = false;
 X.SaveFields = false;
+X.Gradient = true;
 X = parseargs(X, varargin{:});
 
 global LL_MODEL;
@@ -254,40 +255,42 @@ end
 
 %% Adjoint physics!
 
-fprintf('Adjoint physics\n')
+if X.Gradient
+    fprintf('Adjoint physics\n')
 
-model.physics.create('emw2', 'ElectromagneticWaves', 'geom1');
-model.physics('emw2').prop('ShapeProperty').set('order_electricfield', '3');
-model.physics('emw2').prop('BackgroundField').set('SolveFor', 'fullField');
-%% Adjoint current sources!
+    model.physics.create('emw2', 'ElectromagneticWaves', 'geom1');
+    model.physics('emw2').prop('ShapeProperty').set('order_electricfield', '3');
+    model.physics('emw2').prop('BackgroundField').set('SolveFor', 'fullField');
+    %% Adjoint current sources!
 
-numMeasurements = numel(LL_MODEL.measurements);
+    numMeasurements = numel(LL_MODEL.measurements);
 
-measurementSel = model.selection.create('measSel', 'Union');
-measurementSel.geom('geom1', 2);
-measurementSel.name('Measurement selection');
-measSel = {};
+    measurementSel = model.selection.create('measSel', 'Union');
+    measurementSel.geom('geom1', 2);
+    measurementSel.name('Measurement selection');
+    measSel = {};
 
-for ss = 1:numMeasurements
-    planeName = sprintf('geom1_wp_meas%i_bnd', ss);
-    probeName = sprintf('probe%i', ss);
-    
-    currName = sprintf('adjCurrentSource%i', ss);
-    surfCurr = model.physics('emw2').feature.create(currName, ...
-        'SurfaceCurrent', 2);
-    surfCurr.selection.named(planeName);
-    %surfCurr.set('weakExpression', '0');
-    
-    surfCurr.set('Js0', ...
-        {LL_MODEL.measurements{ss}.Jx, ...
-        LL_MODEL.measurements{ss}.Jy, ...
-        LL_MODEL.measurements{ss}.Jz});
-    surfCurr.name(sprintf('Objective current %i', ss));
-    
-    measSel = {measSel{:} planeName};
-end
+    for ss = 1:numMeasurements
+        planeName = sprintf('geom1_wp_meas%i_bnd', ss);
+        probeName = sprintf('probe%i', ss);
 
-measurementSel.set('input', measSel);
+        currName = sprintf('adjCurrentSource%i', ss);
+        surfCurr = model.physics('emw2').feature.create(currName, ...
+            'SurfaceCurrent', 2);
+        surfCurr.selection.named(planeName);
+        %surfCurr.set('weakExpression', '0');
+
+        surfCurr.set('Js0', ...
+            {LL_MODEL.measurements{ss}.Jx, ...
+            LL_MODEL.measurements{ss}.Jy, ...
+            LL_MODEL.measurements{ss}.Jz});
+        surfCurr.name(sprintf('Objective current %i', ss));
+
+        measSel = {measSel{:} planeName};
+    end
+
+    measurementSel.set('input', measSel);
+end % adjoint physics
 
 %% View!
 
@@ -366,9 +369,10 @@ while ~meshingSucceeded && attempts < 10
         model.mesh('mesh1').run;
         meshingSucceeded = true;
     catch exc
-        warning('Meshing attempt %i failed!\n');
-        hmax = globalHmax + ((-1)^attempts)*ceil(attempts/2);
-        fprintf('Trying again at size %i\n', hmax);
+        warning('Meshing attempt %i failed!\n', attempts);
+        hmax = num2str(...
+            str2double(globalHmax) + ((-1)^attempts)*ceil(attempts/2));
+        fprintf('Trying again at size %s\n', hmax);
     end
 end
 
@@ -389,10 +393,11 @@ model.study('std1').feature.create('freq', 'Frequency');
 model.study('std1').feature('freq').set('activate', {'emw' 'on' 'emw2' 'off'});
 model.study('std1').feature('freq').set('plist', freqStr);
 
-%model.study.create('std2');
-model.study('std1').feature.create('freq1', 'Frequency');
-model.study('std1').feature('freq1').set('activate', {'emw' 'off' 'emw2' 'on'});
-model.study('std1').feature('freq1').set('plist', freqStr);
+if X.Gradient
+    model.study('std1').feature.create('freq1', 'Frequency');
+    model.study('std1').feature('freq1').set('activate', {'emw' 'off' 'emw2' 'on'});
+    model.study('std1').feature('freq1').set('plist', freqStr);
+end
 
 fprintf('Solution\n')
 
@@ -411,17 +416,20 @@ model.sol('sol1').feature('s1').feature('i1').feature.create('mg1', 'Multigrid')
 model.sol('sol1').feature('s1').feature('i1').feature('mg1').feature('pr').feature.create('sv1', 'SORVector');
 model.sol('sol1').feature('s1').feature('i1').feature('mg1').feature('po').feature.create('sv1', 'SORVector');
 %model.sol('sol1').feature('s1').feature.remove('fcDef');
+
+if X.Gradient
 % step 2: adjoint
-model.sol('sol1').feature.create('st2', 'StudyStep');
-model.sol('sol1').feature.create('v2', 'Variables');
-model.sol('sol1').feature.create('s2', 'Stationary');
-%model.sol('sol1').feature('s2').feature.create('p1', 'Parametric');
-%model.sol('sol1').feature('s2').feature.create('fc1', 'FullyCoupled');
-model.sol('sol1').feature('s2').feature.create('i1', 'Iterative');
-model.sol('sol1').feature('s2').feature('i1').feature.create('mg1', 'Multigrid');
-model.sol('sol1').feature('s2').feature('i1').feature('mg1').feature('pr').feature.create('sv1', 'SORVector');
-model.sol('sol1').feature('s2').feature('i1').feature('mg1').feature('po').feature.create('sv1', 'SORVector');
-%model.sol('sol1').feature('s2').feature.remove('fcDef');
+    model.sol('sol1').feature.create('st2', 'StudyStep');
+    model.sol('sol1').feature.create('v2', 'Variables');
+    model.sol('sol1').feature.create('s2', 'Stationary');
+    %model.sol('sol1').feature('s2').feature.create('p1', 'Parametric');
+    %model.sol('sol1').feature('s2').feature.create('fc1', 'FullyCoupled');
+    model.sol('sol1').feature('s2').feature.create('i1', 'Iterative');
+    model.sol('sol1').feature('s2').feature('i1').feature.create('mg1', 'Multigrid');
+    model.sol('sol1').feature('s2').feature('i1').feature('mg1').feature('pr').feature.create('sv1', 'SORVector');
+    model.sol('sol1').feature('s2').feature('i1').feature('mg1').feature('po').feature.create('sv1', 'SORVector');
+    %model.sol('sol1').feature('s2').feature.remove('fcDef');
+end
 
 % step 1: compile forward
 model.sol('sol1').feature('st1').name('Compile Equations: Frequency Domain');
@@ -434,17 +442,20 @@ model.sol('sol1').feature('s1').feature('aDef').set('complexfun', true);
 %model.sol('sol1').feature('s1').feature('p1').set('pname', {'freq'});
 %model.sol('sol1').feature('s1').feature('p1').set('control', 'freq');
 model.sol('sol1').feature('s1').feature('i1').set('linsolver', 'bicgstab');
-% step 2: compile adjoint
-model.sol('sol1').feature('st2').name('Compile Equations: Frequency Domain 2');
-model.sol('sol1').feature('st2').set('studystep', 'freq1');
-model.sol('sol1').feature('v2').set('control', 'freq1');
-model.sol('sol1').feature('s2').set('control', 'freq1');
-model.sol('sol1').feature('s2').feature('dDef').active(true);
-model.sol('sol1').feature('s2').feature('aDef').set('complexfun', true);
-%model.sol('sol1').feature('s2').feature('p1').set('plistarr', {freqStr});
-%model.sol('sol1').feature('s2').feature('p1').set('pname', {'freq'});
-%model.sol('sol1').feature('s2').feature('p1').set('control', 'freq1');
-model.sol('sol1').feature('s2').feature('i1').set('linsolver', 'bicgstab');
+
+if X.Gradient
+    % step 2: compile adjoint
+    model.sol('sol1').feature('st2').name('Compile Equations: Frequency Domain 2');
+    model.sol('sol1').feature('st2').set('studystep', 'freq1');
+    model.sol('sol1').feature('v2').set('control', 'freq1');
+    model.sol('sol1').feature('s2').set('control', 'freq1');
+    model.sol('sol1').feature('s2').feature('dDef').active(true);
+    model.sol('sol1').feature('s2').feature('aDef').set('complexfun', true);
+    %model.sol('sol1').feature('s2').feature('p1').set('plistarr', {freqStr});
+    %model.sol('sol1').feature('s2').feature('p1').set('pname', {'freq'});
+    %model.sol('sol1').feature('s2').feature('p1').set('control', 'freq1');
+    model.sol('sol1').feature('s2').feature('i1').set('linsolver', 'bicgstab');
+end
 
 % This step, preposterously, seems necessary to make the adjoint solver not
 % blow away the forward fields.  This seems very counterintuitive.  :-/
@@ -471,14 +482,16 @@ intSurf.set('table', 'tblF');
 assert(numMeasurements == 1);
 intSurf.set('expr', LL_MODEL.measurements{1}.F);
 
-model.result.export.create('expSurfDF', 'Data');
-model.result.export('expSurfDF').name('data set');
-model.result.export('expSurfDF').set('data', 'dsetSurfaces');
-model.result.export('expSurfDF').set('descr', {''});
-model.result.export('expSurfDF').set('filename', 'DF_on_surfaces.txt');
-model.result.export('expSurfDF').set('expr', {'mod1.DF'});
-model.result.export('expSurfDF').set('resolution', 'custom');
-model.result.export('expSurfDF').set('lagorder', '5');
+if X.Gradient
+    model.result.export.create('expSurfDF', 'Data');
+    model.result.export('expSurfDF').name('data set');
+    model.result.export('expSurfDF').set('data', 'dsetSurfaces');
+    model.result.export('expSurfDF').set('descr', {''});
+    model.result.export('expSurfDF').set('filename', 'DF_on_surfaces.txt');
+    model.result.export('expSurfDF').set('expr', {'mod1.DF'});
+    model.result.export('expSurfDF').set('resolution', 'custom');
+    model.result.export('expSurfDF').set('lagorder', '5');
+end
 
 model.result.export.create('expTableF', 'tblF', 'Table');
 model.result.export('expTableF').set('filename', 'F.txt');
@@ -548,23 +561,31 @@ model.result('pg2').set('frametype', 'spatial');
 model.result('pg2').feature('mslc1').name('Multislice');
 model.result('pg2').feature('mslc1').set('expr', 'emw2.normE');
 
-model.result.create('pg3', 'PlotGroup3D');
-model.result('pg3').feature.create('surf1', 'Surface');
-model.result('pg3').feature.create('arws1', 'ArrowSurface');
-model.result('pg3').feature.create('arws2', 'ArrowSurface');
-model.result('pg3').set('data', 'dset2');
-model.result('pg3').feature('surf1').set('expr', 'DF');
-model.result('pg3').feature('surf1').set('unit', 'W/m^3');
-model.result('pg3').feature('surf1').set('descr', '');
-model.result('pg3').feature('arws1').set('expr', {'nx*DF*(DF<0)' 'ny*DF*(DF<0)' 'nz*DF*(DF<0)'});
-%model.result('pg3').feature('arws1').set('scale', '3.2787942186813154E-10');
-model.result('pg3').feature('arws1').set('arrowbase', 'head');
-%model.result('pg3').feature('arws1').set('scaleactive', false);
-model.result('pg3').feature('arws2').set('expr', {'nx*DF*(DF>0)' 'ny*DF*(DF>0)' 'nz*DF*(DF>0)'});
-model.result('pg3').feature('arws2').set('color', 'blue');
-%model.result('pg3').feature('arws2').set('scale', '4.240512841916214E-10');
-%model.result('pg3').feature('arws2').set('scaleactive', false);
-
+if X.Gradient
+    model.result.create('pg3', 'PlotGroup3D');
+    model.result('pg3').feature.create('surf1', 'Surface');
+    model.result('pg3').feature.create('arws1', 'ArrowSurface');
+    model.result('pg3').feature.create('arws2', 'ArrowSurface');
+    model.result('pg3').set('data', 'dset2');
+    
+    model.result('pg3').feature('surf1').set('expr', 'DF');
+    model.result('pg3').feature('surf1').set('unit', 'W/m^3');
+    model.result('pg3').feature('surf1').set('descr', '');
+    
+    model.result('pg3').feature('arws1').set(...
+        'expr', {'nx*DF*(DF<0)' 'ny*DF*(DF<0)' 'nz*DF*(DF<0)'});
+    %model.result('pg3').feature('arws1').set('scale', '3.2787942186813154E-10');
+    model.result('pg3').feature('arws1').set('arrowbase', 'tail');
+    %model.result('pg3').feature('arws1').set('scaleactive', false);
+    
+    model.result('pg3').feature('arws2').set(...
+        'expr', {'nx*DF*(DF>0)' 'ny*DF*(DF>0)' 'nz*DF*(DF>0)'});
+    model.result('pg3').feature('arws1').set('arrowbase', 'head');
+    model.result('pg3').feature('arws2').set('color', 'blue');
+    %model.result('pg3').feature('arws2').set('scale', '4.240512841916214E-10');
+    %model.result('pg3').feature('arws2').set('scaleactive', false);
+end
+%{
 model.result.create('pg4', 'PlotGroup3D');
 model.result('pg4').run;
 model.result('pg4').feature.create('slc1', 'Slice');
@@ -572,6 +593,7 @@ model.result('pg4').feature('slc1').set('quickplane', 'xy');
 model.result('pg4').feature('slc1').set('quickzmethod', 'coord');
 model.result('pg4').feature('slc1').set('expr', 'emw.Ex');
 model.result('pg4').feature('slc1').set('quickz', '10');
+%}
 %model.result('pg4').run;
 %%
 
@@ -610,11 +632,15 @@ end
 model.result.table('tblF').clearTableData;
 model.result.numerical('intF').set('table', 'tblF');
 model.result.numerical('intF').setResult;
-model.result.export('expSurfDF').run;
+
+if X.Gradient
+    model.result.export('expSurfDF').run;
+end
+
 model.result.export('expTableF').run;
 
 %% Plots!!
-
+%{
 figure(1); clf
 mphplot(model, 'pg1', 'rangenum', 1);
 
@@ -626,6 +652,7 @@ mphplot(model, 'pg3', 'rangenum', 1);
 
 figure(4); clf
 mphplot(model, 'pg4', 'rangenum', 1);
+%}
 
 end
 
