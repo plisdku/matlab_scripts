@@ -40,7 +40,7 @@ end
 
 %%
 
-fprintf('Making geometry node\n')
+%fprintf('Making geometry node\n')
 
 model.modelNode.create('mod1');
 geom = model.geom.create('geom1', 3);
@@ -49,7 +49,7 @@ geom.lengthUnit('nm');
 if cacheExists
     fprintf('Using cached STEP file!\n');
 else
-    fprintf('Processing geometry to create STEP file.\n');
+    %fprintf('Processing geometry to create STEP file.\n');
     [nonPMLChunks, pmlChunks] = processGeometry(LL_MODEL.meshes, ...
         nonPMLBounds, pmlBounds, stepFile);
 end
@@ -70,7 +70,7 @@ geom.feature('sca1').selection('input').named('impSTEP');
 
 %% Output planes!!
 
-fprintf('Source and output planes.\n');
+%fprintf('Source and output planes.\n');
 
 numOutputs = numel(LL_MODEL.outputs);
 numSources = numel(LL_MODEL.sources);
@@ -120,10 +120,10 @@ end
 
 %% Run the geometry and pray that it works.
 
-fprintf('Running the geometry!\n');
+%fprintf('Running the geometry!\n');
 model.save([pwd filesep 'preRunGeometry.mph']);
 geom.run;
-fprintf('Geometry ran successfully.\n');
+%fprintf('Geometry ran successfully.\n');
 model.save([pwd filesep 'postRunGeometry.mph']);
 
 %% Materials!
@@ -131,7 +131,7 @@ model.save([pwd filesep 'postRunGeometry.mph']);
 tensorElems = @(T) arrayfun(@(a) sprintf('%2.8f+%2.8fi',real(a),imag(a)), T(:), ...
     'UniformOutput', false);
 
-fprintf('Creating materials.\n');
+%fprintf('Creating materials.\n');
 
 numMaterials = numel(unique(cellfun(@(x) x.material, LL_MODEL.meshes)));
 
@@ -215,7 +215,7 @@ model.save([pwd filesep 'postPML.mph']);
 
 %% Forward physics!
 
-fprintf('Forward physics\n')
+%fprintf('Forward physics\n')
 
 model.physics.create('emw', 'ElectromagneticWaves', 'geom1');
 model.physics('emw').prop('ShapeProperty').set('order_electricfield', '3');
@@ -255,25 +255,25 @@ end
 
 %% Adjoint physics!
 
-if X.Gradient
-    fprintf('Adjoint physics\n')
+%fprintf('Adjoint physics\n')
 
-    model.physics.create('emw2', 'ElectromagneticWaves', 'geom1');
-    model.physics('emw2').prop('ShapeProperty').set('order_electricfield', '3');
-    model.physics('emw2').prop('BackgroundField').set('SolveFor', 'fullField');
-    %% Adjoint current sources!
+model.physics.create('emw2', 'ElectromagneticWaves', 'geom1');
+model.physics('emw2').prop('ShapeProperty').set('order_electricfield', '3');
+model.physics('emw2').prop('BackgroundField').set('SolveFor', 'fullField');
+%% Adjoint current sources!
 
-    numMeasurements = numel(LL_MODEL.measurements);
+numMeasurements = numel(LL_MODEL.measurements);
 
-    measurementSel = model.selection.create('measSel', 'Union');
-    measurementSel.geom('geom1', 2);
-    measurementSel.name('Measurement selection');
-    measSel = {};
+measurementSel = model.selection.create('measSel', 'Union');
+measurementSel.geom('geom1', 2);
+measurementSel.name('Measurement selection');
+measSel = {};
 
-    for ss = 1:numMeasurements
-        planeName = sprintf('geom1_wp_meas%i_bnd', ss);
-        probeName = sprintf('probe%i', ss);
-
+for ss = 1:numMeasurements
+    planeName = sprintf('geom1_wp_meas%i_bnd', ss);
+    probeName = sprintf('probe%i', ss);
+    
+    if X.Gradient
         currName = sprintf('adjCurrentSource%i', ss);
         surfCurr = model.physics('emw2').feature.create(currName, ...
             'SurfaceCurrent', 2);
@@ -285,12 +285,12 @@ if X.Gradient
             LL_MODEL.measurements{ss}.Jy, ...
             LL_MODEL.measurements{ss}.Jz});
         surfCurr.name(sprintf('Objective current %i', ss));
-
-        measSel = {measSel{:} planeName};
     end
 
-    measurementSel.set('input', measSel);
-end % adjoint physics
+    measSel = {measSel{:} planeName};
+end
+
+measurementSel.set('input', measSel);
 
 %% View!
 
@@ -305,7 +305,7 @@ hide1.named('pmlSel');
 
 %% Mesh!
 
-fprintf('Meshing\n');
+%fprintf('Meshing\n');
 
 mesh1 = model.mesh.create('mesh1', 'geom1');
 globalSize = mesh1.feature('size');
@@ -355,7 +355,7 @@ sz.set('hmax', 30);
 
 model.mesh('mesh1').feature.create('ftet1', 'FreeTet');
 
-fprintf('Mesh size purportedly %i\n', globalSize.getDouble('hmax'));
+%fprintf('Mesh size purportedly %i\n', globalSize.getDouble('hmax'));
 
 meshingSucceeded = false;
 attempts = 1;
@@ -365,14 +365,14 @@ while ~meshingSucceeded && attempts < 10
         attempts = attempts + 1;
         globalSize.set('hmax', hmax);
         model.save([pwd filesep 'premesh-' X.MPH]);
-        fprintf('Attempting with hmax %i\n', globalSize.getDouble('hmax'));
+        %fprintf('Attempting with hmax %i\n', globalSize.getDouble('hmax'));
         model.mesh('mesh1').run;
         meshingSucceeded = true;
     catch exc
         warning('Meshing attempt %i failed!\n', attempts);
         hmax = num2str(...
             str2double(globalHmax) + ((-1)^attempts)*ceil(attempts/2));
-        fprintf('Trying again at size %s\n', hmax);
+        %fprintf('Trying again at size %s\n', hmax);
     end
 end
 
@@ -384,7 +384,7 @@ model.save([pwd filesep X.MPH]);
 
 %% Study!
 
-fprintf('Study\n')
+%fprintf('Study\n')
 
 freqStr = sprintf('c_const/%s[nm]', num2str(3e8/LL_MODEL.frequency));
 
@@ -399,7 +399,7 @@ if X.Gradient
     model.study('std1').feature('freq1').set('plist', freqStr);
 end
 
-fprintf('Solution\n')
+%fprintf('Solution\n')
 
 model.sol.create('sol1');
 model.sol('sol1').study('std1');
@@ -455,11 +455,12 @@ if X.Gradient
     %model.sol('sol1').feature('s2').feature('p1').set('pname', {'freq'});
     %model.sol('sol1').feature('s2').feature('p1').set('control', 'freq1');
     model.sol('sol1').feature('s2').feature('i1').set('linsolver', 'bicgstab');
+    
+    % This step, preposterously, seems necessary to make the adjoint solver not
+    % blow away the forward fields.  This seems very counterintuitive.  :-/
+    model.study('std1').feature('freq1').set('usesol', 'on');
 end
 
-% This step, preposterously, seems necessary to make the adjoint solver not
-% blow away the forward fields.  This seems very counterintuitive.  :-/
-model.study('std1').feature('freq1').set('usesol', 'on');
 
 %% Surface outputs
 dsetSurf = model.result.dataset.create('dsetSurfaces', 'Solution');
@@ -597,7 +598,7 @@ model.result('pg4').feature('slc1').set('quickz', '10');
 %model.result('pg4').run;
 %%
 
-fprintf('Saving model.\n');
+%fprintf('Saving model.\n');
 
 model.save([pwd filesep X.MPH]);
 if X.StopEarly
@@ -815,7 +816,7 @@ function nonPMLChunks = makeNonPMLPieces(meshes, bounds)
     
     nonPMLChunks = cell(size(meshes));
 
-    fprintf('Intersecting with non-PML.\n');
+    %fprintf('Intersecting with non-PML.\n');
 
     numMeshes = numel(meshes);
     for mm = 1:numMeshes
@@ -880,7 +881,7 @@ function [nonPMLChunks, pmlChunks] = processGeometry(meshes, ...
     % Each mesh subtracts off all previous meshes.
 
     disjointMeshes = makeDisjointInputs(meshes);
-    fprintf('Done with the difference operations.\n');
+    %fprintf('Done with the difference operations.\n');
 
     % Make similar disjoint meshes but skip everything that does not reach PML.
     % This will really speed things up when intersecting every PML block with every
@@ -902,11 +903,11 @@ function [nonPMLChunks, pmlChunks] = processGeometry(meshes, ...
     %% Create a mesh for each PML block.
 
     pmlMeshes = makePMLMeshes(pmlBounds, nonPMLBounds);
-    fprintf('Done making PML blocks.\n');
+    %fprintf('Done making PML blocks.\n');
 
     %% Create all the separate chunks of material that intersect the PML
 
-    fprintf('Intersecting with PML.\n');
+    %fprintf('Intersecting with PML.\n');
     pmlChunks = makePMLPieces(pmlMeshes, materialMeshesInPML);
     %pmlChunks = makePMLPieces(pmlMeshes, materialMeshes);
     numPMLChunks = numel(pmlChunks);
@@ -917,7 +918,7 @@ function [nonPMLChunks, pmlChunks] = processGeometry(meshes, ...
 
     %% Create the STEP file and set up STEP import.
 
-    fprintf('Got to the STEP file.\n');
+    %fprintf('Got to the STEP file.\n');
     writeSTEP([nonPMLChunks, pmlChunks], stepFile);
     
 end

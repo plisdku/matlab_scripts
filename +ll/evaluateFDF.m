@@ -127,12 +127,7 @@ dFdp = transpose(sum(integrals*1e-27, 2)); % there are three m->nm conversions.
 
 %% F?
 
-fid = fopen('F.txt');
-AA = cell2mat(textscan(fid, '%n', 'CommentStyle', '%'));
-fclose(fid);
-
-F = AA(2);
-
+F = ll.evaluateF();
 
 %% My griddata wrapper, dangit.
 
