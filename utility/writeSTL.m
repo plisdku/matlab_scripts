@@ -70,5 +70,6 @@ end
 
 fprintf(fh, 'endsolid s\n');
 
+fclose(fh);
 
 
