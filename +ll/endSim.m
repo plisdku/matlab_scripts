@@ -34,7 +34,7 @@ cacheExists = false;
 if exist(stepFile, 'file') && exist(movableDomainsFile, 'file') ...
     && exist(domainMaterialsFile, 'file')
     
-    fprintf('Using cached geometry data.\n');
+    %fprintf('Using cached geometry data.\n');
     cacheExists = true;
 end
 
@@ -47,7 +47,7 @@ geom = model.geom.create('geom1', 3);
 geom.lengthUnit('nm');
 
 if cacheExists
-    fprintf('Using cached STEP file!\n');
+    %fprintf('Using cached STEP file!\n');
 else
     %fprintf('Processing geometry to create STEP file.\n');
     [nonPMLChunks, pmlChunks] = processGeometry(LL_MODEL.meshes, ...
@@ -152,7 +152,7 @@ end
 %% Figure out which materials go where
 
 if cacheExists
-    fprintf('Using cached domain materials file.\n');
+    %fprintf('Using cached domain materials file.\n');
     domainMaterial = dlmread(domainMaterialsFile);
 else
     domainMaterial = findDomainMaterials(model, geom, nonPMLChunks, pmlChunks);
@@ -172,7 +172,7 @@ end
 %% Make selection of movable meshes
 
 if cacheExists
-    fprintf('Using cached movable domains file.\n');
+    %fprintf('Using cached movable domains file.\n');
     movableMeshDomains = dlmread(movableDomainsFile);
 else
     movableMeshDomains = findMovableBoundaries(model, LL_MODEL.meshes);
@@ -351,8 +351,10 @@ sz.selection.geom('geom1', 2);
 sz.selection.named('measSel');
 sz.set('custom', 'on');
 sz.set('hmaxactive', 'on');
-sz.set('hmax', 30);
+sz.set('hmax', 5);
 
+model.mesh('mesh1').feature.create('ftri1', 'FreeTri');
+model.mesh('mesh1').feature('ftri1').selection.named('movableMeshes');
 model.mesh('mesh1').feature.create('ftet1', 'FreeTet');
 
 %fprintf('Mesh size purportedly %i\n', globalSize.getDouble('hmax'));
@@ -620,9 +622,13 @@ while ~succeeded
             model.save([pwd filesep 'fields_' X.MPH]);
         end
     catch
-        warning('Got some crappy problem.  Pausing and retrying.\n');
-        pause(10);
-        tries = tries + 1;
+        if tries < 3
+            warning('Got some crappy problem.  Pausing and retrying.\n');
+            pause(10);
+            tries = tries + 1;
+        else
+            error('Failed with %i tries', tries);
+        end
     end
 end
 
@@ -936,7 +942,9 @@ function chunkFiles = writeSTEP(chunks, stepFile)
     
     spacedNames = cellfun(@(A) [A ' '], chunkFiles, 'UniformOutput', false);
 
-    callMerge = ['mergeSTP -unit mm ', spacedNames{:}];
+    callMerge = ['mergeSTP -unit mm ',...
+        spacedNames{:}, ...
+        ' > mergeSTP.txt'];
     unix(callMerge);
     unix(sprintf('mv outStep.step %s', stepFile));
     

@@ -14,10 +14,11 @@ if neflab.disjointHulls(v1, v2)
     return;
 end
 
-inFile = [tempdir sprintf('nefTemp%1.4f.txt', now)];
-outFile = [tempdir sprintf('nefOut%1.4f.txt', now)];
+inFile = [tempdir sprintf('nefTemp%1.7f.txt', now)];
+outFile = [tempdir sprintf('nefOut%1.7f.txt', now)];
 
 fh = fopen(inFile, 'w');
+assert(fh ~= -1);
 neflab.writeMultiOFF(fh, v1, f1);
 neflab.writeMultiOFF(fh, v2, f2);
 fclose(fh);
@@ -35,7 +36,8 @@ if status
     keyboard;
 end
 
-fh = fopen(outFile, 'r');
-[vertices faces] = neflab.readNefPolyhedron(fh);
+[fh, message] = fopen(outFile, 'r');
+assert(fh ~= -1);
+[vertices, faces] = neflab.readNefPolyhedron(fh);
 fclose(fh);
 

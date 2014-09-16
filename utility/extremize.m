@@ -74,8 +74,21 @@ function [x, fval, iter, xHist, fHist, DfHist] = extremize(fn, x0, varargin)
         iter = iter + 1;
         
         % EVALUATE THE FUNCTION
-        % ... and flip the sign if we're maximizing instead of minimizing.
-        [f_eval, Df_eval] = fn(x);
+        % ... and flip the sign if we're maximizing instead of minimizing
+        succeeded = false;
+        while ~succeeded
+            try
+                [f_eval, Df_eval] = fn(x);
+                succeeded = true;
+            catch
+                if iter > 1
+                    warning('Failed to evaluate objective function.  Step back.');
+                    x = 0.75*(x + xHist(:,end));
+                else
+                    error('Failed to evaluate objective function on first iteration!');
+                end
+            end
+        end
         
         fHist(end+1) = f_eval;
         DfHist(end+1,:) = Df_eval;
