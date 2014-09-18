@@ -88,22 +88,22 @@ outputsSources = {LL_MODEL.outputs{:} LL_MODEL.sources{:} ...
 planeNames = {outPlaneNames{:} srcPlaneNames{:} measPlaneNames{:}};
 
 for pp = 1:numel(planeNames)
-    nonPMLBounds = outputsSources{pp}.bounds;
-    if nonPMLBounds(1) == nonPMLBounds(4)
+    planeBounds = outputsSources{pp}.bounds;
+    if planeBounds(1) == planeBounds(4)
         plane = 'yz'; quickPlane = 'quickx';
-        sz = nonPMLBounds([5 6]) - nonPMLBounds([2 3]);
-        center = 0.5*(nonPMLBounds([5 6]) + nonPMLBounds([2 3]));
-        quickPlaneCoord = nonPMLBounds(1);
-    elseif nonPMLBounds(2) == nonPMLBounds(5)
+        sz = planeBounds([5 6]) - planeBounds([2 3]);
+        center = 0.5*(planeBounds([5 6]) + planeBounds([2 3]));
+        quickPlaneCoord = planeBounds(1);
+    elseif planeBounds(2) == planeBounds(5)
         plane = 'zx'; quickPlane = 'quicky';
-        sz = nonPMLBounds([6 4]) - nonPMLBounds([3 1]);
-        center = 0.5*(nonPMLBounds([6 4]) + nonPMLBounds([3 1]));
-        quickPlaneCoord = nonPMLBounds(2);
-    elseif nonPMLBounds(3) == nonPMLBounds(6)
+        sz = planeBounds([6 4]) - planeBounds([3 1]);
+        center = 0.5*(planeBounds([6 4]) + planeBounds([3 1]));
+        quickPlaneCoord = planeBounds(2);
+    elseif planeBounds(3) == planeBounds(6)
         plane = 'xy'; quickPlane = 'quickz';
-        sz = nonPMLBounds([4 5]) - nonPMLBounds([1 2]);
-        center = 0.5*(nonPMLBounds([4 5]) + nonPMLBounds([1 2]));
-        quickPlaneCoord = nonPMLBounds(3);
+        sz = planeBounds([4 5]) - planeBounds([1 2]);
+        center = 0.5*(planeBounds([4 5]) + planeBounds([1 2]));
+        quickPlaneCoord = planeBounds(3);
     end
     
     wp = geom.feature.create(planeNames{pp}, 'WorkPlane');
@@ -231,7 +231,7 @@ if ~isempty(LL_MODEL.incidentField.Ex) ||...
         LL_MODEL.incidentField.Ez});
 end
 
-%% Forward Current sources!
+%% Forward current sources!
 
 numSources = numel(LL_MODEL.sources);
 
@@ -842,7 +842,7 @@ end
 
 function movableMeshDomains = findMovableBoundaries(model, meshes)
     movableMeshDomains = [];
-
+    
     %calcBoundingBox = @(A) [min(A) max(A)];
     
     for mm = 1:numel(meshes)    
