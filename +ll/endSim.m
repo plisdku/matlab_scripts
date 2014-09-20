@@ -68,7 +68,8 @@ geom.feature('sca1').set('isotropic', '1e-6');
 geom.feature('sca1').set('factor', '1e-6');
 geom.feature('sca1').selection('input').named('impSTEP');
 
-%% Output planes!!
+%% Create output/source/measurement volumes, planes and points!
+% Outputs, sources and measurements can all be on points, volumes or planes.
 
 %fprintf('Source and output planes.\n');
 
@@ -76,44 +77,81 @@ numOutputs = numel(LL_MODEL.outputs);
 numSources = numel(LL_MODEL.sources);
 numMeasurements = numel(LL_MODEL.measurements);
 
-outPlaneNames = arrayfun(@(aa) sprintf('wp_out%i', aa), 1:numOutputs, ...
+outTags = arrayfun(@(aa) sprintf('out%i', aa), 1:numOutputs, ...
     'UniformOutput', false);
-srcPlaneNames = arrayfun(@(aa) sprintf('wp_src%i', aa), 1:numSources, ...
+srcTags = arrayfun(@(aa) sprintf('src%i', aa), 1:numSources, ...
     'UniformOutput', false);
-measPlaneNames = arrayfun(@(aa) sprintf('wp_meas%i', aa), 1:numMeasurements, ...
+measTags = arrayfun(@(aa) sprintf('meas%i', aa), 1:numMeasurements, ...
     'UniformOutput', false);
 
 outputsSources = {LL_MODEL.outputs{:} LL_MODEL.sources{:} ...
     LL_MODEL.measurements{:}};
-planeNames = {outPlaneNames{:} srcPlaneNames{:} measPlaneNames{:}};
+manifoldTags = {outTags{:} srcTags{:} measTags{:}};
 
-for pp = 1:numel(planeNames)
-    planeBounds = outputsSources{pp}.bounds;
-    if planeBounds(1) == planeBounds(4)
-        plane = 'yz'; quickPlane = 'quickx';
-        sz = planeBounds([5 6]) - planeBounds([2 3]);
-        center = 0.5*(planeBounds([5 6]) + planeBounds([2 3]));
-        quickPlaneCoord = planeBounds(1);
-    elseif planeBounds(2) == planeBounds(5)
-        plane = 'zx'; quickPlane = 'quicky';
-        sz = planeBounds([6 4]) - planeBounds([3 1]);
-        center = 0.5*(planeBounds([6 4]) + planeBounds([3 1]));
-        quickPlaneCoord = planeBounds(2);
-    elseif planeBounds(3) == planeBounds(6)
-        plane = 'xy'; quickPlane = 'quickz';
-        sz = planeBounds([4 5]) - planeBounds([1 2]);
-        center = 0.5*(planeBounds([4 5]) + planeBounds([1 2]));
-        quickPlaneCoord = planeBounds(3);
+for pp = 1:numel(manifoldTags)
+    
+    bounds = outputsSources{pp}.bounds;
+    extent = bounds(4:6) - bounds(1:3);
+    
+    if nnz(extent) == 0 % it's a point
+        error('I do not handle points yet');
+    elseif nnz(extent) == 1 % it's a line
+        error('I do not handle lines yet');
+    elseif nnz(extent) == 2 % it's a plane
+        if bounds(1) == bounds(4)
+            plane = 'yz'; quickPlane = 'quickx';
+            sz = bounds([5 6]) - bounds([2 3]);
+            center = 0.5*(bounds([5 6]) + bounds([2 3]));
+            quickPlaneCoord = bounds(1);
+        elseif bounds(2) == bounds(5)
+            plane = 'zx'; quickPlane = 'quicky';
+            sz = bounds([6 4]) - bounds([3 1]);
+            center = 0.5*(bounds([6 4]) + bounds([3 1]));
+            quickPlaneCoord = bounds(2);
+        elseif bounds(3) == bounds(6)
+            plane = 'xy'; quickPlane = 'quickz';
+            sz = bounds([4 5]) - bounds([1 2]);
+            center = 0.5*(bounds([4 5]) + bounds([1 2]));
+            quickPlaneCoord = bounds(3);
+        end
+        
+        wp = geom.feature.create(['wp_' manifoldTags{pp}], 'WorkPlane');
+        wp.set('quickplane', plane);
+        wp.set(quickPlane, quickPlaneCoord);
+        wp.geom.feature.create('r1', 'Rectangle');
+        wp.geom.feature('r1').set('base', 'center');
+        wp.geom.feature('r1').set('size', {num2str(sz(1)), num2str(sz(2))});
+        wp.geom.feature('r1').set('pos', {num2str(center(1)), num2str(center(2))});
+        wp.set('createselection', true);
+        
+    elseif nnz(extent) == 3 % it's a volume
+        
+        % The point here is just to mark off a chunk of space and force the
+        % tetrahedra to line up with its surfaces.
+        
+        blk = geom.feature.create(['blk_' manifoldTags{pp}], 'Block');
+        %blk.set('contributeto', 'csel1');
+        %blk.set('createselection', 'on');
+        blk.set('size', {num2str(extent(1)) num2str(extent(2)) num2str(extent(3))});
+        blk.set('type', 'surface');
+        blk.set('pos', {num2str(bounds(1)) num2str(bounds(2)) num2str(bounds(3))});
+        blk.set('base', 'corner');
+        
+        % Create the selection of the inside elements.
+        box = model.selection.create(['box_' manifoldTags{pp}], 'Box');
+        box.set('xmin', num2str(bounds(1)));
+        box.set('ymin', num2str(bounds(2)));
+        box.set('zmin', num2str(bounds(3)));
+        box.set('xmax', num2str(bounds(4)));
+        box.set('ymax', num2str(bounds(5)));
+        box.set('zmax', num2str(bounds(6)));
+        box.set('condition', 'inside');
+        box.name(manifoldTags{pp});
+        
+    else
+        error('wut.');
     end
     
-    wp = geom.feature.create(planeNames{pp}, 'WorkPlane');
-    wp.set('quickplane', plane);
-    wp.set(quickPlane, quickPlaneCoord);
-    wp.geom.feature.create('r1', 'Rectangle');
-    wp.geom.feature('r1').set('base', 'center');
-    wp.geom.feature('r1').set('size', {num2str(sz(1)), num2str(sz(2))});
-    wp.geom.feature('r1').set('pos', {num2str(center(1)), num2str(center(2))});
-    wp.set('createselection', true);
     
     %waitbar(pp/numel(planeNames), h, 'Creating source and output planes');
 end
@@ -185,6 +223,8 @@ sel.geom('geom1', 2);
 sel.set(movableMeshDomains);
 
 %% Mark PML!
+% This can be done by bounding box or, alternatively, by domain numbers.
+% I only use the bounding box approach here.
 
 everythingBox = model.selection.create('box1', 'Box');
 everythingBox.name('Everything');
@@ -264,32 +304,63 @@ model.physics('emw2').prop('BackgroundField').set('SolveFor', 'fullField');
 
 numMeasurements = numel(LL_MODEL.measurements);
 
-measurementSel = model.selection.create('measSel', 'Union');
-measurementSel.geom('geom1', 2);
-measurementSel.name('Measurement selection');
+measDims = [];
 measSel = {};
-
 for ss = 1:numMeasurements
-    planeName = sprintf('geom1_wp_meas%i_bnd', ss);
-    probeName = sprintf('probe%i', ss);
+    
+    bounds = LL_MODEL.measurements{pp}.bounds;
+    extent = bounds(4:6) - bounds(1:3);
     
     if X.Gradient
         currName = sprintf('adjCurrentSource%i', ss);
-        surfCurr = model.physics('emw2').feature.create(currName, ...
-            'SurfaceCurrent', 2);
-        surfCurr.selection.named(planeName);
-        %surfCurr.set('weakExpression', '0');
+        
+        if nnz(extent) == 2 % surface current
 
-        surfCurr.set('Js0', ...
-            {LL_MODEL.measurements{ss}.Jx, ...
-            LL_MODEL.measurements{ss}.Jy, ...
-            LL_MODEL.measurements{ss}.Jz});
-        surfCurr.name(sprintf('Objective current %i', ss));
+            planeName = sprintf('geom1_wp_meas%i_bnd', ss);
+            
+            surfCurr = model.physics('emw2').feature.create(currName, ...
+                'SurfaceCurrent', 2);
+            surfCurr.selection.named(planeName);
+            %surfCurr.set('weakExpression', '0');
+
+            surfCurr.set('Js0', ...
+                {LL_MODEL.measurements{ss}.Jx, ...
+                LL_MODEL.measurements{ss}.Jy, ...
+                LL_MODEL.measurements{ss}.Jz});
+            surfCurr.name(sprintf('Objective current %i', ss));
+            measSel = {measSel{:} planeName};
+            
+            measDims(ss) = 2;
+            
+        elseif nnz(extent) == 3 % volume current
+            
+            volName = sprintf('box_meas%i', ss);
+            
+            ecd = model.physics('emw2').feature.create(currName, ...
+                'ExternalCurrentDensity', 3);
+            ecd.selection.named(volName);
+            ecd.set('Je', ...
+                {LL_MODEL.measurements{ss}.Jx, ...
+                LL_MODEL.measurements{ss}.Jy, ...
+                LL_MODEL.measurements{ss}.Jz});
+            ecd.name(sprintf('Objective current %i', ss));
+            
+            measSel = {measSel{:} volName};
+            
+            measDims(ss) = 3;
+            
+        end
     end
 
-    measSel = {measSel{:} planeName};
 end
 
+if numel(unique(measDims)) > 1
+    error('Mixing measurement dimensions!');
+end
+
+measurementSel = model.selection.create('measSel', 'Union');
+measurementSel.geom('geom1', measDims(1));
+measurementSel.name('Measurement selection');
 measurementSel.set('input', measSel);
 
 %% View!
@@ -347,11 +418,12 @@ end
 
 % Change mesh size for measurement.
 sz = model.mesh('mesh1').feature.create('measSize', 'Size');
-sz.selection.geom('geom1', 2);
+sz.selection.geom('geom1', measDims(1));
 sz.selection.named('measSel');
 sz.set('custom', 'on');
 sz.set('hmaxactive', 'on');
-sz.set('hmax', 5);
+sz.set('hmax', 10);
+warning('Measurement hmax is 10');
 
 model.mesh('mesh1').feature.create('ftri1', 'FreeTri');
 model.mesh('mesh1').feature('ftri1').selection.named('movableMeshes');
@@ -472,18 +544,27 @@ dsetSurf.selection.all;
 
 measData = model.result.dataset.create('dsetMeas', 'Solution');
 measData.name('Objective function data set');
-measData.selection.geom('geom1', 2);
+measData.selection.geom('geom1', measDims(1));
 measData.selection.named('measSel');
 
-intSurf = model.result.numerical.create('intF', 'IntSurface');
-intSurf.name('F');
-intSurf.selection.named('measSel');
-intSurf.set('probetag', 'none');
-
-tblF = model.result.table.create('tblF', 'Table');
-intSurf.set('table', 'tblF');
 assert(numMeasurements == 1);
-intSurf.set('expr', LL_MODEL.measurements{1}.F);
+tblF = model.result.table.create('tblF', 'Table');
+
+if measDims(1) == 2
+    intSurf = model.result.numerical.create('intF', 'IntSurface');
+    intSurf.name('F');
+    intSurf.selection.named('measSel');
+    intSurf.set('probetag', 'none');
+    intSurf.set('table', 'tblF');
+    intSurf.set('expr', LL_MODEL.measurements{1}.F);
+elseif measDims(1) == 3
+    intVol = model.result.numerical.create('intF', 'IntVolume');
+    intVol.name('F');
+    intVol.selection.named('measSel');
+    intVol.set('probetag', 'none');
+    intVol.set('table', 'tblF');
+    intVol.set('expr', LL_MODEL.measurements{1}.F);
+end
 
 if X.Gradient
     model.result.export.create('expSurfDF', 'Data');
@@ -574,16 +655,19 @@ if X.Gradient
     model.result('pg3').feature('surf1').set('expr', 'DF');
     model.result('pg3').feature('surf1').set('unit', 'W/m^3');
     model.result('pg3').feature('surf1').set('descr', '');
+    model.result('pg3').feature('surf1').set('colortablerev', true);
+    model.result('pg3').feature('surf1').set('colortablesym', true);
+    model.result('pg3').feature('surf1').set('colortable', 'OrangeCrush');
     
     model.result('pg3').feature('arws1').set(...
         'expr', {'nx*DF*(DF<0)' 'ny*DF*(DF<0)' 'nz*DF*(DF<0)'});
     %model.result('pg3').feature('arws1').set('scale', '3.2787942186813154E-10');
-    model.result('pg3').feature('arws1').set('arrowbase', 'tail');
+    model.result('pg3').feature('arws1').set('arrowbase', 'head');
     %model.result('pg3').feature('arws1').set('scaleactive', false);
     
     model.result('pg3').feature('arws2').set(...
         'expr', {'nx*DF*(DF>0)' 'ny*DF*(DF>0)' 'nz*DF*(DF>0)'});
-    model.result('pg3').feature('arws1').set('arrowbase', 'head');
+    model.result('pg3').feature('arws2').set('arrowbase', 'tail');
     model.result('pg3').feature('arws2').set('color', 'blue');
     %model.result('pg3').feature('arws2').set('scale', '4.240512841916214E-10');
     %model.result('pg3').feature('arws2').set('scaleactive', false);
@@ -690,7 +774,7 @@ function disjointMeshes = makeDisjointInputs(meshes, excludeBounds)
         nullBounds = [Inf Inf Inf -Inf -Inf -Inf];
         excludeBounds = nullBounds;
     end
-        
+    
     numMeshes = numel(meshes);
     disjointMeshes = cell(size(meshes));
     
@@ -840,6 +924,9 @@ function r = calcBoundingBox(A)
     r = [min(A) max(A)];
 end
 
+% I ought to use mphselectcoords to find the indices of all boundaries that
+% are within some little tolerance of a movable vertex.  Perhaps.  Eh?  I
+% think that's a better way.
 function movableMeshDomains = findMovableBoundaries(model, meshes)
     movableMeshDomains = [];
     
@@ -862,11 +949,36 @@ function movableMeshDomains = findMovableBoundaries(model, meshes)
 end
 
 function domainMaterial = findDomainMaterials(model, geom, nonPMLChunks, pmlChunks)
-
-    %calcBoundingBox = @(A) [min(A) max(A)];
-
+    % Return an array of which material is in which domain.
+    
+    allChunks = [nonPMLChunks pmlChunks];
+    allMaterials = cellfun(@(a) a.material, allChunks);
+    numChunks = numel(allChunks);
+    
     domainMaterial = zeros(geom.getNDomains, 1);
-
+    
+    % 1. Find all bounding boxes and their volumes
+    
+    enclosures = sparse(numChunks, geom.getNDomains);
+    
+    volumes = [];
+    for ss = 1:numChunks
+        bbox = calcBoundingBox(allChunks{ss}.vertices);
+        volumes(ss) = prod(bbox(4:6)-bbox(1:3));
+        
+        domains = selectBoxHelper(model, bbox + [-1 -1 -1 1 1 1]);
+        enclosures(ss,domains) = 1;
+    end
+    
+    % Find the chunk with the smallest bounding box for each domain.
+    [enChunk, enDomain] = find(enclosures);
+    
+    [~,smallestChunk] = max(sparse(enChunk, enDomain, 1./volumes(enChunk)), [], 1);
+    
+    domainMaterial = allMaterials(smallestChunk);
+    
+    %{
+    error('I need to not throw out the measurement volume!');
     for ss = 1:numel(nonPMLChunks)
         bbox = calcBoundingBox(nonPMLChunks{ss}.vertices);
         domainNum = identifyByBounds(model, bbox);
@@ -878,6 +990,7 @@ function domainMaterial = findDomainMaterials(model, geom, nonPMLChunks, pmlChun
         domainNum = identifyByBounds(model, bbox);
         domainMaterial(domainNum) = pmlChunks{cc}.material;
     end
+    %}
 end
 
 function [nonPMLChunks, pmlChunks] = processGeometry(meshes, ...
@@ -885,14 +998,14 @@ function [nonPMLChunks, pmlChunks] = processGeometry(meshes, ...
     
     %% Create mutually disjoint input meshes!
     % Each mesh subtracts off all previous meshes.
-
+    
     disjointMeshes = makeDisjointInputs(meshes);
     %fprintf('Done with the difference operations.\n');
-
+    
     % Make similar disjoint meshes but skip everything that does not reach PML.
     % This will really speed things up when intersecting every PML block with every
     % material block.
-
+    
     disjointMeshesInPML = makeDisjointInputs(meshes, nonPMLBounds);
     pl = @(mesh) flatPatch('Vertices', mesh.vertices, 'Faces', mesh.faces, 'FaceColor', 'g', ...
         'EdgeAlpha', 0.1, 'FaceAlpha', 0.2);
@@ -967,14 +1080,22 @@ function checksum = geometryChecksum(meshes, bounds, pmlBounds)
     
 end
 
+% This function was superseded by a simpler and more robust method
+% elsewhere... I don't use it anymore I think.
 function domainNumber = identifyByBounds(model, bbox)
 
     domainNumber = selectBoxHelper(model, bbox + [-1 -1 -1 1 1 1]);
     if numel(domainNumber) == 1
         return
     end
+    
+    % selectBoxHelper (wrapping mphselectbox) will return the domains whose
+    % vertices are all included in the bounding box.
 
-    % Now start trying to trim off everything that's not in those bounds
+    % Now start trying to trim off everything that's not in those bounds.
+    % Inset each face of the bounding box in turn and throw out everything
+    % that is still enclosed.  This will almost certainly leave only the
+    % desired domain selected.
 
     pushIn = diag([1 1 1 -1 -1 -1]);
 
