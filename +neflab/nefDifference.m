@@ -8,7 +8,7 @@ function [vertices, faces] = nefDifference(v1, f1, v2, f2)
 % Call NefLab
 % Get polyhedron back out
 
-if neflab.disjointHulls(v1, v2)
+if neflab.emptyIntersectingHulls(v1, v2)
     vertices = v1;
     faces = f1;
     return;
