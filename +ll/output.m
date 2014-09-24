@@ -1,5 +1,6 @@
 function output(varargin)
 
+error('This does nothing.')
 X.Bounds = [];
 
 X = parseargs(X, varargin{:});
