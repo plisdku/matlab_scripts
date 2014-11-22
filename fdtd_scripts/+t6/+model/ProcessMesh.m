@@ -49,21 +49,30 @@ classdef ProcessMesh < t6.model.Node
                 
                 instruction = obj.instructions{iCur};
                 
+                if iCur+1 <= numInstructions && ...
+                    ~ischar(obj.instructions{iCur+1})
+                    
+                    argument = obj.instructions{iCur+1};
+                    numArguments = 1;
+                    iCur = iCur + 2;
+                else
+                    numArguments = 0;
+                    iCur = iCur + 1;
+                end
+                
+                fprintf('Handling %s\n', instruction);
+                
                 if strcmpi(instruction, 'Simplify')
                     % Use: 'Simplify', costFn
                     % Use: 'Simplify'
-
-                    if iCur+1 <= numInstructions && ...
-                       ~ischar(obj.instructions{iCur+1})
-                        costFn = obj.instructions{iCur+1};
-                        iCur = iCur + 2;
-
+                    
+                    if numArguments == 1;
+                        costFn = argument;
                         [VV, vertices, T, key, crease{:}] = ...
                             VVMesh.simplify(VV, vertices, costFn, crease{:});
                     else
                         [VV, vertices, T, key, crease{:}] = ...
                             VVMesh.simplify(VV, vertices, [], crease{:});
-                        iCur = iCur + 1;
                     end
                     
                     if ~isempty(refineThese)
@@ -75,18 +84,15 @@ classdef ProcessMesh < t6.model.Node
                     % Use: 'Subdivide', vertexPredicate
                     
                     %fprintf('Subdivide (#%i)\n', iCur);
-                    if iCur+1 <= numInstructions && ...
-                        ~ischar(obj.instructions{iCur+1})
-                        predicate = obj.instructions{iCur+1};
-                        iCur = iCur + 2;
-                        
+                    if numArguments == 1
                         flags = false(size(vertices,1),1);
                         for vv = 1:size(vertices,1)
-                            flags(vv) = predicate(vertices(vv,:));
+                            flags(vv) = argument(vertices(vv,:));
                         end
                         refineThese = find(flags);
-                    else
-                        iCur = iCur + 1;
+                        
+                        fprintf('There are %i verts to subdivide.\n', ...
+                            numel(refineThese));
                     end
                     
                     if isempty(refineThese)
@@ -98,7 +104,53 @@ classdef ProcessMesh < t6.model.Node
                             refineThese, crease{:});
                     end
                     
-                end
+                elseif strcmpi(instruction, 'Refine')
+                    % Use: 'Refine'
+                    % Use: 'Refine', vertexPredicate
+                    
+                    if numArguments == 1
+                        flags = false(size(vertices,1),1);
+                        for vv = 1:size(vertices,1)
+                            flags(vv) = argument(vertices(vv,:));
+                        end
+                        refineThese = find(flags);
+                        
+                        fprintf('There are %i verts to refine.\n', ...
+                            numel(refineThese));
+                    end
+                    
+                    if numArguments == 0
+                        [VV2, vertices, ~, perturbFlags, T] = ...
+                            VVMesh.loopRefine(VV, vertices);
+                    elseif ~isempty(refineThese)
+                        [VV2, vertices, ~, perturbFlags, T] = ...
+                            VVMesh.loopRefine(VV, vertices, refineThese);
+                    else
+                        VV2 = VV;
+                        T = speye(size(VV,1));
+                    end
+                    
+                    % Update crease vertex indices so the vertices of all
+                    % edges that were split are also included.
+                    if ~isequal(VV2, VV)
+                    for cc = 1:numel(crease)
+                        crease{cc} = VVMesh.subdividedCrease(...
+                            crease{cc}, perturbFlags(crease{cc}),...
+                            VV, VV2);
+                        % T is correct regardless.
+                    end
+                    end
+                    
+                    VV = VV2;
+                    
+                    % Expand the refinement region for the next refinement
+                    % level.
+                    if ~isempty(refineThese)
+                        refineThese = union(refineThese, ...
+                            VVMesh.neighborhood(refineThese, VV, 1, 2));
+                    end
+                    
+                end % if simplify, subdivide, refine
                 
                 if isempty(T_total)
                     T_total = T;

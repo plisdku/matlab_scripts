@@ -49,6 +49,16 @@ for ff = 1:numFaces
     vy = verts(faces(ff,:),2);
     vz = verts(faces(ff,:),3);
     
+    dv1 = verts(faces(ff,2),:) - verts(faces(ff,1),:);
+    dv2 = verts(faces(ff,3),:) - verts(faces(ff,1),:);
+    faceArea = 0.5*norm(cross(dv1, dv2));
+    
+    if faceArea < 1e-5
+    %if abs(det([vx vy vz])) < 1e-5 % wrong.  grr.
+        %warning('Null triangle!!  So tiny!  So cute!');
+        continue;
+    end
+    
     jacobianIndices = @(vertNum) (1:3) + 3*(vertNum-1);
     
     jacobianChunk = jac([jacobianIndices(faces(ff,1)), ...
@@ -57,7 +67,11 @@ for ff = 1:numFaces
     
     % Get the quadrature points and weights in 3D
     N = 3;
-    [xx ww nv bc] = simplexQuad3d(N, [vx vy vz]);
+    try
+        [xx, ww, nv, bc] = simplexQuad3d(N, [vx vy vz]);
+    catch exc
+        keyboard
+    end
     
     %{
     figure(2); clf
@@ -171,6 +185,7 @@ vals = linearInterp(xx(1,:), xx(2,:), xx(3,:));
 maskNaN = isnan(vals);
 maskOutOfBounds = abs(vals) > maxF;
 
+%{
 if any(maskNaN)
     warning(sprintf('There were %i NaNs, using nearest-neighbor interpolation', ...
         sum(maskNaN(:))));
@@ -180,6 +195,7 @@ if any(maskOutOfBounds)
     warning(sprintf('There were %i out of bounds values, using nearest-neighbor interpolation', ...
         sum(maskOutOfBounds(:))));
 end
+%}
 
 maskBad = maskNaN | maskOutOfBounds;
 
