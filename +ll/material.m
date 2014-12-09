@@ -7,6 +7,10 @@ X.Name = '';
 
 X = parseargs(X, varargin{:});
 
+if imag(X.Permittivity) > 0
+    warning('Permittivity has positive imaginary part: gain in COMSOL!!');
+end
+
 newMat = struct('name', X.Name, ...
     'epsr', X.Permittivity, ...
     'mur', X.Permeability, ...
