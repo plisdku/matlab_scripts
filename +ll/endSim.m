@@ -1252,7 +1252,8 @@ function comsolMeshParameters(theMesh, model, measDims)
     
     for mm = 1:numel(LL_MODEL.meshes)
     if ~isempty(LL_MODEL.meshes{mm}.hmax) || ...
-            ~isempty(LL_MODEL.meshes{mm}.hgrad)
+            ~isempty(LL_MODEL.meshes{mm}.hgrad) || ...
+            ~isempty(LL_MODEL.meshes{mm}.hmin)
 
         bbox = calcBoundingBox(LL_MODEL.meshes{mm}.vertices) + ...
             [-1 -1 -1 1 1 1];
@@ -1271,6 +1272,11 @@ function comsolMeshParameters(theMesh, model, measDims)
         if ~isempty(LL_MODEL.meshes{mm}.hmax)
             sz.set('hmaxactive', 'on');
             sz.set('hmax', LL_MODEL.meshes{mm}.hmax);
+        end
+        
+        if ~isempty(LL_MODEL.meshes{mm}.hmin)
+            sz.set('hminactive', 'on');
+            sz.set('hmin', LL_MODEL.meshes{mm}.hmin);
         end
         
         if ~isempty(LL_MODEL.meshes{mm}.hgrad)

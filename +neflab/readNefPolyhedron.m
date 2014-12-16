@@ -51,6 +51,11 @@ for ff = 1:numFacets
         
         contours{cc} = loopVerts;
         
+        % Sometimes the NefLab calls produce faces with zero area!!!
+        % (Yuck.)
+        % If I want it to crash when it finds a singular face:
+        %detectSingularFacets(vertices(loopVerts,:));
+        
         %disp(vertices)
         %figure(11); clf
         %patch('Vertices', vertices, 'Faces', loopVerts', 'FaceColor', 'r');
@@ -61,7 +66,10 @@ for ff = 1:numFacets
     
     % To perform the triangulation I need to translate all the vertex
     % indices in the contour array.  Hm.
-    
+    if faceIsSingular(vertices(contours{1},:))
+        warning('Discarding a singular face.');
+        continue
+    end
     tris = neflab.triangulate(vertices, contours{:});
     faces = [faces; tris];
     %disp(tris)
@@ -69,10 +77,20 @@ for ff = 1:numFacets
 end
 
 
+end
 
 
+function detectSingularFacets(verts) 
+    dVerts = bsxfun(@plus, verts, -verts(1,:));
+    if rank(dVerts) < 2
+        warning('Detected a face with zero area');
+    end
+end
 
-
+function isSingular = faceIsSingular(verts)
+    dVerts = bsxfun(@plus, verts, -verts(1,:));
+    isSingular = (rank(dVerts) < 2);
+end
 
 
 

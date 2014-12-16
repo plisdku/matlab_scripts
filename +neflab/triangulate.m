@@ -7,6 +7,45 @@ if numContours == 1 && numel(varargin{1}) == 3
     tris = reshape(varargin{1}, 1, 3);
     return
 else
+    [local2global, localContours, contourLengths] = ...
+        localIndicesRobust(varargin{:});
+    localVertices = vertices(local2global,:);
+    
+    % Beginning and ending indices of contours, e.g.
+    %   cStarts = [1 5 8]
+    %   cEnds = [4 7 15]
+    % means the outer contour is localVertices(1:4,:)
+    % and the inner contours run from 5 to 7 and from 8 to 15.
+    
+    cStarts = 1 + cumsum([0 contourLengths(1:end-1)]);
+    cEnds = cStarts + contourLengths - 1;
+    
+    flatVertices = flatten(localVertices, ...
+        neflab.facetNormal(localVertices, ...
+            localContours(cStarts(1):cEnds(1))));
+    
+    % Explicitly list all the edges of the polygon, for Delaunay
+    % triangulation.  These edges are triangulation constraints.
+    col = @(A) reshape(A, [], 1);
+    constraints = [col(localContours), col(localContours)];
+    
+    for cc = 1:numel(contourLengths)
+        firstCol = localContours(cStarts(cc):cEnds(cc),1);
+        secondCol = firstCol([2:end,1]);
+        constraints(cStarts(cc):cEnds(cc),2) = secondCol;
+    end
+    
+    dt = DelaunayTri(flatVertices, constraints);
+    inside = inOutStatus(dt);
+    
+    localTris = dt.Triangulation(inside,:);
+    tris = local2global(localTris);
+    
+    if size(tris,2) ~= 3
+        tris = tris';
+    end
+    
+    %{
     % It's not a triangle.  It has more vertices and might have holes.
     [localContours, local2global, uniqueGlobal] = localIndices(varargin{:});
     localVertices = vertices(uniqueGlobal,:);
@@ -14,7 +53,6 @@ else
     outerContour = localContours{1};
 
     nv = neflab.facetNormal(localVertices, outerContour);
-
     flatVertices = flatten(localVertices, nv);
 
     colVec = @(A) reshape(A, [], 1);
@@ -29,7 +67,7 @@ else
         constraints = [constraints; ...
             [colVec(loop(1:end)), colVec(loop([2:end,1]))] ];
     end
-
+    
     dt = DelaunayTri(flatVertices, constraints);
     inside = inOutStatus(dt);
 
@@ -40,12 +78,15 @@ else
     if size(tris,2) ~= 3
         tris = tris';
     end
+    %}
 end
 
 
 
 
 end
+
+%{
 % Convert global vertex indices to local facet indices.
 % localContours will take on values from 1 to numVerts (in facet).
 % local2global gives back the global indices.
@@ -56,7 +97,7 @@ localContours = varargin;
 
 numVerts = sum(cellfun(@numel, varargin));
 local2global = cat(1, varargin{:});
-uniqueGlobal = local2global;
+[uniqueGlobal, ia, localContour] = unique(local2global, 'stable');
 
 iVert = 0;
 for cc = 1:numContours
@@ -65,7 +106,23 @@ for cc = 1:numContours
     iVert = iVert + contourLength;
 end
 
-%assert(numel(uniqueGlobal) == numel(unique(local2global)));
+assert(numel(uniqueGlobal) == numel(unique(local2global)));
+
+end
+%}
+
+function [local2global, localContours, contourLengths] = ...
+    localIndicesRobust(varargin)
+
+numContours = numel(varargin);
+contourLengths = cellfun(@numel, varargin);
+
+%cStarts = 1 + cumsum([0 contourLengths(1:end-1)]);
+%dcEnds = cStarts + contourLengths - 1;
+
+[local2global, ~, localContours] = unique(cat(1,varargin{:}), 'stable');
+
+end
 
 
 % The old way that could handle repeated vertices.  I want no part of that
@@ -98,7 +155,6 @@ for cc = 1:numContours
 end
 %}
 
-end
 
 % I need to create a right-handed coordinate system in which normalVector
 % is "up", then project vIn onto this perpspace of normalVector.

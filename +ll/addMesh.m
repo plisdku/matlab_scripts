@@ -5,6 +5,7 @@ X.Material = 1;
 X.Conductivity = 0;
 X.Parameters = [];
 X.HMax = '';
+X.HMin = '';
 X.HGrad = '';
 
 X = parseargs(X, varargin{:});
@@ -22,7 +23,7 @@ jac = m{1}.jacobian;
 
 meshStruct = struct('material', X.Material, ...
     'vertices', v, 'faces', f, 'jacobian', jac, ...
-    'hmax', X.HMax, 'hgrad', X.HGrad);
+    'hmax', X.HMax, 'hgrad', X.HGrad, 'hmin', X.HMin);
 
 LL_MODEL.meshes{numel(LL_MODEL.meshes)+1} = meshStruct;
 
