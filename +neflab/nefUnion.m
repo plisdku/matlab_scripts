@@ -8,8 +8,8 @@ function [vertices faces] = nefUnion(v1, f1, v2, f2)
 % Call NefLab
 % Get polyhedron back out
 
-detectSingularFaces(v1,f1);
-detectSingularFaces(v2,f2);
+%detectSingularFaces(v1,f1);
+%editdetectSingularFaces(v2,f2);
 
 inFile = [tempdir sprintf('nefTemp%1.4f.txt', now)];
 outFile = [tempdir sprintf('nefOut%1.4f.txt', now)];
