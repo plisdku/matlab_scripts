@@ -82,7 +82,7 @@ function [x, fval, iter, xHist, fHist, DfHist] = extremize(fn, x0, varargin)
                 numTries = numTries + 1;
                 [f_eval, Df_eval] = fn(x);
                 succeeded = true;
-            catch
+            catch anException
                 if iter > 1 && numTries < 5
                     warning('Failed to evaluate objective function.  Step back.');
                     x = xHist(:,end) + 0.75*(x-xHist(:,end));

@@ -106,7 +106,7 @@ function endSim(varargin)
             fprintf('ALL ARE DISJOINT\n');
         end
     
-
+    
     stepImport = geom.feature.create('impSTEP', 'Import');
     stepImport.set('createselection', true);
     stepImport.set('type', 'cad');
