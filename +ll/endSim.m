@@ -432,7 +432,7 @@ function endSim(varargin)
             if X.SaveFields
                 model.save([pwd filesep 'fields_' X.MPH]);
             end
-        catch
+        catch crapception
             if tries < maxSolveAttempts
                 warning('Solve failed.  Re-meshing and re-solving.');
                 tries = tries + 1;
