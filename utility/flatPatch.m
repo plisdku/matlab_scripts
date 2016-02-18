@@ -1,4 +1,4 @@
-function flatPatch(varargin)
+function h = flatPatch(varargin)
 % flatPatch  Replacement for patch() with surface normals instead of vertex
 % normals
 %
@@ -76,7 +76,7 @@ for ff = 1:length(allfields)
     argList{end+1} = X.(allfields{ff});
 end
 
-patch(argList{:});
+h = patch(argList{:});
 
 
 

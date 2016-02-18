@@ -345,7 +345,7 @@ tFull = toc;
 
 %% Method 2: cells
 tic
-C2 = txca(A, ndims(A), 3, B_cell, 2, 2);
+C2 = txca(A, ndims(A), 3, B_cell, 2, 2);t
 tSparse = toc;
 
 assert(isClose(C1, C2));

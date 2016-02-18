@@ -1,4 +1,5 @@
 function writeSTL(pv, faces, fname)
+% writeSTL(pv, faces, fname)
 
 % Vectorize some of this.  For big meshes this is annoyingly slow...
 iFaces = 1:size(faces,1);
