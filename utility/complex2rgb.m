@@ -1,4 +1,9 @@
 function [rgb, maxVal] = complex2rgb(A, varargin)
+% [rgb, maxVal] = complex2rgb(A, varargin)
+%
+% complex2rgb(A, 'Mode', 'value')
+% complex2rgb(A, 'Mode', 'saturation')
+% complex2rgb(A, 'Mode', 'flat')
 
 X.Mode = 'value';
 X.Threshold = inf;
