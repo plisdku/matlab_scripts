@@ -1,4 +1,5 @@
 function [vertices faces] = readSTL(fname)
+% [vertices faces] = readSTL(fname)
 
 [numVerts numFaces] = scanSTL(fname);
 
