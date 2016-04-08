@@ -2,6 +2,7 @@ function addMesh(varargin)
 
 X.Mesh = [];
 X.Material = 1;
+X.Voltage = [];
 X.Conductivity = 0;
 X.Parameters = [];
 X.HMax = '';
@@ -21,7 +22,7 @@ jac = m{1}.jacobian;
 %fname = sprintf('mesh_%i.stl', numMeshes+1);
 %ll.meshToSTL(X.Mesh, fname);
 
-meshStruct = struct('material', X.Material, ...
+meshStruct = struct('material', X.Material, 'voltage', X.Voltage, ...
     'vertices', v, 'faces', f, 'jacobian', jac, ...
     'hmax', X.HMax, 'hgrad', X.HGrad, 'hmin', X.HMin);
 

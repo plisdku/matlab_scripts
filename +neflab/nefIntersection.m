@@ -39,6 +39,8 @@ function [vertices faces] = nefIntersection(v1, f1, v2, f2)
     fh = fopen(outFile, 'r');
     [vertices, faces] = neflab.readNefPolyhedron(fh);
     fclose(fh);
-
+    
+    % Cleanup step to fix some geometry problems.
+    vertices = neflab.consolidateVertices([v1; v2], vertices);
 
 end

@@ -1,4 +1,4 @@
-function [vertices faces] = nefUnion(v1, f1, v2, f2)
+function [vertices, faces] = nefUnion(v1, f1, v2, f2)
 % nefUnion    Calculate union of two polyhedra
 %
 % [vertices faces] = nefUnion(v1, f1, v2, f2)
@@ -35,4 +35,7 @@ end
 fh = fopen(outFile, 'r');
 [vertices, faces] = neflab.readNefPolyhedron(fh);
 fclose(fh);
+
+% Cleanup step to fix some geometry problems.
+vertices = neflab.consolidateVertices([v1; v2], vertices);
 
