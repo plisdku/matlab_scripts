@@ -35,6 +35,10 @@ else
         constraints(cStarts(cc):cEnds(cc),2) = secondCol;
     end
     
+    if size(uniqueRows(flatVertices), 1) ~= size(flatVertices,1)
+        disp('Duplicate vertices found')
+    end
+    %dt = delaunayTriangulation(flatVertices, constraints);
     dt = DelaunayTri(flatVertices, constraints);
     inside = inOutStatus(dt);
     

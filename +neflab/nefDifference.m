@@ -41,3 +41,5 @@ assert(fh ~= -1);
 [vertices, faces] = neflab.readNefPolyhedron(fh);
 fclose(fh);
 
+% Cleanup step to fix some geometry problems.
+vertices = neflab.consolidateVertices([v1; v2], vertices);
