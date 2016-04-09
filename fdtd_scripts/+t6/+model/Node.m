@@ -24,5 +24,16 @@ classdef Node < handle
                 vv = [vv; myMeshes{mm}.vertices];
             end
         end
+        
+        function m = mesh(obj, varargin)
+            myMeshes = obj.meshes(varargin{:})
+            
+            if length(myMeshes) ~= 1
+                error('mesh() only works if there is one mesh in the node');
+            end
+            
+            m = myMeshes{1};
+        end
+            
     end
 end

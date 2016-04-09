@@ -30,7 +30,6 @@ numNew = size(vertices,1);
 
 for iVert = 1:numNew
     for iOrig = 1:numOriginal
-        
         delta = vertices(iVert,:) - originalVertices(iOrig,:);
         
         if norm(delta) < consolidateDistance

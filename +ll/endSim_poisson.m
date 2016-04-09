@@ -168,6 +168,7 @@ function endSim_poisson(varargin)
     
     %% Assign domains to materials
     
+    % Seems like I don't define materials at all now.  How to handle this?
     if cacheExists
         domainMaterial = dlmread(domainMaterialsFile);
     else
@@ -820,8 +821,8 @@ end
 %     
 % end
 
-function [nonPMLChunks, pmlChunks] = processGeometry(meshes, ...
-    nonPMLBounds, pmlBounds, srcMeasStructs, stepFile)
+function nonPMLChunks = processGeometry(meshes, ...
+    srcMeasStructs, stepFile)
     
     %% Create mutually disjoint input meshes!
     % Each mesh subtracts off all previous meshes.
@@ -833,26 +834,22 @@ function [nonPMLChunks, pmlChunks] = processGeometry(meshes, ...
     % This will really speed things up when intersecting every PML block with every
     % material block.
     
-    disjointMeshesInPML = makeDisjointInputs(meshes, nonPMLBounds);
-    pl = @(mesh) flatPatch('Vertices', mesh.vertices, 'Faces', mesh.faces, 'FaceColor', 'g', ...
-        'EdgeAlpha', 0.1, 'FaceAlpha', 0.2);
+    pl = @(mesh) flatPatch('Vertices', mesh.vertices, 'Faces', mesh.faces,...
+        'FaceColor', 'g', 'EdgeAlpha', 0.1, 'FaceAlpha', 0.2);
     
     srcMeasMeshes = gatherSrcMeasMeshes(srcMeasStructs);
-    pmlMeshes = makePMLMeshes(pmlBounds, nonPMLBounds);
-    pmlChunks = makePMLPieces(pmlMeshes, uniteMaterials(disjointMeshesInPML));
-    numPMLChunks = numel(pmlChunks);
 
     %% Structure not in PML!
-
-    nonPMLChunks = makeNonPMLPieces(uniteMaterials(disjointMeshes), nonPMLBounds);
+    
+    nonPMLChunks = uniteMaterials(disjointMeshes);
     
     %% Adjust for measurements!
     nonPMLChunks = vennChunks(nonPMLChunks, srcMeasStructs);
 
     %% Create the STEP file and set up STEP import.
-
+    
     %fprintf('Got to the STEP file.\n');
-    writeSTEP([nonPMLChunks, pmlChunks], stepFile);
+    writeSTEP(nonPMLChunks, stepFile);
     
 end
 

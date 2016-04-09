@@ -1,4 +1,5 @@
 classdef Mesh < handle
+    % Mesh object
     
     properties
         vertices
@@ -11,11 +12,30 @@ classdef Mesh < handle
     methods
         
         function obj = Mesh(v, f, j, permittivity, permeability)
-            if nargin > 0 % default constructor has same signature, sigh
-                obj.vertices = v;
+            % mesh = Mesh(vertices, faces, Jacobian, epsilon, mu)
+            % 
+            if nargin >= 2 % default constructor has same signature, sigh
+                
+                if size(v,2) == 3
+                    v = v';
+                    obj.vertices = v(:);
+                elseif size(v,2) == 1              
+                    obj.vertices = v;
+                else
+                    error('Vertex array must be Mx1 or Nx3');
+                end
                 obj.faces = f;
+            end
+            
+            if nargin >= 3
                 obj.jacobian = j;
+            end
+            
+            if nargin >= 4
                 obj.permittivity = permittivity;
+            end
+            
+            if nargin >= 5
                 obj.permeability = permeability;
             end
         end
