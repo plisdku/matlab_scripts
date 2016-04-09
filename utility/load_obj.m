@@ -67,11 +67,14 @@ while (done == 0)
                end
                
            case 'f'
-               [dat2, count2] = sscanf(remainder, '%f//%f');
+               [dat2, count2] = sscanf(remainder, '%f//%f'); % with normals
+               [dat3, count3] = sscanf(remainder, '%f'); % without normals
                
                if count2 == 8
                    faceverts = [faceverts; dat2([1 3 5 7])'];
                    facenorms = [facenorms; dat2([2 4 6 8])'];
+               elseif count3 == 4
+                   faceverts = [faceverts; dat3'];
                else
                    error('Cannot parse line %s', ll);
                end

@@ -1,5 +1,9 @@
-function writeSTL(pv, faces, fname)
-% writeSTL(pv, faces, fname)
+function writeSTL(pv, faces, fname, solidName)
+% writeSTL(vertices_Nx3, faces_Mx3, fname)
+
+if nargin < 4
+    solidName = 's';
+end
 
 % Vectorize some of this.  For big meshes this is annoyingly slow...
 iFaces = 1:size(faces,1);
@@ -13,7 +17,7 @@ nvs = bsxfun(@times, normalVectors, ...
 
 fh = fopen(fname, 'w');
 
-fprintf(fh, 'solid s\n');
+fprintf(fh, 'solid %s\n', solidName);
 
 fmt = ['facet normal %i %i %i\n' ...
     '\touter loop\n' ...
@@ -30,7 +34,7 @@ allDat = [nvs(:,1), nvs(:,2), nvs(:,3), ...
 
 fprintf(fh, fmt, transpose(allDat));
 
-fprintf(fh, 'endsolid s\n');
+fprintf(fh, 'endsolid %s\n', solidName);
 
 %{
 
@@ -68,8 +72,6 @@ for ff = 1:size(faces, 1)
     
 end
 %}
-
-fprintf(fh, 'endsolid s\n');
 
 fclose(fh);
 
