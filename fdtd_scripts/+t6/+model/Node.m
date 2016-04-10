@@ -26,7 +26,7 @@ classdef Node < handle
         end
         
         function m = mesh(obj, varargin)
-            myMeshes = obj.meshes(varargin{:})
+            myMeshes = obj.meshes(varargin{:});
             
             if length(myMeshes) ~= 1
                 error('mesh() only works if there is one mesh in the node');
