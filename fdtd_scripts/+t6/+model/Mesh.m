@@ -67,6 +67,14 @@ classdef Mesh < handle
             
             b = [minCoord maxCoord];
         end
+        
+        function nf = numFaces(obj)
+            nf = size(obj.faces,1);
+        end
+        
+        function nv = numVertices(obj)
+            nv = length(obj.vertices)/3;
+        end
     end
     
 end
