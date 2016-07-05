@@ -855,20 +855,20 @@ function domainMaterial = findDomainMaterials(model, geom, nonPMLChunks, pmlChun
     end
     %}
 end
-
-function markDomains
-    
-    disjointInputMeshes = makeDisjointInputs(meshes);
-    measurementMeshes = makeMeasurementMeshes(measurementBounds);
-    pmlMeshes = makePMLMeshes(pmlBounds, nonPMLBounds);
-    
-    materialMeshes = uniteMaterials(disjointInputMeshes);
-    materialMeshes_PML = uniteMaterials(disjointInputMeshesInPML);
-    
-    innerDomains = separateIntoDomains(disjointInputMeshes, ...
-        measurementMeshes);
-    
-end
+% 
+% function markDomains
+%     
+%     disjointInputMeshes = makeDisjointInputs(meshes);
+%     measurementMeshes = makeMeasurementMeshes(measurementBounds);
+%     pmlMeshes = makePMLMeshes(pmlBounds, nonPMLBounds);
+%     
+%     materialMeshes = uniteMaterials(disjointInputMeshes);
+%     materialMeshes_PML = uniteMaterials(disjointInputMeshesInPML);
+%     
+%     innerDomains = separateIntoDomains(disjointInputMeshes, ...
+%         measurementMeshes);
+%     
+% end
 
 function [nonPMLChunks, pmlChunks] = processGeometry(meshes, ...
     nonPMLBounds, pmlBounds, srcMeasStructs, stepFile)
