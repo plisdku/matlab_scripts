@@ -1,12 +1,19 @@
 %% Read DF data from COMSOL
-function [F, dFdp, integrals] = evaluateFDF(movableMesh, params, filename)
+function [F, dFdp, integrals] = evaluateFDF(movableMesh, params, filename, minFaceArea)
 
 if nargin < 3
     filename = 'DF_on_surfaces.txt';
 end
+
+if nargin < 4
+    minFaceArea = 1e-12
+end
+
 %%
 fid = fopen(filename);
-AA = cell2mat(textscan(fid, '%n%n%n%n', 'CommentStyle', '%'));
+% maxwell version (old version), without normal vectors
+%AA = cell2mat(textscan(fid, '%n%n%n%n', 'CommentStyle', '%'));
+AA = cell2mat(textscan(fid, '%n%n%n%n%n%n%n', 'CommentStyle', '%'));
 fclose(fid);
 
 x = AA(:,1);
@@ -40,6 +47,8 @@ linearInterp = TriScatteredInterp(x,y,z,DF, 'linear');
 nearestInterp = TriScatteredInterp(x,y,z,DF, 'nearest');
 maxDF = max(abs(DF(:)));
 
+omitCount = 0;
+
 numFaces = size(faces, 1);
 integrals = zeros(numParams, numFaces);
 for ff = 1:numFaces
@@ -53,9 +62,10 @@ for ff = 1:numFaces
     dv2 = verts(faces(ff,3),:) - verts(faces(ff,1),:);
     faceArea = 0.5*norm(cross(dv1, dv2));
     
-    if faceArea < 1e-5
+    if faceArea < minFaceArea
     %if abs(det([vx vy vz])) < 1e-5 % wrong.  grr.
         %warning('Null triangle!!  So tiny!  So cute!');
+        omitCount = omitCount+1;
         continue;
     end
     
@@ -137,11 +147,18 @@ end
 
 %%
 
-dFdp = transpose(sum(integrals*1e-27, 2)); % there are three m->nm conversions.
+%keyboard
+
+%%
+
+% maxwell uses this 1e-27 factor
+%dFdp = transpose(sum(integrals*1e-27, 2)); % there are three m->nm conversions.
+dFdp = transpose(sum(integrals, 2));
 
 %% F?
 
-F = ll.evaluateF();
+% maxwell uses column 2, I think column 1 is frequency
+F = ll.evaluateF('Column', 1);
 
 %% My griddata wrapper, dangit.
 
