@@ -21,24 +21,17 @@ function endSim_poisson(varargin)
 
     %% Figure out whether we can read things out of a file or not.
     
-    checksum = geometryChecksum(LL_MODEL.meshes, bounds);
-    assert(isa(checksum, 'uint16'));
+    [stepFile, movableDomainsFile, domainMaterialsFile] = ...
+        generateFileNamesFromGeometry(LL_MODEL.meshes, bounds);
 
-    stepFile = sprintf('structure_%.4x.step', checksum);
-    movableDomainsFile = sprintf('movableDomains_%.4x.txt', checksum);
-    domainMaterialsFile = sprintf('domainMaterials_%.4x.txt', checksum);
-
+    % I'm not using the cache at present---though I should---but here is
+    % the test for its existence.
+    cacheExists = exist(stepFile, 'file') && exist(movableDomainsFile, 'file') ...
+        && exist(domainMaterialsFile, 'file');
     cacheExists = false;
-    if exist(stepFile, 'file') && exist(movableDomainsFile, 'file') ...
-        && exist(domainMaterialsFile, 'file')
-
-        %fprintf('Using cached geometry data.\n');
-        cacheExists = true;
-    end
+    warning('Assuming cache does not exist');
     
     %% Create the materials
-    % I build all the geometry and assign materials at the same time.
-    %fprintf('Creating materials.\n');
 
     comsolMaterials(model, LL_MODEL.meshes, LL_MODEL.materials);
     numMaterials = numel(unique(cellfun(@(x) x.material, LL_MODEL.meshes)));
@@ -51,9 +44,7 @@ function endSim_poisson(varargin)
     measStructs = makeSourcesOrMeasurements(model, geom, 'meas', LL_MODEL.measurements);
     
     %% Build the STEP file if necessary
-
-    cacheExists = false;
-    warning('Assuming cache does not exist');
+    % It's needed unless it's cached and I'm using the cache.
     
     chunks = processGeometry(LL_MODEL.meshes, [sourceStructs measStructs], stepFile);
     
@@ -105,7 +96,7 @@ function endSim_poisson(varargin)
     comsolMovableMeshSelection(model, LL_MODEL.meshes, cacheExists, ...
         movableDomainsFile);
     
-    comsolMeasurements(X, model, LL_MODEL.measurements);
+    comsolMeasurements(model, LL_MODEL.measurements, X.Gradient);
     
     %% Variables for handling the adjoint calculation
     comsolVariables(model);
@@ -123,7 +114,6 @@ function endSim_poisson(varargin)
     %
     % For ever solution failure
     %  make the mesh a bit smaller
-    %
     
     comsolMesh(model, meshDomains, LL_MODEL.meshes, ...
         LL_MODEL.measurements, ...
@@ -149,7 +139,14 @@ function endSim_poisson(varargin)
     tries = 1;
     while ~succeeded
         try
-            model.sol('sol1').runAll;
+            %model.sol('sol1').runAll;
+            
+            % Forward: run Study Step 1 through Save Solutions 1
+            model.sol('sol1').runFromTo('st1', 'su1');
+            
+            % Dual: run Study Step 2 through Stationary 2
+            model.sol('sol1').runFromTo('st2', 's2');
+            
             succeeded = 1;
             if X.SaveFields
                 model.save([pwd filesep 'fields_' X.MPH]);
@@ -186,6 +183,19 @@ function endSim_poisson(varargin)
 
     model.result.export('expTableF').run;
 
+end
+
+
+function [stepFile, movableDomainsFile, domainMaterialsFile] = ...
+        generateFileNamesFromGeometry(meshes, bounds)
+% Calculate checksum from the geometry and generate filenames with it.
+
+    checksum = geometryChecksum(meshes, bounds);
+    assert(isa(checksum, 'uint16'));
+
+    stepFile = sprintf('structure_%.4x.step', checksum);
+    movableDomainsFile = sprintf('movableDomains_%.4x.txt', checksum);
+    domainMaterialsFile = sprintf('domainMaterials_%.4x.txt', checksum);
 end
 
 
@@ -1095,7 +1105,7 @@ function comsolPlots(X, model)
 end
 
 
-function comsolMeasurements(X, model, measurements)
+function comsolMeasurements(model, measurements, doCalculateGradient)
     
     bounds = measurements{1}.bounds;
     extent = bounds(4:6) - bounds(1:3);
@@ -1143,7 +1153,7 @@ function comsolMeasurements(X, model, measurements)
         intVol.set('expr', measurements{1}.F);
     end
 
-    if X.Gradient
+    if doCalculateGradient
         model.result.export.create('exportSurfaceDF', 'Data');
         model.result.export('exportSurfaceDF').name('data set');
         model.result.export('exportSurfaceDF').set('data', 'dsetSurfaces');
