@@ -9,14 +9,15 @@ function endSim_poisson(varargin)
     X = parseargs(X, varargin{:});
 
     global LL_MODEL;
+    bounds = LL_MODEL.bounds;
 
     import com.comsol.model.*
     import com.comsol.model.util.*
-
-    model = ModelUtil.create('Model');
     
-    bounds = LL_MODEL.bounds;
-
+    model = ModelUtil.create('Model');
+    model.modelNode.create('mod1');
+    geom = model.geom.create('geom1', 3);
+    
     if ~exist('importMeshes', 'dir')
         mkdir('importMeshes');
     end
@@ -37,35 +38,13 @@ function endSim_poisson(varargin)
         %fprintf('Using cached geometry data.\n');
         cacheExists = true;
     end
-
-    %%
-    
-    model.modelNode.create('mod1');
-    geom = model.geom.create('geom1', 3);
-    geom.lengthUnit('mm');
     
     %% Create the materials
     % I build all the geometry and assign materials at the same time.
-    tensorElems = @(T) arrayfun(@(a) sprintf('%2.8f+%2.8fi',real(a),imag(a)), T(:), ...
-        'UniformOutput', false);
-
     %fprintf('Creating materials.\n');
 
+    comsolMaterials(model, LL_MODEL.meshes, LL_MODEL.materials);
     numMaterials = numel(unique(cellfun(@(x) x.material, LL_MODEL.meshes)));
-
-    for mm = 1:numMaterials
-
-        matName = sprintf('mat%i', mm);
-        mat = model.material.create(matName);
-        mat.name(matName);
-        mat.propertyGroup('def').set('relpermittivity', ...
-            tensorElems(LL_MODEL.materials{mm}.epsr * eye(3)));
-        mat.propertyGroup('def').set('relpermeability', ...
-            tensorElems(LL_MODEL.materials{mm}.mur * eye(3)));
-        mat.propertyGroup('def').set('electricconductivity', ...
-            tensorElems(LL_MODEL.materials{mm}.sigma * eye(3)));
-
-    end
     
     %% Create output/source/measurement volumes, planes and points!
     % Outputs, sources and measurements can all be on points, volumes or planes.
@@ -77,102 +56,45 @@ function endSim_poisson(varargin)
     
     %% Build the STEP file if necessary
 
-    if cacheExists
-        %fprintf('Using cached STEP file!\n');
-    else
-        %fprintf('Processing geometry to create STEP file.\n');
-        chunks = processGeometry(LL_MODEL.meshes, ...
-            [sourceStructs measStructs], stepFile);
-        % no pml so it's different than maxwell
-        %[nonPMLChunks, pmlChunks] = processGeometry(LL_MODEL.meshes, ...
-        %    nonPMLBounds, pmlBounds, [sourceStructs measStructs], stepFile);
-        %assertDisjoint(nonPMLChunks);
-    end
+    cacheExists = false;
+    warning('Assuming cache does not exist');
     
-    function assertDisjoint(chunks)
-        for cc = 1:numel(chunks)
-            for dd = cc+1:numel(chunks)
-
-                fprintf('testing %i and %i...\n', cc, dd);
-                assert(~neflab.nefTestIntersection(...
-                    chunks{cc}.vertices, chunks{cc}.faces, ...
-                    chunks{dd}.vertices, chunks{dd}.faces));
-
-            end
-        end
-        fprintf('ALL ARE DISJOINT\n');
-    end
+    chunks = processGeometry(LL_MODEL.meshes, [sourceStructs measStructs], stepFile);
     
+    comsolSTEPImport(geom, stepFile);
     
-    stepImport = geom.feature.create('impSTEP', 'Import');
-    stepImport.set('createselection', true);
-    stepImport.set('type', 'cad');
-    stepImport.set('filename', [pwd filesep stepFile]);
-    %stepImport.set('unit', 'source');
-
-    
-    % NO SCALING because I'm in millimeters already, not nanometers.
-    % The STEP file will be in millimeters.  STEP can't do nanometers.
-    % So, I'll scale everything on the way in!
-    % Pre-scaling results in internal geometry errors since COMSOL sucks.
-    %geom.feature.create('sca1', 'Scale');
-    %geom.feature('sca1').set('isotropic', '1e-6');
-    %geom.feature('sca1').set('factor', '1e-6');
-    %geom.feature('sca1').selection('input').named('impSTEP');
-
-    %fprintf('Running the geometry!\n');
     model.save([pwd filesep 'preRunGeometry.mph']);
-    
-    % This is where I put geometry workarounds.  I'd like to try some union
-    % steps...
-    
-    try
-        geom.run;
-    catch exc
-        warning('Failed initial attempt');
-        
-        % Now do pairwise unions of things from nonPMLChunks.
-        % The hope is that some union of two chunks will prevent geometry
-        % failures.  
-        
-        pairs = combnk(1:3,2);
-        
-        succeeded = false;
-        for pp = 1:size(pairs,1)
-        if succeeded == false
-            fprintf('Attempting with union of %i and %i\n', ...
-                pairs(pp,1), pairs(pp,2));
-            
-            try
-                un = geom.feature.create('saveMyButtUnion', 'Union');
-                un.selection('input').set(...
-                    { sprintf('sca1(%i)', pairs(pp,1)), ...
-                      sprintf('sca1(%i)', pairs(pp,2)) } );
-                model.save([pwd filesep 'preRunGeometry.mph']);
-                geom.run();
-                succeeded = true;
-                fprintf('Succeded!\n');
-            catch exc
-                warning('Failed geom.run()!');
-                geom.feature.remove('saveMyButtUnion');
-            end
-        end
-        end
-        
-        if succeeded == false
-            error('Failed every single time!');
-        end
-    end
-    %fprintf('Geometry ran successfully.\n');
+    runGeometry(geom);
     model.save([pwd filesep 'postRunGeometry.mph']);
     
-    %% Assign domains to materials
+    %% Find the domains in each chunk, and the chunk containing each domain
+    % Also find the boundary entities for each chunk.
+    
+    domainChunks = smallestEnclosingChunks(model, geom, chunks); % used for assigning materials
+    chunkBoundaries = cell(size(chunks)); % not used
+    for cc = 1:length(chunks)
+        chunkBoundaries{cc} = ll.outerDomainBoundaryEntities(model, find(domainChunks == cc));
+    end
+    
+    % The original structural meshs, which may have several chunks
+    domainMeshes = smallestEnclosingChunks(model, geom, LL_MODEL.meshes); % used in loop
+    meshDomains = cell(size(LL_MODEL.meshes));
+    meshBoundaries = cell(size(LL_MODEL.meshes)); % used for voltage selection
+    for cc = 1:length(LL_MODEL.meshes)
+        meshDomains{cc} = find(domainMeshes == cc);
+        meshBoundaries{cc} = ll.outerDomainBoundaryEntities(model, meshDomains{cc});
+    end
+    
+    %% Assign a material to each domain
+    % Get the material for each chunk, then get the chunk for each domain.
     
     % Seems like I don't define materials at all now.  How to handle this?
     if cacheExists
         domainMaterial = dlmread(domainMaterialsFile);
     else
-        domainMaterial = findDomainMaterials(model, geom, chunks);
+        allMaterials = cellfun(@(a) a.material, chunks);
+        domainMaterial = allMaterials(domainChunks);
+        %domainMaterial = findDomainMaterials(model, geom, chunks);
         dlmwrite(domainMaterialsFile, domainMaterial);
     end
     
@@ -188,7 +110,12 @@ function endSim_poisson(varargin)
 
     if cacheExists
         %fprintf('Using cached movable domains file.\n');
-        movableMeshDomains = dlmread(movableDomainsFile);
+        try
+            movableMeshDomains = dlmread(movableDomainsFile);
+        catch exc
+            warning('Could not read movable domains file, is it empty?');
+            movableMeshDomains = [];
+        end
     else
         movableMeshDomains = findMovableBoundaries(model, LL_MODEL.meshes);
         dlmwrite(movableDomainsFile, movableMeshDomains);
@@ -199,47 +126,64 @@ function endSim_poisson(varargin)
     sel.geom('geom1', 2);
     sel.set(movableMeshDomains);
     
-    %% Make selection of meshes with fixed voltages
+    %% Electrode selection
+    % Make selection of meshes with fixed voltages.
     
-    voltageMeshDomains = findElectrodes(model, LL_MODEL.meshes);
-    
-    for nn = 1:numel(voltageMeshDomains)
-        electrodeName = sprintf('electrode_%i', nn);
+    for mm = 1:numel(LL_MODEL.meshes)
+    if ~isempty(LL_MODEL.meshes{mm}.voltage)
+        electrodeName = sprintf('electrode_%i', mm);
         sel = model.selection.create(electrodeName, 'Explicit');
         sel.name(electrodeName);
         sel.geom('geom1', 2);
-        %sel.set(voltageMeshDomains(nn));
+        sel.set(meshBoundaries{mm});
+    end
     end
 
-    %% Assembly!  Yarr!
-
-    model.save([pwd filesep 'prePhysics.mph']);
-
     %% Forward physics!
-
-    %fprintf('Forward physics\n')
+    
+    model.save([pwd filesep 'prePhysics.mph']);
+    
+    elementOrderString = '3';
+    warning('Element order %s', elementOrderString);
     
     model.physics.create('es', 'Electrostatics', 'geom1');
-    model.physics('es').prop('ShapeProperty').set('order_electricpotential', '3');
+    model.physics('es').prop('ShapeProperty').set('order_electricpotential',...
+        elementOrderString);
 
     %% Forward electric potentials!
     
-    numPotentials = numel(LL_MODEL.potentials);
-    
-    for ss = 1:numPotentials
-        potentialName = sprintf('potential%i', ss);
-        pot = model.physics('es').create(potName, ...
+    % These are the fixed potentials
+    for mm = 1:numel(LL_MODEL.meshes)
+    if ~isempty(LL_MODEL.meshes{mm}.voltage)
+        potentialName = sprintf('potential%i', mm);
+        pot = model.physics('es').create(potentialName, ...
             'ElectricPotential', 2);
-        pot.selection.named(potentialStructs{ss}.selectionName);
-        pot.set('V0', LL_MODEL.potentials{ss}.V);
-        pot.name(sprintf('Potential %i', ss));
+        pot.selection.named(sprintf('electrode_%i', mm));
+        pot.set('V0', LL_MODEL.meshes{mm}.voltage);
+        pot.name(sprintf('Potential %i', mm));
+    end
     end
 
     %% Adjoint physics!
 
     %fprintf('Adjoint physics\n')
     model.physics.create('es2', 'Electrostatics', 'geom1');
-    model.physics('es2').prop('ShapeProperty').set('order_electricpotential', '3');
+    model.physics('es2').prop('ShapeProperty').set('order_electricpotential',...
+        elementOrderString);
+    
+    %% Adjoint electric potentials
+    % Every surface must have V=0 on it.
+    
+    for mm = 1:numel(LL_MODEL.meshes)
+    if ~isempty(LL_MODEL.meshes{mm}.voltage)
+        potentialName = sprintf('adjointPotential%i', mm);
+        pot = model.physics('es2').create(potentialName, ...
+            'ElectricPotential', 2);
+        pot.selection.named(sprintf('electrode_%i', mm));
+        pot.set('V0', 0);
+        pot.name(sprintf('Adjoint potential %i', mm));
+    end
+    end
     
     %% Adjoint space charge!
     
@@ -264,9 +208,10 @@ function endSim_poisson(varargin)
             error('not handling surfaces yet')
         elseif nnz(extent) == 3 % volume current
             
-            scd = model.physics('es2').create('scd1', 'SpaceChargeDensity', 3);
+            scd = model.physics('es2').create(currName, 'SpaceChargeDensity', 3);
             scd.selection.named(measStructs{ss}.selectionName);
-            scd.set('rhoq', LL_MODEL.measurements{ss}.rhoq);
+            %scd.set('rhoq', LL_MODEL.measurements{ss}.rhoq);
+            scd.set('rhoq', LL_MODEL.measurements{ss}.g); % should it be g or not?
             scd.name(sprintf('Adjoint charge %i', ss));
 
             measSel = {measSel{:} measStructs{ss}.selectionName};
@@ -316,16 +261,23 @@ function endSim_poisson(varargin)
     %
     
     theMesh = model.mesh.create('mesh1', 'geom1');
-    comsolMeshParameters(theMesh, model, measDims);
+    
+    nonElectrodeDomains = [];
+    for mm = 1:length(LL_MODEL.meshes)
+    if LL_MODEL.meshes{mm}.exclude == 0
+        nonElectrodeDomains = [nonElectrodeDomains, meshDomains{mm}];
+    end
+    end
+    comsolMeshParameters(theMesh, model, measDims, nonElectrodeDomains);
     
     globalSize = theMesh.feature('size');
     
-    globalHmax = 200;
+    globalHmax = 20e-3;
     if ~isempty(LL_MODEL.hmax)
         globalHmax = str2double(LL_MODEL.hmax); % adjust for Mesh/Study
     end
     
-    globalHmin = 4;
+    globalHmin = .1e-3;
     if ~isempty(LL_MODEL.hmin)
         globalHmin = str2double(LL_MODEL.hmin);
     end
@@ -395,11 +347,93 @@ function endSim_poisson(varargin)
     model.result.numerical('intF').setResult;
 
     if X.Gradient
-        model.result.export('expSurfDF').run;
+        model.result.export('exportSurfaceDF').run;
     end
 
     model.result.export('expTableF').run;
 
+end
+
+
+function comsolMaterials(model, meshes, materials)
+
+    tensorElems = @(T) arrayfun(@(a) sprintf('%2.8f+%2.8fi',real(a),imag(a)), T(:), ...
+        'UniformOutput', false);
+
+    numMats = numel(unique(cellfun(@(x) x.material, meshes)));
+
+    for mm = 1:numMats
+
+        matName = sprintf('mat%i', mm);
+        mat = model.material.create(matName);
+        mat.name(matName);
+        mat.propertyGroup('def').set('relpermittivity', ...
+            tensorElems(materials{mm}.epsr * eye(3)));
+        mat.propertyGroup('def').set('relpermeability', ...
+            tensorElems(materials{mm}.mur * eye(3)));
+        mat.propertyGroup('def').set('electricconductivity', ...
+            tensorElems(materials{mm}.sigma * eye(3)));
+
+    end
+
+end
+
+function comsolSTEPImport(geom, stepFileName)
+
+    stepImport = geom.feature.create('impSTEP', 'Import');
+    stepImport.set('createselection', true);
+    stepImport.set('type', 'cad');
+    stepImport.set('filename', [pwd filesep stepFileName]);
+    %stepImport.set('unit', 'source');
+
+    % The STEP file will be in millimeters.  Scale to meters.
+    % Pre-scaling results in internal geometry errors since COMSOL sucks.
+    scale = geom.feature.create('STEP_unit_correction', 'Scale');
+    scale.set('isotropic', '1e3');
+    scale.set('factor', '1e3');
+    scale.selection('input').named('impSTEP');
+
+end
+
+
+function runGeometry(geom)
+    try
+        geom.run();
+    catch exc
+        warning('Failed initial attempt');
+
+        % Now do pairwise unions of things from nonPMLChunks.
+        % The hope is that some union of two chunks will prevent geometry
+        % failures.
+
+        pairs = combnk(1:3,2);
+
+        succeeded = false;
+        for pp = 1:size(pairs,1)
+        if succeeded == false
+            fprintf('Attempting with union of %i and %i\n', ...
+                pairs(pp,1), pairs(pp,2));
+
+            try
+                un = geom.feature.create('saveMyButtUnion', 'Union');
+                un.selection('input').set(...
+                    { sprintf('sca1(%i)', pairs(pp,1)), ...
+                      sprintf('sca1(%i)', pairs(pp,2)) } );
+                model.save([pwd filesep 'preRunGeometry.mph']);
+                geom.run();
+                succeeded = true;
+                fprintf('Succeded!\n');
+            catch exc
+                warning('Failed geom.run()!');
+                geom.feature.remove('saveMyButtUnion');
+            end
+        end
+        end
+
+        if succeeded == false
+            error('Failed every single time!');
+        end
+    end
 end
 
 function potentialRecords = makePotentials(model, geom, prefix, potInputs)
@@ -497,7 +531,7 @@ end
 % elsewhere.
 function srcMeasRecords = makeSourcesOrMeasurements(model, geom,...
         prefix, srcMeasInputs)
-
+    
     N = numel(srcMeasInputs);
     srcMeasRecords = cell(size(srcMeasInputs));
 
@@ -560,15 +594,16 @@ function srcMeasRecords = makeSourcesOrMeasurements(model, geom,...
             srcMeasRecords{nn}.faces = m{1}.faces;
 
             boxName = sprintf('box_%s_%i', prefix, nn);
-
+            
             % Create the selection of the inside elements.
+            margin = 1e-6;
             box = model.selection.create(boxName, 'Box');
-            box.set('xmin', num2str(bounds(1)));
-            box.set('ymin', num2str(bounds(2)));
-            box.set('zmin', num2str(bounds(3)));
-            box.set('xmax', num2str(bounds(4)));
-            box.set('ymax', num2str(bounds(5)));
-            box.set('zmax', num2str(bounds(6)));
+            box.set('xmin', num2str(bounds(1)-margin));
+            box.set('ymin', num2str(bounds(2)-margin));
+            box.set('zmin', num2str(bounds(3)-margin));
+            box.set('xmax', num2str(bounds(4)+margin));
+            box.set('ymax', num2str(bounds(5)+margin));
+            box.set('zmax', num2str(bounds(6)+margin));
             box.set('condition', 'inside');
             box.name(boxName);
 
@@ -651,12 +686,15 @@ function meshes = uniteMaterials(inMeshes)
         iMat = inMeshes{mm}.material;
         
         if iMat <= numel(meshes) && isfield(meshes{iMat}, 'vertices')
+            % If the material has been unioned before, unite with previous.
             [meshes{iMat}.vertices, meshes{iMat}.faces] = neflab.nefUnion(...
                 inMeshes{mm}.vertices, inMeshes{mm}.faces, ...
                 meshes{iMat}.vertices, meshes{iMat}.faces);
         else
+            % New material, not yet unioned.  Make a new output mesh.
             meshes{iMat}.vertices = inMeshes{mm}.vertices;
             meshes{iMat}.faces = inMeshes{mm}.faces;
+            meshes{iMat}.material = iMat;
         end
         
     end
@@ -667,8 +705,9 @@ end
 % outChunks is basically the Venn diagram from overlaying subChunks on
 % inChunks.  The materials in outChunks come from the materials in
 % inChunks.
-function outChunks = vennChunks(outChunks, subChunks)
+function outChunks = vennChunks(inChunks, subChunks)
     
+    outChunks = inChunks;
     for iSub = 1:numel(subChunks)
     if subChunks{iSub}.dimensions == 3
         
@@ -719,7 +758,7 @@ function movableMeshDomains = findMovableBoundaries(model, meshes)
     for mm = 1:numel(meshes)    
     if any(meshes{mm}.jacobian(:))
     
-        bbox = calcBoundingBox(meshes{mm}.vertices) + [-1 -1 -1 1 1 1];
+        bbox = calcBoundingBox(meshes{mm}.vertices) + [-1 -1 -1 1 1 1]*1e-6;
     
         comsolIndices = [1 4; 2 5; 3 6];
     
@@ -732,7 +771,7 @@ function movableMeshDomains = findMovableBoundaries(model, meshes)
     end
 end
 
-function electrodeMeshes = findElectrodes(model, meshes)
+function electrodeDomains = findElectrodes(model, meshes)
     electrodeDomains = [];
     
     for mm = 1:numel(meshes)
@@ -768,7 +807,7 @@ function enclosingChunks = smallestEnclosingChunks(model, geom, chunks)
         bbox = calcBoundingBox(chunks{ss}.vertices);
         volumes(ss) = prod(bbox(4:6)-bbox(1:3));
         
-        domains = selectBoxHelper(model, bbox + [-1 -1 -1 1 1 1]);
+        domains = selectBoxHelper(model, bbox + [-1 -1 -1 1 1 1]*1e-6);
         enclosures(ss,domains) = 1;
     end
     
@@ -780,50 +819,11 @@ function enclosingChunks = smallestEnclosingChunks(model, geom, chunks)
     enclosingChunks = smallestChunks;
 end
 
-
-function domainMaterial = findDomainMaterials(model, geom, chunks)
-    % Return an array of which material is in which domain.
+function nonPMLChunks = processGeometry(meshes, srcMeasStructs, stepFile)
+    % chunks = processGeometry(meshes, srcMeasStructs, stepFile)
     %
-    
-    allMaterials = cellfun(@(a) a.material, chunks);
-    
-    owner = enclosingChunks(model, geom, chunks);
-    
-    domainMaterial = allMaterials(owner);
-    
-    %{
-    error('I need to not throw out the measurement volume!');
-    for ss = 1:numel(nonPMLChunks)
-        bbox = calcBoundingBox(nonPMLChunks{ss}.vertices);
-        domainNum = identifyByBounds(model, bbox);
-        domainMaterial(domainNum) = nonPMLChunks{ss}.material;    
-    end
-    
-    for cc = 1:numel(pmlChunks)
-        bbox = calcBoundingBox(pmlChunks{cc}.vertices);
-        domainNum = identifyByBounds(model, bbox);
-        domainMaterial(domainNum) = pmlChunks{cc}.material;
-    end
-    %}
-end
+    % 
 
-% function markDomains
-%     
-%     disjointInputMeshes = makeDisjointInputs(meshes);
-%     measurementMeshes = makeMeasurementMeshes(measurementBounds);
-%     pmlMeshes = makePMLMeshes(pmlBounds, nonPMLBounds);
-%     
-%     materialMeshes = uniteMaterials(disjointInputMeshes);
-%     materialMeshes_PML = uniteMaterials(disjointInputMeshesInPML);
-%     
-%     innerDomains = separateIntoDomains(disjointInputMeshes, ...
-%         measurementMeshes);
-%     
-% end
-
-function nonPMLChunks = processGeometry(meshes, ...
-    srcMeasStructs, stepFile)
-    
     %% Create mutually disjoint input meshes!
     % Each mesh subtracts off all previous meshes.
     
@@ -844,12 +844,31 @@ function nonPMLChunks = processGeometry(meshes, ...
     nonPMLChunks = uniteMaterials(disjointMeshes);
     
     %% Adjust for measurements!
-    nonPMLChunks = vennChunks(nonPMLChunks, srcMeasStructs);
-
+    if ~isempty(srcMeasStructs)
+        nonPMLChunks = vennChunks(nonPMLChunks, srcMeasStructs);
+    end
+    
     %% Create the STEP file and set up STEP import.
     
     %fprintf('Got to the STEP file.\n');
     writeSTEP(nonPMLChunks, stepFile);
+    
+    
+    % Just for testing!  If needed.
+    function assertDisjoint(chunks)
+        for cc = 1:numel(chunks)
+            for dd = cc+1:numel(chunks)
+
+                fprintf('testing %i and %i...\n', cc, dd);
+                assert(~neflab.nefTestIntersection(...
+                    chunks{cc}.vertices, chunks{cc}.faces, ...
+                    chunks{dd}.vertices, chunks{dd}.faces));
+
+            end
+        end
+        fprintf('ALL ARE DISJOINT\n');
+    end
+    %assertDisjoint(nonPMLChunks);
     
 end
 
@@ -901,43 +920,9 @@ function checksum = geometryChecksum(meshes, bounds)
         ll.fletcher16(meshes{mm}.material, true);
     end
     
-    
     checksum = ll.fletcher16(bounds);
-    
-    %checksum = ll.fletcher16(pmlBounds, true);
-    
 end
 
-% This function was superseded by a simpler and more robust method
-% elsewhere... I don't use it anymore I think.
-function domainNumber = identifyByBounds(model, bbox)
-
-    domainNumber = selectBoxHelper(model, bbox + [-1 -1 -1 1 1 1]);
-    if numel(domainNumber) == 1
-        return
-    end
-    
-    % selectBoxHelper (wrapping mphselectbox) will return the domains whose
-    % vertices are all included in the bounding box.
-
-    % Now start trying to trim off everything that's not in those bounds.
-    % Inset each face of the bounding box in turn and throw out everything
-    % that is still enclosed.  This will almost certainly leave only the
-    % desired domain selected.
-
-    pushIn = diag([1 1 1 -1 -1 -1]);
-
-    for ii = 1:6
-        removeThese = selectBoxHelper(model, bbox + pushIn(ii,:));
-        domainNumber = setdiff(domainNumber, removeThese);
-        if numel(domainNumber) < 2
-            return;
-        end
-    end
-
-    warning('There are still %i matching domains!', numel(domainNumber));
-
-end
 
 function selections = selectBoxHelper(model, bbox)
 
@@ -950,26 +935,84 @@ end
 % Create the Study node in the simulation.
 function comsolStudy(X, model)
     
-    global LL_MODEL;
-    freqStr = sprintf('c_const/%s[nm]', num2str(3e8/LL_MODEL.frequency));
+%    global LL_MODEL;
+
+    fprintf('Solution\n')
 
     model.study.create('std1');
-    model.study('std1').feature.create('freq', 'Frequency');
-    model.study('std1').feature('freq').set('activate', {'emw' 'on' 'emw2' 'off'});
-    model.study('std1').feature('freq').set('plist', freqStr);
-
-    if X.Gradient
-        model.study('std1').feature.create('freq1', 'Frequency');
-        model.study('std1').feature('freq1').set('activate', {'emw' 'off' 'emw2' 'on'});
-        model.study('std1').feature('freq1').set('plist', freqStr);
-    end
-
-    %fprintf('Solution\n')
-
+    
+    % Create forward study
+    model.study('std1').create('stat', 'Stationary');
+    model.study('std1').feature('stat').set('activate', {'es' 'on' 'es2' 'off'});
+    model.study('std1').feature('stat').label('Forward');
+    model.study('std1').feature('stat').set('notlistsolnum', 1);
+    model.study('std1').feature('stat').set('notsolnum', '1');
+    model.study('std1').feature('stat').set('listsolnum', 1);
+    model.study('std1').feature('stat').set('solnum', '1');
+    
+    % Create the solver, which also creates the "dset1" dataset.
     model.sol.create('sol1');
+    
     model.sol('sol1').study('std1');
     model.sol('sol1').attach('std1');
+    
+    model.sol('sol1').create('st1', 'StudyStep');
+    model.sol('sol1').feature('st1').set('study', 'std1');
+    model.sol('sol1').feature('st1').set('studystep', 'stat');
 
+    model.sol('sol1').create('v1', 'Variables');
+    model.sol('sol1').feature('v1').set('control', 'stat');
+    
+    model.sol('sol1').create('s1', 'Stationary');
+    model.sol('sol1').feature('s1').create('fc1', 'FullyCoupled');
+    model.sol('sol1').feature('s1').create('i1', 'Iterative');
+    model.sol('sol1').feature('s1').feature('i1').set('linsolver', 'cg');
+    model.sol('sol1').feature('s1').feature('i1').create('mg1', 'Multigrid');
+    model.sol('sol1').feature('s1').feature('i1').feature('mg1').set('prefun', 'amg');
+    model.sol('sol1').feature('s1').feature('fc1').set('linsolver', 'i1');
+    model.sol('sol1').feature('s1').feature.remove('fcDef');
+    
+    % The Store Solution node makes the forward solution's fields
+    % accessible to the dual solution for calculation of sources etc.
+    % Creating this node also automatically creates the "dset2" dataset.
+    model.sol('sol1').create('su1', 'StoreSolution');
+    
+    model.study('std1').create('stat1', 'Stationary');
+    model.study('std1').feature('stat1').set('activate', {'es' 'off' 'es2' 'on'});
+    model.study('std1').feature('stat1').label('Dual');
+    model.study('std1').feature('stat1').set('notlistsolnum', 1);
+    model.study('std1').feature('stat1').set('notsolnum', 'auto');
+    model.study('std1').feature('stat1').set('listsolnum', 1);
+    model.study('std1').feature('stat1').set('solnum', 'auto');
+    
+    if X.Gradient
+        model.sol('sol1').create('st2', 'StudyStep');
+        model.sol('sol1').feature('st2').set('study', 'std1');
+        model.sol('sol1').feature('st2').set('studystep', 'stat1');
+
+        model.sol('sol1').create('v2', 'Variables');
+        model.sol('sol1').feature('v2').set('initmethod', 'sol');
+        model.sol('sol1').feature('v2').set('initsol', 'sol1');
+        model.sol('sol1').feature('v2').set('notsolmethod', 'sol');
+        model.sol('sol1').feature('v2').set('notsol', 'sol1');
+        model.sol('sol1').feature('v2').set('notsoluse', 'su1');
+        model.sol('sol1').feature('v2').set('control', 'stat1');
+        model.sol('sol1').feature('v2').set('solnum', 'auto');
+        model.sol('sol1').feature('v2').set('solvertype', 'solnum');
+        model.sol('sol1').feature('v2').set('listsolnum', {'1'});
+        model.sol('sol1').feature('v2').set('solnum', 'auto');
+        
+        model.sol('sol1').create('s2', 'Stationary');
+        model.sol('sol1').feature('s2').create('fc1', 'FullyCoupled');
+        model.sol('sol1').feature('s2').create('i1', 'Iterative');
+        model.sol('sol1').feature('s2').feature('i1').set('linsolver', 'cg');
+        model.sol('sol1').feature('s2').feature('i1').create('mg1', 'Multigrid');
+        model.sol('sol1').feature('s2').feature('i1').feature('mg1').set('prefun', 'amg');
+        model.sol('sol1').feature('s2').feature('fc1').set('linsolver', 'i1');
+        model.sol('sol1').feature('s2').feature.remove('fcDef');
+    end
+    
+    %{
     % step 1: forward
     model.sol('sol1').feature.create('st1', 'StudyStep');
     model.sol('sol1').feature.create('v1', 'Variables');
@@ -1032,29 +1075,34 @@ function comsolStudy(X, model)
         % blow away the forward fields.  This seems very counterintuitive.  :-/
         model.study('std1').feature('freq1').set('usesol', 'on');
     end
+    %}
 end
 
 
 function comsolPlots(X, model)
     
-    model.result.dataset.create('dset2', 'Solution');
-    model.result.dataset('dset2').name('Movable meshes');
-    %model.result.dataset('dset2').selection.geom('geom1', 2);
-    model.result.dataset('dset2').selection.named('movableMeshes');
-
-
+    model.result.dataset.create('movableDataset', 'Solution');
+    model.result.dataset('movableDataset').name('Movable meshes');
+    model.result.dataset('movableDataset').selection.named('movableMeshes');
+    
     model.result.create('pg1', 'PlotGroup3D');
-    model.result('pg1').name('Electric field');
+    model.result('pg1').label('Electric Potential (es)');
+    model.result('pg1').set('oldanalysistype', 'noneavailable');
     model.result('pg1').set('frametype', 'spatial');
+    model.result('pg1').set('data', 'dset1');
     model.result('pg1').feature.create('mslc1', 'Multislice');
-    model.result('pg1').feature('mslc1').name('Multislice');
-
+    model.result('pg1').feature('mslc1').set('oldanalysistype', 'noneavailable');
+    model.result('pg1').feature('mslc1').set('data', 'parent');
+    
     model.result.create('pg2', 'PlotGroup3D');
-    model.result('pg2').feature.create('mslc1', 'Multislice');
-    model.result('pg2').name('Electric field 1');
+    model.result('pg2').label('Electric Potential (es2)');
+    model.result('pg2').set('oldanalysistype', 'noneavailable');
     model.result('pg2').set('frametype', 'spatial');
-    model.result('pg2').feature('mslc1').name('Multislice');
-    model.result('pg2').feature('mslc1').set('expr', 'emw2.normE');
+    model.result('pg2').set('data', 'dset1');
+    model.result('pg2').feature.create('mslc1', 'Multislice');
+    model.result('pg2').feature('mslc1').set('oldanalysistype', 'noneavailable');
+    model.result('pg2').feature('mslc1').set('expr', 'V2');
+    model.result('pg2').feature('mslc1').set('data', 'parent');
 
     if X.Gradient
         model.result.create('pg3', 'PlotGroup3D');
@@ -1062,7 +1110,7 @@ function comsolPlots(X, model)
         model.result('pg3').feature.create('arws1', 'ArrowSurface');
         model.result('pg3').feature.create('arws2', 'ArrowSurface');
         model.result('pg3').set('data', 'dset2');
-
+        
         model.result('pg3').feature('surf1').set('expr', 'DF');
         model.result('pg3').feature('surf1').set('unit', 'W/m^3');
         model.result('pg3').feature('surf1').set('descr', '');
@@ -1072,8 +1120,8 @@ function comsolPlots(X, model)
 
         model.result('pg3').feature('arws1').set(...
             'expr', {'nx*DF*(DF<0)' 'ny*DF*(DF<0)' 'nz*DF*(DF<0)'});
-        %model.result('pg3').feature('arws1').set('scale', '3.2787942186813154E-10');
         model.result('pg3').feature('arws1').set('arrowbase', 'head');
+        %model.result('pg3').feature('arws1').set('scale', '3.2787942186813154E-10');
         %model.result('pg3').feature('arws1').set('scaleactive', false);
 
         model.result('pg3').feature('arws2').set(...
@@ -1083,16 +1131,8 @@ function comsolPlots(X, model)
         %model.result('pg3').feature('arws2').set('scale', '4.240512841916214E-10');
         %model.result('pg3').feature('arws2').set('scaleactive', false);
     end
-    %{
-    model.result.create('pg4', 'PlotGroup3D');
-    model.result('pg4').run;
-    model.result('pg4').feature.create('slc1', 'Slice');
-    model.result('pg4').feature('slc1').set('quickplane', 'xy');
-    model.result('pg4').feature('slc1').set('quickzmethod', 'coord');
-    model.result('pg4').feature('slc1').set('expr', 'emw.Ex');
-    model.result('pg4').feature('slc1').set('quickz', '10');
-    %}
-    %model.result('pg4').run;
+    
+
     %%
 end
 
@@ -1100,11 +1140,15 @@ end
 function comsolMeasurements(X, model, measDims)
     
     global LL_MODEL;
-    dsetSurf = model.result.dataset.create('dsetSurfaces', 'Solution');
-    dsetSurf.name('Surfaces data set');
-    dsetSurf.selection.geom('geom1', 2);
-    dsetSurf.selection.all;
-
+    
+    % The surfaces data set should export the dual pressure DF at
+    % all points on all surfaces.
+    dsetSurfacesOnly = model.result.dataset.create('dsetSurfaces', 'Solution');
+    dsetSurfacesOnly.name('Surfaces data set');
+    dsetSurfacesOnly.selection.geom('geom1', 2);
+    dsetSurfacesOnly.selection.named('movableMeshes');
+%    dsetSurfacesOnly.selection.all;
+    
     measData = model.result.dataset.create('dsetMeas', 'Solution');
     measData.name('Objective function data set');
     measData.selection.geom('geom1', measDims(1));
@@ -1138,14 +1182,14 @@ function comsolMeasurements(X, model, measDims)
     end
 
     if X.Gradient
-        model.result.export.create('expSurfDF', 'Data');
-        model.result.export('expSurfDF').name('data set');
-        model.result.export('expSurfDF').set('data', 'dsetSurfaces');
-        model.result.export('expSurfDF').set('descr', {''});
-        model.result.export('expSurfDF').set('filename', 'DF_on_surfaces.txt');
-        model.result.export('expSurfDF').set('expr', {'mod1.DF'});
-        model.result.export('expSurfDF').set('resolution', 'custom');
-        model.result.export('expSurfDF').set('lagorder', '5');
+        model.result.export.create('exportSurfaceDF', 'Data');
+        model.result.export('exportSurfaceDF').name('data set');
+        model.result.export('exportSurfaceDF').set('data', 'dsetSurfaces');
+        model.result.export('exportSurfaceDF').set('descr', {''});
+        model.result.export('exportSurfaceDF').set('filename', 'DF_on_surfaces.txt');
+        model.result.export('exportSurfaceDF').set('expr', {'mod1.DF', 'nx', 'ny', 'nz'});
+        model.result.export('exportSurfaceDF').set('resolution', 'custom');
+        model.result.export('exportSurfaceDF').set('lagorder', '5');
     end
 
     model.result.export.create('expTableF', 'tblF', 'Table');
@@ -1156,49 +1200,30 @@ end
 function comsolVariables(model)
     model.variable.create('var1');
     model.variable('var1').model('mod1');
-    model.variable('var1').set('Ex21', 'up(emw.Ex)-down(emw.Ex)');
-    model.variable('var1').set('Ey21', 'up(emw.Ey)-down(emw.Ey)');
-    model.variable('var1').set('Ez21', 'up(emw.Ez)-down(emw.Ez)');
-    model.variable('var1').set('Hx21', 'up(emw.Hx)-down(emw.Hx)');
-    model.variable('var1').set('Hy21', 'up(emw.Hy)-down(emw.Hy)');
-    model.variable('var1').set('Hz21', 'up(emw.Hz)-down(emw.Hz)');
-    model.variable('var1').set('Dx21', 'up(emw.Dx)-down(emw.Dx)');
-    model.variable('var1').set('Dy21', 'up(emw.Dy)-down(emw.Dy)');
-    model.variable('var1').set('Dz21', 'up(emw.Dz)-down(emw.Dz)');
-    model.variable('var1').set('Bx21', 'up(emw.Bx)-down(emw.Bx)');
-    model.variable('var1').set('By21', 'up(emw.By)-down(emw.By)');
-    model.variable('var1').set('Bz21', 'up(emw.Bz)-down(emw.Bz)');
-    model.variable('var1').set('En21', 'nx*mod1.Ex21+ny*mod1.Ey21+nz*mod1.Ez21');
-    model.variable('var1').set('Et121', 't1x*mod1.Ex21+t1y*mod1.Ey21+t1z*mod1.Ez21');
-    model.variable('var1').set('Et221', 't2x*mod1.Ex21+t2y*mod1.Ey21+t2z*mod1.Ez21');
-    model.variable('var1').set('Hn21', 'nx*mod1.Hx21+ny*mod1.Hy21+nz*mod1.Hz21');
-    model.variable('var1').set('Ht121', 't1x*mod1.Hx21+t1y*mod1.Hy21+t1z*mod1.Hz21');
-    model.variable('var1').set('Ht221', 't2x*mod1.Hx21+t2y*mod1.Hy21+t2z*mod1.Hz21');
-    model.variable('var1').set('Dn21', 'nx*mod1.Dx21+ny*mod1.Dy21+nz*mod1.Dz21');
-    model.variable('var1').set('Dt121', 't1x*mod1.Dx21+t1y*mod1.Dy21+t1z*mod1.Dz21');
-    model.variable('var1').set('Dt221', 't2x*mod1.Dx21+t2y*mod1.Dy21+t2z*mod1.Dz21');
-    model.variable('var1').set('Bn21', 'nx*mod1.Bx21+ny*mod1.By21+nz*mod1.Bz21');
-    model.variable('var1').set('Bt121', 't1x*mod1.Bx21+t1y*mod1.By21+t1z*mod1.Bz21');
-    model.variable('var1').set('Bt221', 't2x*mod1.Bx21+t2y*mod1.By21+t2z*mod1.Bz21');
-    model.variable('var1').set('en', 'nx*emw2.Ex+ny*emw2.Ey+nz*emw2.Ez');
-    model.variable('var1').set('et1', 't1x*emw2.Ex+t1y*emw2.Ey+t1z*emw2.Ez');
-    model.variable('var1').set('et2', 't2x*emw2.Ex+t2y*emw2.Ey+t2z*emw2.Ez');
-    model.variable('var1').set('hn', 'nx*emw2.Hx+ny*emw2.Hy+nz*emw2.Hz');
-    model.variable('var1').set('ht1', 't1x*emw2.Hx+t1y*emw2.Hy+t1z*emw2.Hz');
-    model.variable('var1').set('ht2', 't2x*emw2.Hx+t2y*emw2.Hy+t2z*emw2.Hz');
-    model.variable('var1').set('dn', 'nx*emw2.Dx+ny*emw2.Dy+nz*emw2.Dz');
-    model.variable('var1').set('dt1', 't1x*emw2.Dx+t1y*emw2.Dy+t1z*emw2.Dz');
-    model.variable('var1').set('dt2', 't2x*emw2.Dx+t2y*emw2.Dy+t2z*emw2.Dz');
-    model.variable('var1').set('bn', 'nx*emw2.Bx+ny*emw2.By+nz*emw2.Bz');
-    model.variable('var1').set('bt1', 't1x*emw2.Bx+t1y*emw2.By+t1z*emw2.Bz');
-    model.variable('var1').set('bt2', 't2x*emw2.Bx+t2y*emw2.By+t2z*emw2.Bz');
-    model.variable('var1').set('DF_E', '-emw.omega*imag(-conj(mod1.dn)*conj(mod1.En21)+conj(mod1.et1)*conj(mod1.Dt121)+conj(mod1.et2)*conj(mod1.Dt221))');
-    model.variable('var1').set('DF_H', 'emw.omega*imag(-conj(mod1.bn)*conj(mod1.Hn21)+conj(mod1.ht1)*conj(mod1.Bt121)+conj(mod1.ht2)*conj(mod1.Bt221))');
-    model.variable('var1').set('DF', 'mod1.DF_E+mod1.DF_H');
+    model.variable('var1').set('En', 'es.nx*es.Ex+es.ny*es.Ey+es.nz*es.Ez');
+    model.variable('var1').set('E2n', 'es2.nx*es2.Ex+es2.ny*es2.Ey+es2.nz*es2.Ez');
+    model.variable('var1').set('gg', '1', 'dual volume source');
+    model.variable('var1').set('ee', '-D_eta*(-En)', 'primal boundary source');
+    model.variable('var1').set('D_eta', 'motion_x*es.nx+motion_y*es.ny+motion_z*es.nz', 'boundary displ.');
+    model.variable('var1').set('I_dual_bdy', '(-E2n)*ee', 'dual integrand, bdy');
+    model.variable('var1').set('DF', '(-E2n)*(-En)', 'dual pressure');
+    model.variable('var1').set('I_primal_vol', 'gg*V', 'primal integrand, vol');
+    model.variable('var1').set('motion_x', '0', 'swept motion vec');
+    model.variable('var1').set('motion_y', '0');
+    model.variable('var1').set('motion_z', '1');
+    model.variable('var1').set('a0', '1', 'const for F2');
+    model.variable('var1').set('ax', '1', 'const for F3');
+    model.variable('var1').set('ay', '0.5', 'const for F3');
+    model.variable('var1').set('F_1', 'V', 'integrand for F1');
+    model.variable('var1').set('F_2', 'a0*V', 'integrand for F2');
+    model.variable('var1').set('F_3', '-ax*es.Ex-ay*es.Ey', 'integrand for F3');
+    model.variable('var1').set('g_1', '1');
+    model.variable('var1').set('g_2', 'a0');
+    model.variable('var1').set('g_3', '0', '-div a = 0');
 end
 
 
-function comsolMeshParameters(theMesh, model, measDims)
+function comsolMeshParameters(theMesh, model, measDims, meshDomains)
     global LL_MODEL;
     
     globalSize = theMesh.feature('size');
@@ -1222,7 +1247,7 @@ function comsolMeshParameters(theMesh, model, measDims)
             ~isempty(LL_MODEL.meshes{mm}.hmin)
 
         bbox = calcBoundingBox(LL_MODEL.meshes{mm}.vertices) + ...
-            [-1 -1 -1 1 1 1];
+            [-1 -1 -1 1 1 1]*1e-6;
 
         comsolIndices = [1 4; 2 5; 3 6];
 
@@ -1259,12 +1284,14 @@ function comsolMeshParameters(theMesh, model, measDims)
     sz.selection.named('measSel');
     sz.set('custom', 'on');
     sz.set('hmaxactive', 'on');
-    sz.set('hmax', 15);
+    sz.set('hmax', 2e-3);
     %warning('Measurement hmax is 15');
 
     theMesh.feature.create('ftri1', 'FreeTri');
     theMesh.feature('ftri1').selection.named('movableMeshes');
     theMesh.feature.create('ftet1', 'FreeTet');
+    theMesh.feature('ftet1').selection.geom('geom1', 3);
+    theMesh.feature('ftet1').selection.set(meshDomains);
 end
 
 
