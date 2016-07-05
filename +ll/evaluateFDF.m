@@ -6,7 +6,7 @@ if nargin < 3
 end
 
 if nargin < 4
-    minFaceArea = 1e-12
+    minFaceArea = 1e-12;
 end
 
 %%
@@ -101,8 +101,6 @@ for ff = 1:numFaces
     % Now get DF at those points with griddata.
     pointwiseDF = saferTriScatteredInterp(linearInterp, nearestInterp, ...
         xx, maxDF );
-    %pointwiseDF = saferGridData(x, y, z, DF, ...
-    %    xx(1,:), xx(2,:), xx(3,:));
     
     if any(isnan(pointwiseDF(:)))
         warning('We have NaN.\n');
@@ -147,10 +145,6 @@ end
 
 %%
 
-%keyboard
-
-%%
-
 % maxwell uses this 1e-27 factor
 %dFdp = transpose(sum(integrals*1e-27, 2)); % there are three m->nm conversions.
 dFdp = transpose(sum(integrals, 2));
@@ -159,38 +153,6 @@ dFdp = transpose(sum(integrals, 2));
 
 % maxwell uses column 2, I think column 1 is frequency
 F = ll.evaluateF('Column', 1);
-
-%% My griddata wrapper, dangit.
-
-function vals = saferGridData(x, y, z, FF, xx, yy, zz)
-
-warning off MATLAB:TriScatteredInterp:DupPtsAvValuesWarnId
-vals = griddata(x, y, z, FF, xx, yy, zz);
-
-maskNaN = isnan(vals);
-maskOutOfBounds = abs(vals) > max(abs(FF));
-
-if any(maskNaN)
-    warning(sprintf('There were %i NaNs, using nearest-neighbor interpolation', ...
-        sum(maskNaN(:))));
-end
-
-if any(maskOutOfBounds)
-    warning(sprintf('There were %i out of bounds values, using nearest-neighbor interpolation', ...
-        sum(maskOutOfBounds(:))));
-end
-
-maskBad = maskNaN | maskOutOfBounds;
-
-if any(maskBad)
-    vals(maskBad) = griddata(x, y, z, FF, ...
-        xx(maskBad), yy(maskBad), zz(maskBad), 'nearest');
-    
-    if any(isnan(vals))
-        error('Still have NaNs in interpolation, sorry dude');
-    end
-end
-
 
 
     
