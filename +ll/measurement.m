@@ -9,7 +9,10 @@ X.g = '0.0';
 
 X = parseargs(X, varargin{:});
 
+extents = X.Bounds(4:6) - X.Bounds(1:3);
+
 measStruct = struct('bounds', X.Bounds, ...
+    'dimensions', nnz(extents), ...
     'F', X.F, 'Jx', X.Jx, 'Jy', X.Jy, 'Jz', X.Jz, 'g', X.g);
 
 global LL_MODEL;
