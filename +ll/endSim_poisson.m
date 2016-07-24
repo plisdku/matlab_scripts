@@ -174,6 +174,10 @@ function endSim_poisson(varargin)
         fprintf('Solve succeeded with %i tries\n', tries);
     end
     
+    if isa(LL_MODEL.forwardCallback, 'function_handle')
+        LL_MODEL.forwardCallback()
+    end
+    
     %% Save the objective function and sensitivity information
 
     model.result.table('tblF').clearTableData;
