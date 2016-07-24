@@ -144,6 +144,9 @@ function endSim_poisson(varargin)
             % Forward: run Study Step 1 through Save Solutions 1
             model.sol('sol1').runFromTo('st1', 'su1');
             
+            % INSERT CHARGED PARTICLE OPTICS HERE
+            % Also... run the field export here as needed!
+            
             % Dual: run Study Step 2 through Stationary 2
             model.sol('sol1').runFromTo('st2', 's2');
             
@@ -182,8 +185,38 @@ function endSim_poisson(varargin)
     end
 
     model.result.export('expTableF').run;
+    
+    %% Save other requested exports
+    for nn = 1:length(LL_MODEL.exports)
+    if strcmpi(LL_MODEL.exports{nn}.mode, 'Forward')
+        doExport(model, LL_MODEL.exports{nn}, sprintf('export_%i',nn));
+    end
+    end
 
 end
+
+function doExport(model, exportStruct, export_name)
+    
+    pointFile = sprintf([pwd filesep '%s_points.txt'], export_name);
+    assert(size(exportStruct.points,2) == 3);
+    dlmwrite(pointFile, exportStruct.points, 'delimiter', '\t');
+    
+    export = model.result.export.create(export_name, 'Data');
+    export.label(export_name);
+    export.set('location', 'file');
+    %export.set('descr', {'Electric potential'});
+    export.set('filename', exportStruct.file);
+    %export.set('unit', {'V'});
+    export.set('coordfilename', [pwd filesep pointFile]);
+    export.set('expr', {'V'});
+%    model.save([pwd filesep 'mid_export.mph']);
+    try
+        export.run;
+    catch exc
+        warning('Got a prollem')
+    end
+end
+
 
 
 function [stepFile, movableDomainsFile, domainMaterialsFile] = ...
