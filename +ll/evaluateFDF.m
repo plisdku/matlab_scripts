@@ -1,12 +1,19 @@
 %% Read DF data from COMSOL
-function [F, dFdp, integrals] = evaluateFDF(movableMesh, params, filename)
+function [F, dFdp, integrals] = evaluateFDF(movableMesh, params, filename, minFaceArea)
 
 if nargin < 3
     filename = 'DF_on_surfaces.txt';
 end
+
+if nargin < 4
+    minFaceArea = 1e-12;
+end
+
 %%
 fid = fopen(filename);
-AA = cell2mat(textscan(fid, '%n%n%n%n', 'CommentStyle', '%'));
+% maxwell version (old version), without normal vectors
+%AA = cell2mat(textscan(fid, '%n%n%n%n', 'CommentStyle', '%'));
+AA = cell2mat(textscan(fid, '%n%n%n%n%n%n%n', 'CommentStyle', '%'));
 fclose(fid);
 
 x = AA(:,1);
@@ -40,6 +47,8 @@ linearInterp = TriScatteredInterp(x,y,z,DF, 'linear');
 nearestInterp = TriScatteredInterp(x,y,z,DF, 'nearest');
 maxDF = max(abs(DF(:)));
 
+omitCount = 0;
+
 numFaces = size(faces, 1);
 integrals = zeros(numParams, numFaces);
 for ff = 1:numFaces
@@ -53,9 +62,10 @@ for ff = 1:numFaces
     dv2 = verts(faces(ff,3),:) - verts(faces(ff,1),:);
     faceArea = 0.5*norm(cross(dv1, dv2));
     
-    if faceArea < 1e-5
+    if faceArea < minFaceArea
     %if abs(det([vx vy vz])) < 1e-5 % wrong.  grr.
         %warning('Null triangle!!  So tiny!  So cute!');
+        omitCount = omitCount+1;
         continue;
     end
     
@@ -91,8 +101,6 @@ for ff = 1:numFaces
     % Now get DF at those points with griddata.
     pointwiseDF = saferTriScatteredInterp(linearInterp, nearestInterp, ...
         xx, maxDF );
-    %pointwiseDF = saferGridData(x, y, z, DF, ...
-    %    xx(1,:), xx(2,:), xx(3,:));
     
     if any(isnan(pointwiseDF(:)))
         warning('We have NaN.\n');
@@ -137,43 +145,14 @@ end
 
 %%
 
-dFdp = transpose(sum(integrals*1e-27, 2)); % there are three m->nm conversions.
+% maxwell uses this 1e-27 factor
+%dFdp = transpose(sum(integrals*1e-27, 2)); % there are three m->nm conversions.
+dFdp = transpose(sum(integrals, 2));
 
 %% F?
 
-F = ll.evaluateF();
-
-%% My griddata wrapper, dangit.
-
-function vals = saferGridData(x, y, z, FF, xx, yy, zz)
-
-warning off MATLAB:TriScatteredInterp:DupPtsAvValuesWarnId
-vals = griddata(x, y, z, FF, xx, yy, zz);
-
-maskNaN = isnan(vals);
-maskOutOfBounds = abs(vals) > max(abs(FF));
-
-if any(maskNaN)
-    warning(sprintf('There were %i NaNs, using nearest-neighbor interpolation', ...
-        sum(maskNaN(:))));
-end
-
-if any(maskOutOfBounds)
-    warning(sprintf('There were %i out of bounds values, using nearest-neighbor interpolation', ...
-        sum(maskOutOfBounds(:))));
-end
-
-maskBad = maskNaN | maskOutOfBounds;
-
-if any(maskBad)
-    vals(maskBad) = griddata(x, y, z, FF, ...
-        xx(maskBad), yy(maskBad), zz(maskBad), 'nearest');
-    
-    if any(isnan(vals))
-        error('Still have NaNs in interpolation, sorry dude');
-    end
-end
-
+% maxwell uses column 2, I think column 1 is frequency
+F = ll.evaluateF('Column', 1);
 
 
     
