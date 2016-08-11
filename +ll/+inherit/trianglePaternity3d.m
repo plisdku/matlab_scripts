@@ -1,5 +1,15 @@
 function [outVertices, outFaces, outParents] = trianglePaternity3d(...
     vChild, fChild, vParents, fParents)
+% trianglePaternity3d   Identify intersections of a triangle with several parent triangles
+%
+% [v, f, parents] = trianglePaternity3d(vChild, fChild, vParents, fParents) returns a
+% triangulation of the child triangle, labeled by the index of intersecting parent
+% triangles.  The parent and child triangles are assumed to all be coplanar, and the
+% analysis is performed in a projection plane.
+%
+% Parts of the child triangle that intersect no parent triangle are excluded from the
+% returned triangulation, so it's up to the caller to make sure the child is really
+% covered by the parents.
 
 %% Make a basis matrix.
 
