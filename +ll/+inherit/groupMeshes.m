@@ -1,4 +1,8 @@
 function [allVertices, allFaces, totalJacobian] = groupMeshes(varargin)
+% [v, f, jac] = groupMeshes(mesh1, mesh2, ...)  Group meshes into one mesh
+%
+% This concatenates the input meshes' vertices, faces and Jacobian matrices
+% and adjusts the face and Jacobian indexing as necessary.
 
 numMeshes = nargin;
 meshes = varargin;

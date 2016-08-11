@@ -1,9 +1,8 @@
 function [v2, f2] = reduceVertexList(v1, f1)
 % reduceVertexList    Cull extraneous vertices from a face-vertex mesh
 %
-% [v2,f2] = reduceVertxeList(v1,f1) returns vertices v2 from v1 that are
-% referenced in f1, and re-indexes the faces f1 as f2, referring to rows of
-% v2.
+% [v2,f2] = reduceVertexList(v1,f1) creates a mesh equivalent to the input mesh,
+% guaranteed to have no unused vertices.
 
 %%
 %v1 = allVertices;

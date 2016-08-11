@@ -2,8 +2,9 @@ function [indicesNew, indicesOld] = paternity(v1, f1, v2, f2)
 % paternity    Calculate which faces of polyhedron 2 came from which faces
 % of polyhedron 1
 %
-% ancestors = paternity(v1, f1, v2, f2)
+% [indicesNew, indicesOld] = paternity(v1, f1, v2, f2)
 %
+% 
 
 % Write args to file
 % Call NefLab
