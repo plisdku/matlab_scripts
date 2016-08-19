@@ -1,4 +1,4 @@
-function endSim_poisson(varargin)
+function disjointMeshes = endSim_poisson(varargin)
     % endSim
     
     X.MPH = 'fromMatlab.mph';
@@ -46,7 +46,9 @@ function endSim_poisson(varargin)
     %% Build the STEP file if necessary
     % It's needed unless it's cached and I'm using the cache.
     
-    chunks = processGeometry(LL_MODEL.meshes, [sourceStructs measStructs], stepFile);
+    % chunks: array of structs with vertices, faces and a material tag.
+    % they are mutually disjoint and their material tags may not be unique.
+    [disjointMeshes, chunks] = processGeometry(LL_MODEL.meshes, [sourceStructs measStructs], stepFile);
     
     comsolSTEPImport(geom, stepFile);
     
@@ -64,14 +66,13 @@ function endSim_poisson(varargin)
     % We'll use these to select electrode boundaries to apply voltages on
     % and to exclude domains from meshing as needed (e.g. for electrodes).
     
-    [meshDomains, meshBoundaries] = findMeshEntities(model, geom, LL_MODEL.meshes);
+    %[meshDomains, meshOuterBoundaries] = findMeshEntities(model, geom, LL_MODEL.meshes);
+    [meshDomains, meshOuterBoundaries, meshNewBoundaries] = findMeshEntities(model, geom, disjointMeshes);
     
-    %% Electrode selection
-    % Make selection of meshes with fixed voltages.
-    % We'll reference these selections when setting up forward and adjoint
-    % physics.
-
-    comsolElectrodeSelections(model, LL_MODEL.meshes, meshBoundaries);
+    % Create selections named 'boundary_%i' for each mesh.
+    % These are for *new* boundaries added by each input mesh, so each
+    % boundary entity is present in one and only one selection.
+    comsolBoundarySelections(model, meshNewBoundaries);
 
     %% Physics!
     
@@ -265,6 +266,7 @@ function comsolSTEPImport(geom, stepFileName)
     stepImport.set('createselection', true);
     stepImport.set('type', 'cad');
     stepImport.set('filename', [pwd filesep stepFileName]);
+	stepImport.set('importtol', '1.0E-9');
     %stepImport.set('unit', 'source');
 
     % The STEP file will be in millimeters.  Scale to meters.
@@ -317,15 +319,31 @@ function comsolRunGeometry(geom)
     end
 end
 
-function [meshDomains, meshBoundaries] = findMeshEntities(model, geom, meshes)
+function [meshDomains, meshBoundaries, contributedBoundaries] = ...
+    findMeshEntities(model, geom, meshes)
     % The original structural meshs, which may have several chunks
     domainMeshes = smallestEnclosingChunks(model, geom, meshes); % used in loop
     meshDomains = cell(size(meshes)); % for meshing
     meshBoundaries = cell(size(meshes)); % comsolElectrodeSelections
+    contributedBoundaries = cell(size(meshes));
+    
     for cc = 1:length(meshes)
         meshDomains{cc} = find(domainMeshes == cc);
         meshBoundaries{cc} = ll.outerDomainBoundaryEntities(model, meshDomains{cc});
     end
+    
+    % Now I want something else... the boundary entities that were added
+    % by the addition of each mesh in order.  Gotta work backwards to get
+    % these.
+    
+    boundariesToExclude = [];
+    for cc = length(meshes):-1:1
+        contributedBoundaries{cc} = setdiff(meshBoundaries{cc},...
+            boundariesToExclude);
+        boundariesToExclude = [boundariesToExclude; ...
+            contributedBoundaries{cc}];
+    end
+    
 end
 
 function comsolAssignMaterials(model, geom, chunks, ...
@@ -354,17 +372,27 @@ function comsolAssignMaterials(model, geom, chunks, ...
     end
 end
 
-function comsolElectrodeSelections(model, meshes, meshBoundaries)
-    for mm = 1:numel(meshes)
-    if ~isempty(meshes{mm}.voltage)
-        electrodeName = sprintf('electrode_%i', mm);
-        sel = model.selection.create(electrodeName, 'Explicit');
-        sel.name(electrodeName);
+function comsolBoundarySelections(model, meshBoundaries)
+    for mm = 1:numel(meshBoundaries)
+        selName = sprintf('boundary_%i', mm);
+        sel = model.selection.create(selName, 'Explicit');
+        sel.name(selName);
         sel.geom('geom1', 2);
         sel.set(meshBoundaries{mm});
     end
-    end
 end
+% 
+% function comsolElectrodeSelections(model, meshes, meshBoundaries)
+%     for mm = 1:numel(meshes)
+%     if ~isempty(meshes{mm}.voltage)
+%         electrodeName = sprintf('electrode_%i', mm);
+%         sel = model.selection.create(electrodeName, 'Explicit');
+%         sel.name(electrodeName);
+%         sel.geom('geom1', 2);
+%         sel.set(meshBoundaries{mm});
+%     end
+%     end
+% end
     
 function comsolForwardPhysics(model, meshes, elementOrderString)
 
@@ -375,15 +403,21 @@ function comsolForwardPhysics(model, meshes, elementOrderString)
         elementOrderString);
 
     % Forward electric potentials!
-    
+    % (Boundary conditions with surface charge don't need to create any
+    % object analogous to this potential object... just write to rhoq.)
     for mm = 1:numel(meshes)
     if ~isempty(meshes{mm}.voltage)
         potentialName = sprintf('potential%i', mm);
         pot = model.physics('es').create(potentialName, ...
             'ElectricPotential', 2);
-        pot.selection.named(sprintf('electrode_%i', mm));
+        pot.selection.named(sprintf('boundary_%i', mm));
         pot.set('V0', meshes{mm}.voltage);
         pot.name(sprintf('Potential %i', mm));
+    elseif ~isempty(meshes{mm}.surfacecharge)
+        chargeName = sprintf('surfaceCharge%i', mm);
+        charge = model.physics('es').create(chargeName, 'SurfaceChargeDensity', 2);
+        charge.selection.named(sprintf('boundary_%i', mm));
+        charge.set('rhoqs', meshes{mm}.surfacecharge);
     end
     end
 end
@@ -405,16 +439,22 @@ function comsolAdjointPhysics(model, meshes, measurements, measStructs, ...
         potentialName = sprintf('adjointPotential%i', mm);
         pot = model.physics('es2').create(potentialName, ...
             'ElectricPotential', 2);
-        pot.selection.named(sprintf('electrode_%i', mm));
+        pot.selection.named(sprintf('boundary_%i', mm));
         pot.set('V0', 0);
         pot.name(sprintf('Adjoint potential %i', mm));
+    elseif ~isempty(meshes{mm}.surfacecharge)
+        chargeName = sprintf('adjointSurfaceCharge%i', mm);
+        charge = model.physics('es2').create(chargeName, ...
+            'SurfaceChargeDensity', 2);
+        charge.selection.named(sprintf('boundary_%i', mm));
+        charge.set('rhoqs', 0);
     end
     end
 
     % Adjoint space charge!
 
     numMeasurements = numel(measurements);
-
+    
     measDims = [];
     measSel = {};
     for ss = 1:numMeasurements
@@ -451,10 +491,12 @@ function comsolAdjointPhysics(model, meshes, measurements, measStructs, ...
         error('Mixing measurement dimensions!');
     end
 
-    measurementSel = model.selection.create('measSel', 'Union');
-    measurementSel.geom('geom1', measDims(1));
-    measurementSel.name('Measurement selection');
-    measurementSel.set('input', measSel);
+    if numMeasurements > 0
+        measurementSel = model.selection.create('measSel', 'Union');
+        measurementSel.geom('geom1', measDims(1));
+        measurementSel.name('Measurement selection');
+        measurementSel.set('input', measSel);
+    end
 end
 
 
@@ -726,15 +768,15 @@ function movableMeshDomains = findMovableBoundaries(model, meshes)
     end
 end
 
-function electrodeDomains = findElectrodes(model, meshes)
-    electrodeDomains = [];
-    
-    for mm = 1:numel(meshes)
-        if ~isempty(meshes{mm}.voltage)
-            electrodeDomains = [electrodeDomains, mm];
-        end
-    end
-end
+% function electrodeDomains = findElectrodes(model, meshes)
+%     electrodeDomains = [];
+%     
+%     for mm = 1:numel(meshes)
+%         if ~isempty(meshes{mm}.voltage)
+%             electrodeDomains = [electrodeDomains, mm];
+%         end
+%     endf
+% end
 
 function enclosingChunks = smallestEnclosingChunks(model, geom, chunks)
     % Approximately find the smallest chunk enclosing each domain in the
@@ -774,7 +816,7 @@ function enclosingChunks = smallestEnclosingChunks(model, geom, chunks)
     enclosingChunks = smallestChunks;
 end
 
-function nonPMLChunks = processGeometry(meshes, srcMeasStructs, stepFile)
+function [disjointMeshes, nonPMLChunks] = processGeometry(meshes, srcMeasStructs, stepFile)
     % chunks = processGeometry(meshes, srcMeasStructs, stepFile)
     %
     % 
@@ -799,6 +841,8 @@ function nonPMLChunks = processGeometry(meshes, srcMeasStructs, stepFile)
     nonPMLChunks = uniteMaterials(disjointMeshes);
     
     %% Adjust for measurements!
+    %
+    
     if ~isempty(srcMeasStructs)
         nonPMLChunks = vennChunks(nonPMLChunks, srcMeasStructs);
     end
@@ -807,7 +851,6 @@ function nonPMLChunks = processGeometry(meshes, srcMeasStructs, stepFile)
     
     %fprintf('Got to the STEP file.\n');
     writeSTEP(nonPMLChunks, stepFile);
-    
     
     % Just for testing!  If needed.
     function assertDisjoint(chunks)

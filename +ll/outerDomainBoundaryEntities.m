@@ -1,8 +1,8 @@
 function boundaries = outerDomainBoundaryEntities(model, domains)
 % boundaries = outerDomainBoundaryEntities(model, domains)
 %
-% Return entity indices of boundaries touching only one domain, i.e.
-% outer boundaries.
+% Return entity indices of boundaries neighboring only one of the input
+% domains, i.e. outer boundaries of the union of domains.
 
 % Collect a list of all boundary entity indices.
 % Boundaries will appear in the list once for each domain they bound,
