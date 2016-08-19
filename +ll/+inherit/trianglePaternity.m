@@ -1,9 +1,21 @@
 function [outVertices, outFaces, outParents] = trianglePaternity(...
     vChild, fChild, vParents, fParents)
+% trianglePaternity     Identify intersections of a triangle with several parent triangles
+%
+% [v, f, parents] = trianglePaternity(vChild, fChild, vParents, fParents) returns a
+% triangulation of the child triangle, labeled by the index of intersecting parent
+% triangles.
+%
+% Parts of the child triangle that intersect no parent triangle are excluded from the
+% returned triangulation, so it's up to the caller to make sure the child is really
+% covered by the parents.
 
 %% 
 
-%% Triangulate the entire pile of stuff
+%% Triangulate all the child and parent vertices at once
+%
+% Some of these triangles belong to the child triangle.
+
 numChildVertices = size(vChild, 1);
 
 vertices = [vChild; vParents];
@@ -21,7 +33,7 @@ DT = delaunayTriangulation(vertices, edgeConstraints);
 vv = DT.Points;
 ff = DT.ConnectivityList;
 
-%%
+%% 
 
 centroid = @(face) mean(vv(face,:));
 

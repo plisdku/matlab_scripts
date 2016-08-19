@@ -60,7 +60,7 @@ if isa(faceFilter, 'function_handle')
 end
 
 if doDisconnect
-    [v f] = disconnect(X.Vertices, X.Faces);
+    [v, f] = disconnect(X.Vertices, X.Faces);
 else
     v = X.Vertices;
     f = X.Faces;
@@ -80,7 +80,7 @@ h = patch(argList{:});
 
 
 
-function [v f] = disconnect(vertices, faces)
+function [v, f] = disconnect(vertices, faces)
 
 v = zeros(3*size(faces,1), 3);
 f = reshape(1:3*size(faces,1), 3, [])';
