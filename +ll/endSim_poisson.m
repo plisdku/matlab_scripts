@@ -48,6 +48,7 @@ function disjointMeshes = endSim_poisson(varargin)
     
     % chunks: array of structs with vertices, faces and a material tag.
     % they are mutually disjoint and their material tags may not be unique.
+    
     [disjointMeshes, chunks] = processGeometry(LL_MODEL.meshes, [sourceStructs measStructs], stepFile);
     
     comsolSTEPImport(geom, stepFile);
@@ -173,6 +174,15 @@ function disjointMeshes = endSim_poisson(varargin)
 
     if tries > 1
         fprintf('Solve succeeded with %i tries\n', tries);
+    end
+    
+    for nn = 1:length(LL_MODEL.measurements)
+        meas = LL_MODEL.measurements{nn};
+        if ~isempty(meas.Function)
+            keyboard
+%            [measF, measDF] = meas.Function(
+            
+        end
     end
     
     if isa(LL_MODEL.forwardCallback, 'function_handle')
@@ -458,30 +468,40 @@ function comsolAdjointPhysics(model, meshes, measurements, measStructs, ...
     measDims = [];
     measSel = {};
     for ss = 1:numMeasurements
+        meas = measurements{ss};
+        measDims(ss) = meas.dimensions;
         
-        measDims(ss) = measurements{ss}.dimensions;
-        
-        %bounds = measurements{ss}.bounds;
-        %extent = bounds(4:6) - bounds(1:3);
-        
-
-        %if ~X.Gradient
-        %    continue;
-        %end
-
-        currName = sprintf('adjSpaceCharge%i', ss);
-
-        if measurements{ss}.dimensions == 0 % point
+        if meas.dimensions == 0 % point
             error('not handling points yet')
-        elseif measurements{ss}.dimensions == 2 % surface current
+        elseif meas.dimensions == 2 % surface current
             error('not handling surfaces yet')
-        elseif measurements{ss}.dimensions == 3 % volume current
-
-            scd = model.physics('es2').create(currName, 'SpaceChargeDensity', 3);
-            scd.selection.named(measStructs{ss}.selectionName);
-            %scd.set('rhoq', LL_MODEL.measurements{ss}.rhoq);
-            scd.set('rhoq', measurements{ss}.g); % should it be g or not?
-            scd.name(sprintf('Adjoint charge %i', ss));
+        elseif meas.dimensions == 3 % volume current
+            
+            if ~isempty(meas.function)
+                funcname = sprintf('adjfunc_%i',ss);
+                interpolation = model.func.create('int1', 'Interpolation');
+                interpolation.label(sprintf('Interpolation %s', ss));
+                %interpolation.model('comp1');
+                interpolation.set('importedname', meas.import);
+                interpolation.set('funcs', {funcname, '1'});
+                interpolation.set('importeddim', '3D');
+                interpolation.set('importedstruct', 'Spreadsheet');
+                interpolation.set('defvars', 'on');
+                interpolation.set('sourcetype', 'model');
+                interpolation.set('frame', 'material');
+                
+                if strcmpi(meas.dualField, 'V')
+                    currName = sprintf('adjSpaceCharge%i', ss);
+                    scd = model.physics('es2').create(currName, 'SpaceChargeDensity', 3);
+                    scd.selection.named(measStructs{ss}.selectionName);
+                    %scd.set('rhoq', LL_MODEL.measurements{ss}.rhoq);
+                    scd.set('rhoq', funcname); % should it be g or not?
+                     scd.name(sprintf('Adjoint charge %i', ss));
+                else
+                    error('Gotta handle %s', meas.dualField)
+                end
+            end
+            
 
             measSel = {measSel{:} measStructs{ss}.selectionName};
         end
@@ -585,7 +605,7 @@ function srcMeasRecords = makeSourcesOrMeasurements(model, geom,...
             % The point here is just to mark off a chunk of space and force the
             % tetrahedra to line up with its surfaces.
 
-            r = t6.model.Rect(@(p) bounds);
+            r = dmodel.Rect(@(p) bounds);
             m = r.meshes;
             srcMeasRecords{nn}.vertices = m{1}.patchVertices;
             srcMeasRecords{nn}.faces = m{1}.faces;
@@ -1186,12 +1206,12 @@ end
 
 
 function comsolMeasurements(model, measurements, doCalculateGradient)
+
+    assert(numel(measurements) == 1);
     
     bounds = measurements{1}.bounds;
     extent = bounds(4:6) - bounds(1:3);
     measDims = nnz(extent);
-    
-    %global LL_MODEL;
     
     % The surfaces data set should export the dual pressure DF at
     % all points on all surfaces.
@@ -1206,32 +1226,56 @@ function comsolMeasurements(model, measurements, doCalculateGradient)
     measData.selection.geom('geom1', measDims(1));
     measData.selection.named('measSel');
 
-    assert(numel(measurements) == 1);
-    tblF = model.result.table.create('tblF', 'Table');
-
-    if measDims(1) == 0
-        intPt = model.result.numerical.create('intF', 'EvalPoint');
-        intPt.selection.named('measSel');
-        intPt.set('probetag', 'none');
-        intPt.set('table', 'tblF');
-        intPt.set('expr', measurements{1}.F);
+    if measDims(1) ~= 3
+        error('Can only do a 3D measurement right now')
+    else
+        export_name = sprintf('meas_%i', 1);
         
-    elseif measDims(1) == 2
-        intSurf = model.result.numerical.create('intF', 'IntSurface');
-        intSurf.name('F');
-        intSurf.selection.named('measSel');
-        intSurf.set('probetag', 'none');
-        intSurf.set('table', 'tblF');
-        intSurf.set('expr', measurements{1}.F);
+        % Write the set of data points
+        pointFile = sprintf([pwd filesep '%s_points.txt'], export_name);
+        assert(size(measurements{1}.points,2) == 3);
+        dlmwrite(pointFile, measurements{1}.points, 'delimiter', '\t');
         
-    elseif measDims(1) == 3
-        intVol = model.result.numerical.create('intF', 'IntVolume');
-        intVol.name('F');
-        intVol.selection.named('measSel');
-        intVol.set('probetag', 'none');
-        intVol.set('table', 'tblF');
-        intVol.set('expr', measurements{1}.F);
+        % Create the field export
+        assert(iscell(measurements{1}.forwardField));
+        
+        export = model.result.export.create(export_name, 'Data');
+        export.label(export_name);
+        export.set('location', 'file');
+        %export.set('descr', {'Electric potential'});
+        export.set('filename', measurements{1}.export);
+        %export.set('unit', {'V'});
+        export.set('coordfilename', [pwd filesep pointFile]);
+        export.set('expr', measurements{1}.forwardField);
+    %    model.save([pwd filesep 'mid_export.mph']);
     end
+    
+    
+    
+    %tblF = model.result.table.create('tblF', 'Table');
+%     if measDims(1) == 0
+%         intPt = model.result.numerical.create('intF', 'EvalPoint');
+%         intPt.selection.named('measSel');
+%         intPt.set('probetag', 'none');
+%         intPt.set('table', 'tblF');
+%         intPt.set('expr', measurements{1}.F);
+%         
+%     elseif measDims(1) == 2
+%         intSurf = model.result.numerical.create('intF', 'IntSurface');
+%         intSurf.name('F');
+%         intSurf.selection.named('measSel');
+%         intSurf.set('probetag', 'none');
+%         intSurf.set('table', 'tblF');
+%         intSurf.set('expr', measurements{1}.F);
+%         
+%     elseif measDims(1) == 3
+%         intVol = model.result.numerical.create('intF', 'IntVolume');
+%         intVol.name('F');
+%         intVol.selection.named('measSel');
+%         intVol.set('probetag', 'none');
+%         intVol.set('table', 'tblF');
+%         intVol.set('expr', measurements{1}.F);
+%     end
 
     if doCalculateGradient
         model.result.export.create('exportSurfaceDF', 'Data');
