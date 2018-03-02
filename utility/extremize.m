@@ -1,4 +1,4 @@
-function [x, fval, iter, xHist, fHist, DfHist] = extremize(fn, x0, varargin)
+function [xBest, fBest, iter, xHist, fHist, DfHist] = extremize(fn, x0, varargin)
 % extremize    minimize or maximize a function
 %
 % [x, fval, iter] = extremize(fun, x0, named parameters)
@@ -99,21 +99,23 @@ function [x, fval, iter, xHist, fHist, DfHist] = extremize(fn, x0, varargin)
         f = fSign*f_eval;
         Df = fSign*Df_eval;
         
+        if f < fBest
+            xBest = x;
+            fBest = f;
+        end
+        
         X.Callback(xHist, fHist, DfHist);
         
         % Check if we've reached the goal value.
         if (fSign < 0 && f_eval > X.GoalF) || ...
             (fSign > 0 && f_eval < X.GoalF)
-            
             report('Goal value of F reached.\n');
-            fval = f_eval;
-            return;
+            return
         end
         
         if iter >= X.MaxIter
             report('Maximum number of iterations reached.\n');
-            fval = f_eval;
-            return;
+            return
         end
         
         % Check if change in F is below TolF in last N iterations
@@ -122,18 +124,15 @@ function [x, fval, iter, xHist, fHist, DfHist] = extremize(fn, x0, varargin)
             if all(abs(diff(fHist(end-N_tolF:end))) < X.TolF)
                 report('%i changes in f smaller than TolF = %g\n', ...
                     N_tolF, X.TolF);
-                fval = f_eval;
-                return;
+                return
             end
             
             if all(abs(diff(fHist(end-N_tolF:end))/f) < X.RelTolF)
                 report('%i relative changes in f smaller than RelTolF = %g\n', ...
                     N_tolF, X.RelTolF);
-                fval = f_eval;
                 return
-            end;
+            end
         end
-        
         
         activeConstraints = (Df' < 0 & x == X.Bounds(:,1)) | ...
             (Df' > 0 & x == X.Bounds(:,2));
@@ -144,54 +143,39 @@ function [x, fval, iter, xHist, fHist, DfHist] = extremize(fn, x0, varargin)
             report('%i ', find(activeConstraints));
             report('\n');
         end
-    
-        if f < fBest
-            xBest = x;
-            fBest = f;
-        end
-    
-        if iter >= 2
-            isBetter = (fSign*fHist(end) < fSign*fHist(end-1));
         
-            if ~isBetter % step halfway across and average the gradients.  uh yeah.
-                stepSizes = stepSizes * shrinkFactor;
-                x = 0.5*(xBest + x);
-                %DfHist(end,:) = DfHist(end-1,:);
-            
-                Df = 0.5*(fSign*DfHist(end-1,:) + Df);
-            
-                report('\tregressed and averaging\n');
-            
-            elseif iter >= 3
-            
-                relChange = @(A, B) abs(A-B) ./ abs(B);
-            
-                bigChanges = (relChange(DfHist(end,:), DfHist(end-1,:)) > bigDelta) ...
-                    & (relChange(DfHist(end-1,:), DfHist(end-2,:)) > bigDelta);
-            
-                smallChanges = (relChange(DfHist(end,:), DfHist(end-1,:)) < smallDelta) ...
-                    & (relChange(DfHist(end-1,:), DfHist(end-2,:)) < smallDelta);
+        if f ~= fBest % step halfway across and average the gradients.  uh yeah.
+            stepSizes = stepSizes * shrinkFactor;
+            x = 0.5*(xBest + x);
+            report('\tregressed\n');
+        elseif iter >= 3
+            relChange = @(A, B) abs(A-B) ./ abs(B);
 
-                if any(bigChanges)
-                    report('\tbig changes: ');
-                    report('%i ', find(bigChanges));
-                    report('\n');
-                end
+            bigChanges = (relChange(DfHist(end,:), DfHist(end-1,:)) > bigDelta) ...
+                & (relChange(DfHist(end-1,:), DfHist(end-2,:)) > bigDelta);
 
-                if any(smallChanges)
-                    report('\tsmall changes: ');
-                    report('%i ', find(smallChanges));
-                    report('\n');
-                end
+            smallChanges = (relChange(DfHist(end,:), DfHist(end-1,:)) < smallDelta) ...
+                & (relChange(DfHist(end-1,:), DfHist(end-2,:)) < smallDelta);
 
-                stepSizes(bigChanges & ii) = stepSizes(bigChanges & ii) * shrinkFactor;
-                stepSizes(smallChanges & ii) = stepSizes(smallChanges & ii) * growFactor;
-                
-                isBetter = all(diff(fHist(end-2:end)) < 0);
-            
-                if isBetter
-                    stepSizes = stepSizes * growFactor;
-                end
+            if any(bigChanges)
+                report('\tbig changes: ');
+                report('%i ', find(bigChanges));
+                report('\n');
+            end
+
+            if any(smallChanges)
+                report('\tsmall changes: ');
+                report('%i ', find(smallChanges));
+                report('\n');
+            end
+
+            stepSizes(bigChanges & ii) = stepSizes(bigChanges & ii) * shrinkFactor;
+            stepSizes(smallChanges & ii) = stepSizes(smallChanges & ii) * growFactor;
+
+            isBetter = all(diff(fHist(end-2:end)) < 0);
+
+            if isBetter
+                stepSizes = stepSizes * growFactor;
             end
         end
     
@@ -204,7 +188,6 @@ function [x, fval, iter, xHist, fHist, DfHist] = extremize(fn, x0, varargin)
         step = -stepSizes .* unitGrad';
         step(activeConstraints) = 0;
         
-        xPrev = x;
         x(:) = x(:) + step(:);
     
         iBelowMin = x < X.Bounds(:,1);

@@ -254,8 +254,14 @@ for frame = 0:numFrames-1
     data = file.readFrames('NumFrames', 1);
     
     if mod(frame, X.Period) == 0
-        clf
+        imageHandles = cell(1, file.numFields);
+        
         for ff = 1:file.numFields
+            
+            if ishandle(imageHandles{ff})
+                set(imageHandles{ff}, 'CData', transpose(squeeze(data(:,:,:,ff))));
+                continue;
+            end
             
             if prod(nxny) > 1
                 subplot(nxny(2), nxny(1), ff, 'align');
@@ -264,7 +270,7 @@ for frame = 0:numFrames-1
             myRow = floor(1 + (ff-1)/nxny(1));
             myCol = 1 + mod(ff-1, nxny(1));
             
-            imagesc_centered(xyzPos{row,1}, xyzPos{col,1}, ...
+            imageHandles{ff} = imagesc_centered(xyzPos{row,1}, xyzPos{col,1}, ...
                 transpose(squeeze(data(:,:,:,ff))), imagesc_args{:});
             axis xy image
             colorbar

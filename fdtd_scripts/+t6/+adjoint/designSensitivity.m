@@ -10,7 +10,7 @@ designObject.writeSimulation(parameters, 'forward');
 if strcmpi(computer, 'GLNXA64')
     snapdragon = 'env -u LD_LIBRARY_PATH snapdragon';
 else
-    snapdragon = 'snapdragon';
+    snapdragon = '/usr/local/bin/snapdragon';
 end
 
 unixCall = sprintf('%s --geometry --sensitivity --outputDirectory %s %s/params.xml > out.txt', ...

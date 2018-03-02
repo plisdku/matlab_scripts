@@ -138,7 +138,7 @@ if numBumps == 0
 end
 
 pMin = [0*candidateHeights, candidateCenters-0.1, 0*candidateWidths];
-pMax = [3*candidateHeights, candidateCenters+0.1, 1];
+pMax = [3*candidateHeights, candidateCenters+0.1, ones(size(candidateWidths))];
 
 pInit = [candidateHeights, candidateCenters, candidateWidths];
 

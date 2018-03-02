@@ -60,13 +60,7 @@ classdef DesignObject < handle
         end
         
         function applyParameters(obj, designParameters)
-            
-            %for gg = 1:length(obj.Sim.Grids)
-            %    grid = obj.Sim.Grids{gg};
-                
-                obj.Sim.Grid.Meshes = obj.Sim.Grid.NodeGroup.meshes(designParameters);
-            %end
-            
+            obj.Sim.Grid.Meshes = obj.Sim.Grid.NodeGroup.meshes(designParameters);
         end
         
         function f = evaluateForward(obj)

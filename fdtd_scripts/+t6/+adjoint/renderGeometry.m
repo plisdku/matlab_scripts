@@ -11,7 +11,7 @@ X.Materials = [];
 X.Sensitivity = [];
 X.Mesh = [];
 X.FaceAlpha = 0.2;
-X.EdgeAlpha = 0.02;
+X.EdgeAlpha = 0.0;
 X.EdgeColor = 'k';
 
 X = parseargs(X, varargin{:});
