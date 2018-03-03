@@ -4,6 +4,10 @@ doc = documentNode;
 
 assemblyXML = doc.createElement('Assembly');
 
+allVertices = [];
+allFreeDirections = [];
+idxNextControlVert = 0;
+
 for aa = 1:length(sim.Grid.Meshes)
     
     mesh = sim.Grid.Meshes{aa};
@@ -15,11 +19,25 @@ for aa = 1:length(sim.Grid.Meshes)
         freeDirections = zeros(size(vertices));
     end
     
+    allVertices = [allVertices; vertices];
+    allFreeDirections = [allFreeDirections; freeDirections];
+    
+    % Create the old-style mesh XML
     elemXML = meshXML(doc, origin, mesh.permittivity, mesh.permeability, ...
         vertices, faces, freeDirections);
+    assemblyXML.appendChild(elemXML);
     
+    % Add the new-style mesh XML
+    elemXML = meshFaceXML(doc, mesh.permittivity, mesh.permeability, ...
+        faces + idxNextControlVert);
+    idxNextControlVert = idxNextControlVert + size(vertices, 1);
     assemblyXML.appendChild(elemXML);
 end
+
+% Add the new-style vertex XML
+
+elemXML = verticesXML(doc, origin, allVertices, allFreeDirections);
+assemblyXML.appendChild(elemXML);
 
 % Background!
 
@@ -33,7 +51,7 @@ if ~isempty(sim.Grid.Background)
         elemXML.setAttribute('permeability', ...
             sim.Grid.Background.permeability);
     end
-    assemblyXML.appendChild(elemXML);    
+    assemblyXML.appendChild(elemXML);
 end
 
 
@@ -42,6 +60,43 @@ end
 gridXML.appendChild(assemblyXML);
 
 
+%function elemXML = meshXML(doc, mesh)
+function elemXML = verticesXML(doc, origin, vertices, freeDirections)
+
+digits = 14;
+
+elemXML = doc.createElement('Vertices');
+
+for vv = 1:length(vertices)
+    vertXML = doc.createElement('Vertex');
+    vertXML.setAttribute('position', num2str(vertices(vv,:) - origin, digits));
+    vertXML.setAttribute('freeDirections', num2str(freeDirections(vv,:)));
+    elemXML.appendChild(vertXML);
+end
+
+
+
+%function elemXML = meshXML(doc, mesh)
+function elemXML = meshFaceXML(doc, permittivity, permeability, faces)
+
+digits = 14;
+
+elemXML = doc.createElement('NewMesh');
+
+if ~isempty(permittivity)
+    elemXML.setAttribute('permittivity', permittivity);
+end
+
+if ~isempty(permeability)
+    elemXML.setAttribute('permeability', permeability);
+end
+
+
+for ff = 1:length(faces)
+    faceXML = doc.createElement('Face');
+    faceXML.setAttribute('vertices', num2str(faces(ff,:), digits));
+    elemXML.appendChild(faceXML);
+end
 
 
 
