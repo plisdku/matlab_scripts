@@ -4,7 +4,12 @@ if ~exist(obj.FileName, 'file')
     n = 0;
 else
     fileStruct = dir(obj.FileName);
-    n = floor(fileStruct.bytes / obj.BytesPerValue / obj.FrameSize);
+    
+    if (fileStruct.bytes == 0)
+        n = 0;
+    else
+        n = floor(fileStruct.bytes / obj.BytesPerValue / obj.FrameSize);
+    end
     
     %{
     %determine size of file in bytes (this is gross; Matlab's fault!!! lame API)
