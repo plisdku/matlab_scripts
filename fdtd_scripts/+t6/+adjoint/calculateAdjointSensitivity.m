@@ -21,6 +21,29 @@ bigJacobian = node.jacobian(parameters);
 vertices = node.vertices(parameters);
 vertJacobian = sparse(size(vertices, 1), 1);
 
+%% Print the tensor
+
+if 0
+    for ii = 1:size(coeffs,1)
+        coeff = coeffs{ii,2};
+        
+        tensor = coeff.tensor;
+        for dd = 1:3
+            td = tensor{dd,dd};
+            
+            for ee = 1:length(td.EH)
+                coeffVals = td.EH{ee}.coefficients;
+                fprintf('EH %d\n', nnz(coeffVals));
+            end
+            for ee = 1:length(td.DB)
+                coeffVals = td.DB{ee}.coefficients;
+                fprintf('DB %d\n', nnz(coeffVals));
+            end
+        end
+end
+end
+        
+
 %%
 
 for fieldXYZ = 1:3

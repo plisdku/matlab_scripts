@@ -8,9 +8,9 @@ allVertices = [];
 allFreeDirections = [];
 idxNextControlVert = 0;
 
-for aa = 1:length(sim.Grid.Meshes)
+for solidIdx = 1:length(sim.Grid.Meshes)
     
-    mesh = sim.Grid.Meshes{aa};
+    mesh = sim.Grid.Meshes{solidIdx};
     
     vertices = sim.extendIntoPML(mesh.patchVertices);
     faces = mesh.faces-1;
@@ -29,9 +29,20 @@ for aa = 1:length(sim.Grid.Meshes)
     
     % Add the new-style mesh XML
     elemXML = meshFaceXML(doc, mesh.permittivity, mesh.permeability, ...
-        faces + idxNextControlVert);
+        faces + idxNextControlVert, solidIdx-1);
     idxNextControlVert = idxNextControlVert + size(vertices, 1);
     assemblyXML.appendChild(elemXML);
+    
+    % Add the new-style Permittivity or Permeability
+    if ~isempty(mesh.permittivity)
+        elemXML = permittivityXML(doc, mesh.permittivity, solidIdx-1);
+        assemblyXML.appendChild(elemXML);
+    end
+    
+    if ~isempty(mesh.permeability)
+        elemXML = permeabilityXML(doc, mesh.permeability, solidIdx-1);
+        assemblyXML.appendChild(elemXML);
+    end
 end
 
 % Add the new-style vertex XML
@@ -54,10 +65,22 @@ if ~isempty(sim.Grid.Background)
     assemblyXML.appendChild(elemXML);
 end
 
-
-
-
 gridXML.appendChild(assemblyXML);
+
+end
+
+
+function elemXML = permittivityXML(doc, matName, solidId)
+    elemXML = doc.createElement('Permittivity');
+    elemXML.setAttribute('materialName', matName);
+    elemXML.setAttribute('solidId', num2str(solidId));
+end
+
+function elemXML = permeabilityXML(doc, matName, solidId)
+    elemXML = doc.createElement('Permeability');
+    elemXML.setAttribute('materialName', matName);
+    elemXML.setAttribute('solidId', num2str(solidId));
+end
 
 
 %function elemXML = meshXML(doc, mesh)
@@ -73,23 +96,27 @@ for vv = 1:length(vertices)
     vertXML.setAttribute('freeDirections', num2str(freeDirections(vv,:)));
     elemXML.appendChild(vertXML);
 end
+end
 
 
 
 %function elemXML = meshXML(doc, mesh)
-function elemXML = meshFaceXML(doc, permittivity, permeability, faces)
+function elemXML = meshFaceXML(doc, permittivity, permeability, faces, solidId)
 
 digits = 14;
 
-elemXML = doc.createElement('NewMesh');
+elemXML = doc.createElement('Solid');
 
-if ~isempty(permittivity)
-    elemXML.setAttribute('permittivity', permittivity);
-end
+%if ~isempty(permittivity)
+%    elemXML.setAttribute('permittivity', permittivity);
+%end
 
-if ~isempty(permeability)
-    elemXML.setAttribute('permeability', permeability);
-end
+%if ~isempty(permeability)
+%    elemXML.setAttribute('permeability', permeability);
+%end
+
+
+elemXML.setAttribute('id', num2str(solidId));
 
 
 for ff = 1:length(faces)
@@ -97,8 +124,7 @@ for ff = 1:length(faces)
     faceXML.setAttribute('vertices', num2str(faces(ff,:), digits));
     elemXML.appendChild(faceXML);
 end
-
-
+end
 
 
 %function elemXML = meshXML(doc, mesh)
@@ -128,4 +154,5 @@ for ff = 1:length(faces)
     faceXML = doc.createElement('Face');
     faceXML.setAttribute('vertices', num2str(faces(ff,:), digits));
     elemXML.appendChild(faceXML);
+end
 end
