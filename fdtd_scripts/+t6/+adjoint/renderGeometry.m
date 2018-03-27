@@ -43,8 +43,8 @@ if ~isempty(X.Model)
         controlVertices = [controlVertices; meshes{mm}.patchVertices];
     end
     
-    plot3(X.Units*controlVertices(:,1), X.Units*controlVertices(:,2), ...
-        X.Units*controlVertices(:,3), 'bo')
+    %plot3(X.Units*controlVertices(:,1), X.Units*controlVertices(:,2), ...
+    %    X.Units*controlVertices(:,3), 'bo')
     hold on
 
 end

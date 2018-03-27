@@ -1,4 +1,4 @@
-function [f Df] = evalQF(data, filters, kernel, xs, ys, zs, ts)
+function [f, Df] = evalQF(data, filters, kernel, xs, ys, zs, ts)
 % [f Df] = evalQF(data, filters, kernel, xs, ys, zs, ts)
 %
 
@@ -17,6 +17,11 @@ for mm = 1:numel(filters)
     %else
     %    U = filters{mm}.Data;
     %end
+    
+    %figure(4); clf
+    %subplot(211)
+    %plot(abs(d(:)))
+    %title(sprintf('d before filter %i', mm));
     
     if any(strcmpi(filters{mm}.Operation, {'Matrix', 'MatrixArray'}))
         
@@ -39,6 +44,10 @@ for mm = 1:numel(filters)
         
     end
     
+    %subplot(212)
+    %plot(abs(d(:)))
+    %title(sprintf('d after filter %i', mm));
+    %pause(0.001);
     %if mm == 4
     %    assignin('base', 'qfData', d);
     %end

@@ -32,10 +32,6 @@ classdef DesignObject < handle
                 error('Mode must be forward or adjoint');
             end
             
-%            if numel(obj.Sim.Grids) > 1
-%                error('Trogdor 6 does not support multiple grids');
-%            end
-            
             if ~isempty(obj.Sim.Directory) && ~exist(obj.Sim.Directory, 'dir')
                 try mkdir(obj.Sim.Directory)
                 catch exception
@@ -49,11 +45,6 @@ classdef DesignObject < handle
                     error('Could not create output directory!');
                 end
             end
-            
-%            assert(numel(obj.Sim.Grids) == 1);
-%            if ~isempty(obj.Sim.Grids{1}.Links)
-%                warning('Ignoring Link objects');
-%            end
             
             doc = t6.xml.generateXML(obj.Sim, designParameters, mode);
             xmlwrite([obj.Sim.Directory, filesep, obj.XML], doc);

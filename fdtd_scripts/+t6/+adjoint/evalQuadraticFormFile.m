@@ -1,4 +1,4 @@
-function [f Df] = evalQuadraticFormFile(file, userFilters, userKernel)
+function [f, Df] = evalQuadraticFormFile(file, userFilters, userKernel)
 % [f Df] = evalQuadraticFormFile(file, userFilters, userKernel)
 
 import t6.*
@@ -43,7 +43,7 @@ filters = [filters, userFilters];
 
 %%
 
-[f Df] = adjoint.evalQF(data, filters, userKernel, posInterp{1}, posInterp{2}, ...
+[f, Df] = adjoint.evalQF(data, filters, userKernel, posInterp{1}, posInterp{2}, ...
     posInterp{3}, tInterp);
 
 

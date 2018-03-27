@@ -21,8 +21,8 @@ if strcmpi(mode, 'forward')
 elseif strcmpi(mode, 'adjoint')
     
     fname = [sim.OutputDirectory filesep meas.filename];
-    [f Df] = adjoint.evalQuadraticFormFile(fname, meas.filters, meas.kernel);
-    [adjCurrents permutedFields] = adjoint.adjointCurrentNames(fname);
+    [f, Df] = adjoint.evalQuadraticFormFile(fname, meas.filters, meas.kernel); % TODO: why the eff is this HERE?
+    [adjCurrents, permutedFields] = adjoint.adjointCurrentNames(fname);
     of = OutputFile(fname);
     fwdTimesteps = of.timesteps();
     adjCells = of.Regions.YeeCells(1,:);

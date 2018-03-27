@@ -195,7 +195,6 @@ for nLayer = 1:length(boundary_z)+1
     epsrEz(indicesEz) = epsr(nLayer);
 end
 
-
 if ~isempty(normalizationPos)
     modeEnergy = 0.5*trapz(normalizationPos, Ez_normalization.*conj(Hx_normalization));
 

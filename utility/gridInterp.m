@@ -81,6 +81,10 @@ if size(A,dim) > 1 && ~isempty(x{dim})
     
     B = bsxfun(@times, weightLeft, B(indicesLeft{:})) + ...
         bsxfun(@times, weightRight, B(indicesRight{:}));
+else
+    szB = ones(1, numdim);
+    szB(dim) = length(y{dim});
+    B = repmat(B, szB);
 end
 end
 

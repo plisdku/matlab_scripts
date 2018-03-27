@@ -89,6 +89,7 @@ yy = gradient(phiRPM, nEff);
 yy = yy / max(abs(yy(:)));
 
 inds = findLocalMax(yy, 3);
+inds = inds( yy(inds) ~= 0.0 );
 
 if isempty(inds)
     fprintf('No modes were found!\n');

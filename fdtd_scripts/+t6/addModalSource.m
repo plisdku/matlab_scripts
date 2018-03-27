@@ -80,8 +80,7 @@ X.TimeFunction = [];
 X.Mode = '';
 X = parseargs(X, varargin{:});
 
-
-[phasorJ phasorM] = modeInjection.surfaceEquivalentCurrents(...
+[phasorJ, phasorM] = modeInjection.surfaceEquivalentCurrents(...
     X.PhasorE, X.PhasorH, X.Direction, X.X, X.Y, X.Z);
 
 srcJx = @(x,y,z) spatialModulation(2*phasorJ(x,y,z,1), X.TimeFunction);

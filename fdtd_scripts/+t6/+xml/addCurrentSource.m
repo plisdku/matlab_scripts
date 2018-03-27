@@ -146,7 +146,7 @@ for ff = 1:numel(fieldTokens)
     fieldArgs(ff).z = sim.Grid.Origin(3) + (offset(3) + yeeZ)*sim.Dxyz(3);
     fieldArgs(ff).t = (offset(4) + timesteps)*sim.Dt;
     
-    [fieldArgs(ff).xx fieldArgs(ff).yy fieldArgs(ff).zz] = ndgrid(x,y,z);
+    [fieldArgs(ff).xx, fieldArgs(ff).yy, fieldArgs(ff).zz] = ndgrid(x,y,z);
 end
 
 return

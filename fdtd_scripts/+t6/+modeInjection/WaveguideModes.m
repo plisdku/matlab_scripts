@@ -87,7 +87,7 @@ classdef WaveguideModes
             
             if strcmpi(mode, 'te')
                 for mm = 1:numel(k)
-                    [ex hy hz] = tmm.solveTE(X.BoundariesX, X.Permittivities,...
+                    [ex, hy, hz] = tmm.solveTE(X.BoundariesX, X.Permittivities,...
                         X.Permeabilities, omega, k(mm), X.X, isBound(mm));
                     
                     % Forward permutation: ex becomes ey and so on.
@@ -98,7 +98,7 @@ classdef WaveguideModes
                 end
             elseif strcmpi(mode, 'tm')
                 for mm = 1:numel(k)
-                    [hx ey ez] = tmm.solveTM(X.BoundariesX, X.Permittivities,...
+                    [hx, ey, ez] = tmm.solveTM(X.BoundariesX, X.Permittivities,...
                         X.Permeabilities, omega, k(mm), X.X, isBound(mm));
                     
                     obj.H(:,:,2,mm) = hx; % forward permute to our coordinates.
@@ -134,7 +134,7 @@ classdef WaveguideModes
             obj.xE = X.X;
             obj.yE = X.Y;
             
-            [ex ey ez hx hy hz obj.nEff] = modesolver.fvmodes(X.Wavelength, ...
+            [ex, ey, ez, hx, hy, hz, obj.nEff] = modesolver.fvmodes(X.Wavelength, ...
                 X.GuessIndex, X.NumModes, ...
                 diff(obj.xH), diff(obj.yH), X.Permittivity, ...
                 X.BoundaryConditions);
@@ -176,7 +176,7 @@ classdef WaveguideModes
         end
         
         
-        function [Eout Hout] = interpolate(obj, varargin)
+        function [Eout, Hout] = interpolate(obj, varargin)
             import t6.modeInjection.*
             X.X = [];
             X.Y = [];
@@ -230,8 +230,6 @@ classdef WaveguideModes
             end
             
         end
-            
-            
         
         
     end % methods
