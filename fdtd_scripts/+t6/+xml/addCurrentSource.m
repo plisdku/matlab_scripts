@@ -318,7 +318,7 @@ for ff = 1:numel(fieldTokens)
     timesteps = duration(1):duration(2);
     fieldArgs(ff).t = actualTimeOffset + timesteps*dt;
     
-    [fieldArgs(ff).xx fieldArgs(ff).yy fieldArgs(ff).zz] = ndgrid(evalCoords{:});
+    [fieldArgs(ff).xx, fieldArgs(ff).yy, fieldArgs(ff).zz] = ndgrid(evalCoords{:});
 end
 
 return

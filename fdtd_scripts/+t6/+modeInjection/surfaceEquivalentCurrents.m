@@ -11,10 +11,10 @@ srcM = t6.multTensor(srcE, nCross, 4);
 srcJ = -t6.multTensor(srcH, nCross, 4);
 
 % Neglecting wavevector still!  :-O
-phasorM = @(x,y,z,xyz) gridInterp(x0,y0,z0,srcM(:,:,:,xyz),x,y,z);
-phasorJ = @(x,y,z,xyz) gridInterp(x0,y0,z0,srcJ(:,:,:,xyz),x,y,z);
-%phasorM = @(x,y,z,xyz) interpn(x0, y0, z0, srcM(:,:,:,xyz), x, y, z);
-%phasorJ = @(x,y,z,xyz) interpn(x0, y0, z0, srcJ(:,:,:,xyz), x, y, z);
+%phasorM = @(x,y,z,xyz) gridInterp(x0,y0,z0,srcM(:,:,:,xyz),x,y,z);
+%phasorJ = @(x,y,z,xyz) gridInterp(x0,y0,z0,srcJ(:,:,:,xyz),x,y,z);
+phasorM = @(x,y,z,xyz) interpn(x0, y0, z0, srcM(:,:,:,xyz), x, y, z);
+phasorJ = @(x,y,z,xyz) interpn(x0, y0, z0, srcJ(:,:,:,xyz), x, y, z);
 
 %{
 % might be 10x slower this way
