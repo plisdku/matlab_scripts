@@ -23,9 +23,9 @@ for solidIdx = 1:length(sim.Grid.Meshes)
     allFreeDirections = [allFreeDirections; freeDirections];
     
     % Create the old-style mesh XML
-    elemXML = meshXML(doc, origin, mesh.permittivity, mesh.permeability, ...
-        vertices, faces, freeDirections);
-    assemblyXML.appendChild(elemXML);
+    %elemXML = meshXML(doc, origin, mesh.permittivity, mesh.permeability, ...
+    %    vertices, faces, freeDirections);
+    %assemblyXML.appendChild(elemXML);
     
     % Add the new-style mesh XML
     elemXML = meshFaceXML(doc, mesh.permittivity, mesh.permeability, ...

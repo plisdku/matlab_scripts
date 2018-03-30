@@ -15,11 +15,19 @@ if ~exist('outDir')
 end
 out = @(str) sprintf('%s/%s', outDir, str);
 
-[coeffs, verts] = readDeps(out('Depsilon'));
+[coeffs, idxFileVerts] = readDeps(out('Depsilon'));
 
 bigJacobian = node.jacobian(parameters);
-vertices = node.vertices(parameters);
-vertJacobian = sparse(size(vertices, 1), 1);
+controlVertsUnrolled = node.vertices(parameters);
+vertJacobian = sparse(size(controlVertsUnrolled, 1), 1);
+
+numControlVerts = size(controlVertsUnrolled) / 3;
+
+if max(idxFileVerts) > numControlVerts
+    warning('More control vertices than expected in the file');
+    idxFileVerts = idxFileVerts(idxFileVerts <= numControlVerts);
+end
+
 
 %% Print the tensor
 
@@ -133,7 +141,7 @@ while tBeginChunk <= numT
         ED = sum(adjE.*fwdD, 2);
         EE = sum(adjE.*fwdE, 2);
     
-        for movableVert = verts
+        for movableVert = idxFileVerts
         for freeDir = 1:3
         if isstruct(coeffs{movableVert, freeDir})
         if isstruct(coeffs{movableVert,freeDir}.tensor{1,1})
@@ -153,9 +161,8 @@ while tBeginChunk <= numT
             dotProdEE = sum(coeffE.*EE(indexE));
             sumSensitivity = sumSensitivity + dotProdEE;
             
-            vertJacobian(freeDir + 3*(movableVert-1), 1) = ...
-                vertJacobian(freeDir + 3*(movableVert-1), 1) ...
-                + sumSensitivity;
+            linearIdx = freeDir + 3*(movableVert-1);
+            vertJacobian(linearIdx, 1) = vertJacobian(linearIdx, 1) + sumSensitivity;
             
         end
         end
@@ -177,7 +184,7 @@ end % for fieldXYZ = 1:3
 %%
 
 ts3 = [vertJacobian(1:3:end), vertJacobian(2:3:end), vertJacobian(3:3:end)];
-vert3 = [vertices(1:3:end), vertices(2:3:end), vertices(3:3:end)];
+vert3 = [controlVertsUnrolled(1:3:end), controlVertsUnrolled(2:3:end), controlVertsUnrolled(3:3:end)];
 
 dfdp = vertJacobian' * bigJacobian;
 

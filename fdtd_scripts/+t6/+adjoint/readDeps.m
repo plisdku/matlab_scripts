@@ -1,4 +1,4 @@
-function [cc, movableVertices] = readDeps(fname)
+function [outData, idxMovableVertices] = readDeps(fname)
 
 if nargin < 1
     fname = 'Depsilon';
@@ -10,7 +10,7 @@ if fid == -1
     error('Cannot open Depsilon');
 end
 
-cc = cell(0,3);
+outData = cell(0,3);
 
 for tensor_ij = 0:2
     
@@ -92,15 +92,19 @@ for tensor_ij = 0:2
                 % Get the corresponding indices
                 inds = fread(fid, numValues, 'uint32');
                 
+                
+                %fprintf('\t\t\tN Vertex: %i\n', vNum);
+                %vals
+                %fprintf('\n');
                  %fprintf('\t\t\tIndices: ');
                  %fprintf('%i ', inds);
                  %fprintf('\n\t\t\tValues: ');
                  %fprintf('%2.4f ', vals);
                  %fprintf('\n');
                  
-                cc{vNum+1, freeDir+1}.tensor{tensor_ij+1, tensor_ij+1}...
+                outData{vNum+1, freeDir+1}.tensor{tensor_ij+1, tensor_ij+1}...
                     .DB{lag+1}.coefficients = vals;
-                cc{vNum+1, freeDir+1}.tensor{tensor_ij+1, tensor_ij+1}...
+                outData{vNum+1, freeDir+1}.tensor{tensor_ij+1, tensor_ij+1}...
                     .DB{lag+1}.indices = inds;
             end
             
@@ -129,15 +133,19 @@ for tensor_ij = 0:2
                 % Get the corresponding indices
                 inds = fread(fid, numValues, 'uint32');
                 
+                %fprintf('\t\t\tD Vertex: %i\n', vNum);
+                %vals
+                %fprintf('\n');
+                
                  %fprintf('\t\t\tIndices: ');
                  %fprintf('%i ', inds);
                  %fprintf('\n\t\t\tValues: ');
                  %fprintf('%2.4f ', vals);
                  %fprintf('\n');
                  
-                cc{vNum+1, freeDir+1}.tensor{tensor_ij+1, tensor_ij+1} ...
+                outData{vNum+1, freeDir+1}.tensor{tensor_ij+1, tensor_ij+1} ...
                     .EH{lag+1}.coefficients = vals;
-                cc{vNum+1, freeDir+1}.tensor{tensor_ij+1, tensor_ij+1} ...
+                outData{vNum+1, freeDir+1}.tensor{tensor_ij+1, tensor_ij+1} ...
                     .EH{lag+1}.indices = inds;
             end
             
@@ -151,17 +159,17 @@ end
 fclose(fid);
 
 % Figure out which vertices have data in them.
-movableVertices = [];
-if exist('cc')
-for nn = 1:size(cc,1)
-   movable = 0;
-   for xyz = 1:size(cc,2)
-       if ~isempty(cc{nn,xyz})
-           movable = 1;
-       end
-   end
-   if movable
-       movableVertices = [movableVertices, nn];
-   end
-end
+idxMovableVertices = [];
+if exist('outData')
+    for idxVert = 1:size(outData,1)
+        movable = 0;
+        for xyz = 1:size(outData,2)
+            if ~isempty(outData{idxVert,xyz})
+                movable = 1;
+            end
+        end
+        if movable
+            idxMovableVertices = [idxMovableVertices, idxVert];
+        end
+    end
 end

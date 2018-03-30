@@ -9,13 +9,18 @@ designObject.writeSimulation(parameters, 'forward');
 
 if strcmpi(computer, 'GLNXA64')
     snapdragon = 'env -u LD_LIBRARY_PATH snapdragon';
+    meshboolean = 'env -u LD_LIBRARY_PATH meshboolean';
 else
     snapdragon = '/usr/local/bin/snapdragon';
+    meshboolean = '/usr/local/bin/meshboolean';
 end
 
-unixCall = sprintf('%s --booleans --geometry --sensitivity --outputDirectory %s %s/params.xml > out.txt', ...
+unixCall = sprintf('%s %s/params.xml %s/bparams.xml; %s --geometry --sensitivity --outputDirectory %s %s/bparams.xml > out.txt', ...
+    meshboolean, designObject.Sim.Directory, designObject.Sim.Directory, ...
     snapdragon, designObject.Sim.OutputDirectory, ...
     designObject.Sim.Directory);
+
+unixCall
 
 exitval = unix(unixCall);
 
@@ -30,9 +35,16 @@ end
 
 designObject.writeSimulation(parameters, 'adjoint');
 
-unixCall = sprintf('%s --adjoint --booleans --sensitivity --outputDirectory %s %s/params.xml > out.txt', ...
+unixCall = sprintf('%s %s/params.xml %s/bparams.xml; %s --adjoint --sensitivity --outputDirectory %s %s/bparams.xml > out.txt', ...
+    meshboolean, designObject.Sim.Directory, designObject.Sim.Directory, ...
     snapdragon, designObject.Sim.OutputDirectory, ...
     designObject.Sim.Directory);
+
+unixCall
+
+%unixCall = sprintf('%s --adjoint --booleans --sensitivity --outputDirectory %s %s/params.xml > out.txt', ...
+%    snapdragon, designObject.Sim.OutputDirectory, ...
+%    designObject.Sim.Directory);
 exitval = unix(unixCall);
 
 if exitval
