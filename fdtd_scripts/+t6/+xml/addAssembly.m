@@ -1,4 +1,4 @@
-function addAssembly(sim, gridXML, documentNode, origin, designParameters)
+function addAssembly(sim, gridXML, documentNode, origin)
 global TROG_XML_COUNT___;
 doc = documentNode;
 

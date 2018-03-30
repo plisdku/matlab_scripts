@@ -20,7 +20,7 @@ gridXML.setAttribute('origin', sprintf('%i ', sim.Grid.Origin));
 %    sprintf('%i ', nonPMLYeeCells + [originTrogdor, originTrogdor]));
 %gridXML.setAttribute('origin', sprintf('%i ', originTrogdor));
 
-t6.xml.addAssembly(sim, gridXML, doc, sim.Grid.Origin, designParameters);
+t6.xml.addAssembly(sim, gridXML, doc, sim.Grid.Origin);
 t6.xml.addOutputs(sim, gridXML, doc, mode);
 t6.xml.addTFSFSources(sim, gridXML, doc, mode);
 t6.xml.addCustomTFSFSources(sim, gridXML, doc, mode);
