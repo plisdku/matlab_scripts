@@ -15,6 +15,7 @@ X.MaxCellSize = [Inf Inf Inf];
 X.Duration = 1;
 X.Courant = 0.99;
 X.PML = [0 0 0 0 0 0];
+X.ElectromagneticMode = '3d';
 
 X = parseargs(X, varargin{:});
 
@@ -50,6 +51,7 @@ global TROGDOR_SIMULATION;
 TROGDOR_SIMULATION = t6.TrogdorSimulation();
 sim = TROGDOR_SIMULATION;
 
+sim.ElectromagneticMode = X.ElectromagneticMode;
 sim.Dxyz = dxyz;
 sim.Dt = dt;
 sim.NumT = numTimesteps;
@@ -84,4 +86,13 @@ for xyz = 1:3
         end
     end
 end
+
+if (~strcmpi(X.ElectromagneticMode, '1d') && ...
+   ~strcmpi(X.ElectromagneticMode, '2d') && ...
+   ~strcmpi(X.ElectromagneticMode, 'te2d') && ...
+   ~strcmpi(X.ElectromagneticMode, 'tm2d') && ...
+   ~strcmpi(X.ElectromagneticMode, '3d'))
+    error('ElectromagneticMode must be 1d, 2d, te2d, tm2d or 3d');
+end
+
 

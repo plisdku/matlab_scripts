@@ -5,6 +5,7 @@ classdef TrogdorSimulation < handle
         Grid = t6.TrogdorGrid;
         %Grids = {}
         %CurrentGrid % handle to, well, the current grid
+        ElectromagneticMode = '3d'
         Dxyz = 0
         Dt = 0
         NumT = 0

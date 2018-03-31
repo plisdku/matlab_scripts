@@ -26,6 +26,7 @@ doc = com.mathworks.xml.XMLUtils.createDocument('Simulation');
 
 root = doc.getDocumentElement;
 root.setAttribute('version', '6.0');
+root.setAttribute('electromagneticMode', sim.ElectromagneticMode);
 root.setAttribute('dx', num2str(sim.Dxyz(1), 10));
 root.setAttribute('dy', num2str(sim.Dxyz(2), 10));
 root.setAttribute('dz', num2str(sim.Dxyz(3), 10));
